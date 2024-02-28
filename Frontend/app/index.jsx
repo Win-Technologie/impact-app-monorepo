@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import _layout from './_layout'
 
 
 export default function Page() {

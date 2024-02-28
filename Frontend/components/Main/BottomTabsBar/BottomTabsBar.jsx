@@ -4,7 +4,7 @@ import React from 'react'
 export default function BottomTabsBar({}) {
   return (
     <View>
-      <Text>BottomTabsBar mm</Text>
+      <Text>BottomTabsBar </Text>
     </View>
   )
 }
