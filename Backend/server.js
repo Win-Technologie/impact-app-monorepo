@@ -4,19 +4,21 @@
 // Les routes de l'application sont définies dans les fichiers 'routes/payments/payments.routes' et 'routes/projects/projects.routes'.
 // Le serveur écoute sur le port défini par la variable d'environnement PORT ou sur le port 8000 par défaut.
 require('dotenv').config(); // lecteur de variables d'environnement 
-
+// MODULES
 const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const flash = require('connect-flash');
-const cors = require('cors'); 
+const cors = require('cors');
+const cron = require('node-cron');
 const { connectToMongo } = require('./mongoConnection');
+const VARS = require('../vars');
+const { removeRevokedTokens } = require('./utils/jwt');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 
 // Routes
-
 const userRoutes = require('./routes/user/user.routes');
 
 connectToMongo();
@@ -56,6 +58,31 @@ app.use((req, res, next) => {
 //app.use("/Backend/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use('/api/users', userRoutes);
+
+
+
+// Programmation de tâches qui s'exécutent automatiquement après un certain laps de temps
+// cron.schedule('0 0 * * 0', async () => { //chaque semaine le dimanche à minuit
+// cron.schedule('* * * * *', async () => {  // running a task every minute
+cron.schedule(`${VARS.EVERYSIXHOURS}`, async () => {
+    console.log('Exécution du nettoyage des tokens révoqués...');
+    // await removeRevokedTokens();
+    removeRevokedTokens()
+        .then((result) => {
+            if (result) {
+                console.log('Les tokens révoqués ont été supprimés avec succès.');
+            } else {
+                console.log("Une erreur s'est produite lors de la suppression des tokens révoqués");
+            }
+        })
+        .catch((error) => {
+            console.error('Erreur lors de la suppression des tokens révoqués :', error);
+        });
+
+}, {
+    scheduled: true,
+    timezone: "America/New_York" // Régler le fuseau horaire en fonction de votre lieu de résidence
+});
 
 
 

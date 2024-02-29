@@ -30,6 +30,8 @@ function createAccessToken(user) {
 // Révoquer un token (appelé lors de la déconnexion)
 async function revokeToken(token) {
     try {
+
+     
         const tokenAlreadyRevoked = await isTokenRevoked(token);
         console.log(tokenAlreadyRevoked);
 
@@ -73,23 +75,21 @@ async function isTokenRevoked(token) {
     }
 }
 
-
+//  Suppression des jetons révoqués dans la base de données
 async function removeRevokedTokens() {
     try {
-        // Conecta a la base de datos principal
+       // Se connecte à la base de données principale
         const mainDb = getDb(VARS.MAINDB);
-        
-        // Obtiene la colección de tokens revocados
+        // Obtient la collection de jetons révoqués
         const tknCollection = mainDb.collection(VARS.TKNRVKCOLLECTION);
-
-        // Elimina todos los tokens revocados
+        // Supprime tous les tokens révoqués
         const deleteResult = await tknCollection.deleteMany({});
         
-        console.log(`Se eliminaron ${deleteResult.deletedCount} tokens revocados.`);
+        console.log(`La suppression de ${deleteResult.deletedCount} tokens révoqués a été effectuée.`);
         
         return true;
     } catch (error) {
-        console.error("Error al eliminar tokens revocados:", error);
+        console.error("Erreur lors de la suppression des tokens révoqués :", error);
         return false;
     }
 }
