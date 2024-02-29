@@ -6,51 +6,57 @@
 require('dotenv').config(); // lecteur de variables d'environnement 
 
 const express = require('express');
-// const mongoose = require('mongoose');
-// const passport = require('passport');
-// const session = require('express-session');
-// const flash = require('connect-flash');
-// const cors = require('cors'); 
+const mongoose = require('mongoose');
+const session = require('express-session');
+const flash = require('connect-flash');
+const cors = require('cors'); 
 const { connectToMongo } = require('./mongoConnection');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// Routes
+
+const userRoutes = require('./routes/user/user.routes');
+
 connectToMongo();
 
 // // Express body parser
-// app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Augmentez la limite selon vos besoins
-// app.use(express.json({ limit: '10mb' })); // Augmentez la limite selon vos besoins
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Augmentez la limite selon vos besoins
+app.use(express.json({ limit: '10mb' })); // Augmentez la limite selon vos besoins
 
 
 // // Express body parser
-// app.use(express.urlencoded({ extended: true }));
-// app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 // // Configuration d'express-session
-// app.use(session({
-//     secret: 'votre_secret_session', // Remplacez par une chaîne aléatoire et sécurisée
-//     resave: true,
-//     saveUninitialized: true,
-// }));
+app.use(session({
+    secret: 'votre_secret_session', // Remplacez par une chaîne aléatoire et sécurisée
+    resave: true,
+    saveUninitialized: true,
+}));
 
 // // Utilisation de CORS middleware
-// app.use(cors());
+app.use(cors());
 
 
 // // Express flash middleware
-// app.use(flash());
+app.use(flash());
 
-// // Global variables for flash messages
-// app.use((req, res, next) => {
-//     res.locals.success_msg = req.flash('success_msg');
-//     res.locals.error_msg = req.flash('error_msg');
-//     res.locals.error = req.flash('error');
-//     next();
-// });
+// Global variables for flash messages
+app.use((req, res, next) => {
+    res.locals.success_msg = req.flash('success_msg');
+    res.locals.error_msg = req.flash('error_msg');
+    res.locals.error = req.flash('error');
+    next();
+});
 
 // Configuration pour utiliser les fichiers statiques du dossier "uploads".
 //app.use("/Backend/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use('/api/users', userRoutes);
+
 
 
 // Start the server
