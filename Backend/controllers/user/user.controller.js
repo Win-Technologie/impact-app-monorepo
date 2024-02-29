@@ -1,7 +1,7 @@
 // // Importations nécessaires
 const { getDb } = require('../../mongoConnection');
 const bcrypt = require('bcryptjs');
-// const jwt = require('../utils/jwt');
+const jwt = require('../../utils/jwt');
 // const Tenant = require('../modeles/Tenants');
 // //const imageCache = new NodeCache(); //instance de cache pour stocker les images
 const { body, validationResult } = require('express-validator');
@@ -71,7 +71,7 @@ async function validateRegisterOwnerFields(req) {
     await body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req);
 }
 
-async function registerUser(req, res) {
+async function RegisterUser(req, res) {
     try {
         const { email, name, lastName, password, phone, address, postalCode,
             province, city, country, gender, birthDay, companyName
@@ -133,12 +133,92 @@ async function registerUser(req, res) {
     }
 }
 
+async function Login(req, res) {
+    try {
+
+        const { email, password } = req.body;
+        // Validation des champs de la requête
+        await body('email').isEmail().withMessage("L'adresse e-mail est invalide").notEmpty().withMessage("L'adresse e-mail est requise").run(req);
+        await body('password').notEmpty().withMessage('Le mot de passe est requis').run(req);
+        // Vérification des erreurs de validation
+        const validationErrors = validationResult(req);
+
+        if (!validationErrors.isEmpty()) {
+            return res.status(400).json({ errors: validationErrors.array() });
+        }
+
+        // On convertit l'adresse e-mail en minuscules pour assurer une recherche insensible à la casse
+        const emailLowerCase = email.toLowerCase();
+
+        const mainDb = getDb(VARS.MAINDB);
+        const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
+
+        const loggedInUser = await userCollection.findOne({ "email": emailLowerCase });
+
+        if (!loggedInUser) {
+            return res.status(403).json({ msg: "user not found" });
+        }
+
+        if (loggedInUser.active) {
+            token = jwt.createAccessToken(loggedInUser);
+            const passwordMatch = await bcrypt.compare(password, loggedInUser.password);
+
+            if (passwordMatch) {
+                return res.status(200).json({ msg: "Utilisateur authentifié avec succès", A7: token, user: loggedInUser._id });
+            } else {
+                return res.status(401).json({ msg: "Mot de passe incorrect" });
+            }
+
+        } else {
+            res.status(401).json({ msg: "Compte inactif." });
+        }
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
+
+async function Logout(req, res) {
+
+    // res.status(200).json({ msg: "hello from logout" });
+    try {
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const decodedToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!decodedToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        // const userEmail = decodedToken.user_email; // Assurez-vous que le token contient bien l'email
+        // Révoquer le jeton
+        jwt.revokeToken(token);
+    
+        // Envoyer une réponse réussie en cas de déconnexion réussie
+        console.info('Déconnexion réussie');
+        res.status(200).json({ msg: 'Déconnexion réussie' });
+
+    } catch (error) {
+        // Gérer les erreurs et renvoyer une réponse d'erreur du serveur
+        console.error(`Erreur lors de la déconnexion : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
 
 
 
 module.exports = {
 
-    registerUser,
+    RegisterUser,
+    Login,
+    Logout
 };
 
 
