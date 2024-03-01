@@ -234,7 +234,7 @@ async function RefresLogin(req, res) {
 
         const mainDb = getDb(VARS.MAINDB);
         const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
-        
+
         const loggedInUser = await userCollection.findOne({ _id: user_id });
         //Vérifier si l'utilisateur existe et si son compte est actif dans le système.
         if (!loggedInUser || loggedInUser.active === false) {
@@ -254,15 +254,36 @@ async function RefresLogin(req, res) {
     }
 }
 
+async function GetUserById(req, res) {
+    try {
+        const userId = req.params.id;
+        const mainDb = getDb(VARS.MAINDB);
+        const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
+        const userProfile = await userCollection.findOne({ _id: userId });
+
+        if (!userProfile) {
+            return res.status(404).json({ msg: "Profil introuvable" });
+        }
+
+        res.status(200).json({ user: userProfile });
+
+    } catch (error) {
+        // Gérer les erreurs et renvoyer une réponse d'erreur du serveur
+        console.error(`Erreur lors de la déconnexion : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
+
+
 
 
 
 module.exports = {
-
     RegisterUser,
     Login,
     Logout,
     RefresLogin,
+    GetUserById
 };
 
 

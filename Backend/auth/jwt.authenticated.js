@@ -25,6 +25,27 @@ function ensureAuth(req, res, next) {
     }
 }
 
+async function isActiveSession(req, res, next) {
+    try {
+        if (!req.headers.authorization) {
+            return res.status(403).send({ msg: "La requête ne contient pas l'en-tête d'authentification" });
+        }
+        const token = req.headers.authorization.replace("Bearer ", "");
+        const tokenAlreadyRevoked = await isTokenRevoked(token);
+
+        if (tokenAlreadyRevoked) {
+
+            return res.status(401).json({ msg: "La session de l'utilisateur a expiré" });
+        }
+        
+        next();
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
+
 module.exports ={
     ensureAuth,
+    isActiveSession
 }

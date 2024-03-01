@@ -121,4 +121,5 @@ module.exports = {
     decoded,
     removeRevokedTokens,
     createRefreshToken,
+    isTokenRevoked
 };
