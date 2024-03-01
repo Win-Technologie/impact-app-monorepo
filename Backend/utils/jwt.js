@@ -3,9 +3,6 @@ const VARS = require('../../vars');
 // const VARS = require('../../vars');
 const { getDb } = require('../mongoConnection');
 
-// const JWT_KEY = VARS.JWTSTKEY;
-
-
 // Accéder aux zones authentifiées du site web
 function createAccessToken(user) {
 
@@ -13,12 +10,12 @@ function createAccessToken(user) {
     // // Définir l'heure d'expiration du jeton, dans ce cas, 3 heures après sa création
     // expToken.setHours(expToken.getHours() + 8760);
     const expToken = new Date();
+   // expToken.setMonth(expToken.getMonth() + 1);
     expToken.setFullYear(expToken.getFullYear() + 1);
     // Créer un objet de charge utile pour le jeton (contenant toutes les données)
     const payload = {
         token_type: "access", // Type de jeton, dans ce cas, "access"
         user_id: user._id, // Identifiant unique de l'utilisateur associé au jeton
-
         iat: Date.now(), // Heure d'émission du jeton (en millisecondes depuis le 1er janvier 1970)
         exp: expToken.getTime(), // Heure d'expiration du jeton (en millisecondes depuis le 1er janvier 1970)
     };
@@ -94,6 +91,25 @@ async function removeRevokedTokens() {
     }
 }
 
+// Renouvellement d'un ancien token pour prolonger la session de l'utilisateur
+function createRefreshToken(user) {
+
+    const expToken = new Date();
+
+    // expToken.setMonth(expToken.getMonth() + 1);
+    //expToken.setHours(expToken.getHours() + 3);
+    expToken.setFullYear(expToken.getFullYear() + 1);
+
+    const payload = {
+        token_type: "refresh",
+        user_id: user._id, // Identifiant unique de l'utilisateur associé au jeton
+        iat: Date.now(), // Heure d'émission du jeton (en millisecondes depuis le 1er janvier 1970)
+        exp: expToken.getTime(), // Heure d'expiration du jeton (en millisecondes depuis le 1er janvier 1970)
+    };
+
+    return jwt.sign(payload, VARS.JWTSTKEY);
+}
+
 // Obtenir les données du token
 function decoded(token) {
     return jwt.decode(token, VARS.JWTSTKEY, true);
@@ -104,4 +120,5 @@ module.exports = {
     revokeToken,
     decoded,
     removeRevokedTokens,
+    createRefreshToken,
 };

@@ -117,7 +117,7 @@ async function RegisterUser(req, res) {
             birthDay: birthDay,
             typeAccount: "free",
         });
-       /// Sauvegarde du nouveau propriétaire dans la collection 'users'
+        /// Sauvegarde du nouveau propriétaire dans la collection 'users'
         const insertResult = await userCollection.insertOne(newUSer);
 
         if (!insertResult.acknowledged) {
@@ -146,28 +146,22 @@ async function Login(req, res) {
         if (!validationErrors.isEmpty()) {
             return res.status(400).json({ errors: validationErrors.array() });
         }
-
         // On convertit l'adresse e-mail en minuscules pour assurer une recherche insensible à la casse
         const emailLowerCase = email.toLowerCase();
-
         const mainDb = getDb(VARS.MAINDB);
         const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
-
         const loggedInUser = await userCollection.findOne({ "email": emailLowerCase });
 
         if (!loggedInUser) {
             return res.status(403).json({ msg: "user not found" });
         }
-
         if (loggedInUser.active) {
-            token = jwt.createAccessToken(loggedInUser);
+
             const passwordMatch = await bcrypt.compare(password, loggedInUser.password);
-
             if (passwordMatch) {
-
+                token = jwt.createAccessToken(loggedInUser);
                 // Réinitialiser le nombre de tentatives si la connexion est réussie
                 await userCollection.updateOne({ "_id": loggedInUser._id }, { $set: { loginAttempts: 0 } });
-
                 return res.status(200).json({ msg: "Utilisateur authentifié avec succès", A7: token, user: loggedInUser._id });
             } else {
 
@@ -218,7 +212,7 @@ async function Logout(req, res) {
         // const userEmail = decodedToken.user_email; // Assurez-vous que le token contient bien l'email
         // Révoquer le jeton
         jwt.revokeToken(token);
-    
+
         // Envoyer une réponse réussie en cas de déconnexion réussie
         console.info('Déconnexion réussie');
         res.status(200).json({ msg: 'Déconnexion réussie' });
@@ -230,13 +224,45 @@ async function Logout(req, res) {
     }
 }
 
+async function RefresLogin(req, res) {
+
+    try {
+        const { token } = req.body;
+        if (!token) res.status(400).send({ msg: "Token required" });
+
+        const { user_id } = jwt.decoded(token);
+
+        const mainDb = getDb(VARS.MAINDB);
+        const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
+        
+        const loggedInUser = await userCollection.findOne({ _id: user_id });
+        //Vérifier si l'utilisateur existe et si son compte est actif dans le système.
+        if (!loggedInUser || loggedInUser.active === false) {
+            return res.status(403).json({ msg: "Utilisateur présentant des problèmes avec le compte, contactez l'administrateur" });
+        }
+
+        refreshToken = jwt.createRefreshToken(loggedInUser);
+        //révoquer l'ancien token
+        jwt.revokeToken(token);
+
+        res.status(200).json({ msg: "Session rafraîchie avec succès ", A7: refreshToken, user: loggedInUser._id });
+
+    } catch (error) {
+        // Gérer les erreurs et renvoyer une réponse d'erreur du serveur
+        console.error(`Erreur lors de la déconnexion : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
+
+
 
 
 module.exports = {
 
     RegisterUser,
     Login,
-    Logout
+    Logout,
+    RefresLogin,
 };
 
 
