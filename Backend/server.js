@@ -62,9 +62,7 @@ app.use('/api/users', userRoutes);
 
 
 // Programmation de tâches qui s'exécutent automatiquement après un certain laps de temps
-// cron.schedule('0 0 * * 0', async () => { //chaque semaine le dimanche à minuit
-// cron.schedule('* * * * *', async () => {  // running a task every minute
-cron.schedule(`${VARS.EVERYSIXHOURS}`, async () => {
+cron.schedule(`${VARS.CRONTIMER.EVERYHOUR}`, async () => {
     console.log('Exécution du nettoyage des tokens révoqués...');
     // await removeRevokedTokens();
     removeRevokedTokens()

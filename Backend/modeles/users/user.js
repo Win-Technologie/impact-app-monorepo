@@ -115,7 +115,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         ref: 'AccidentReport',
         index: true
-    }]
+    }],
+    loginAttempts: {
+        type: Number,
+        default: 0,
+        required: true,
+    },
 });
 
 const User = mongoose.model('User', userSchema);

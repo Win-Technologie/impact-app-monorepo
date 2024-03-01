@@ -164,13 +164,31 @@ async function Login(req, res) {
             const passwordMatch = await bcrypt.compare(password, loggedInUser.password);
 
             if (passwordMatch) {
+
+                // Réinitialiser le nombre de tentatives si la connexion est réussie
+                await userCollection.updateOne({ "_id": loggedInUser._id }, { $set: { loginAttempts: 0 } });
+
                 return res.status(200).json({ msg: "Utilisateur authentifié avec succès", A7: token, user: loggedInUser._id });
             } else {
-                return res.status(401).json({ msg: "Mot de passe incorrect" });
-            }
 
+                // Augmenter le nombre de tentatives si le mot de passe est erroné
+                const updatedUser = await userCollection.findOneAndUpdate(
+                    { "_id": loggedInUser._id },
+                    { $inc: { loginAttempts: 1 } },
+                    { returnDocument: 'after' }
+                );
+
+                // Vérifier si la limite de tentatives a été dépassée
+                if (updatedUser.loginAttempts >= 3) {
+                    // Bloquer le compte
+                    await userCollection.updateOne({ "_id": loggedInUser._id }, { $set: { active: false } });
+                    return res.status(401).json({ msg: "Compte bloqué suite à plusieurs tentatives infructueuses" });
+                } else {
+                    return res.status(401).json({ msg: "Mot de passe incorrect" });
+                }
+            }
         } else {
-            res.status(401).json({ msg: "Compte inactif." });
+            res.status(401).json({ msg: "Compte inactif, contactez l'administrateur." });
         }
 
     } catch (error) {
