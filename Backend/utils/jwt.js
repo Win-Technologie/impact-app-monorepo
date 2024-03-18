@@ -67,7 +67,7 @@ async function isTokenRevoked(token) {
         // console.log(tokenFound);
         return tokenFound != null; // Renvoie true si le token est trouvé
     } catch (error) {
-        console.error("Erreur lors de la vérification du token 3333:", error);
+        console.error("Erreur lors de la vérification du token:", error);
         return false;
     }
 }

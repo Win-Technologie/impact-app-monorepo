@@ -9,6 +9,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const flash = require('connect-flash');
+const path = require('path');
 const cors = require('cors');
 const cron = require('node-cron');
 const { connectToMongo } = require('./mongoConnection');
@@ -55,7 +56,7 @@ app.use((req, res, next) => {
 });
 
 // Configuration pour utiliser les fichiers statiques du dossier "uploads".
-//app.use("/Backend/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/Backend/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use('/api/users', userRoutes);
 

@@ -35,4 +35,4 @@ yarn-error.*
 *.tsbuildinfo
 
 #VARIABLES BACKEND
-vars.js
+#vars.js

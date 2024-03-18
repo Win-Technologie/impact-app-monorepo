@@ -331,7 +331,34 @@ async function RestorePassword(req, res) {
     }
 }
 
+async function EditUser(req, res) {
+    try {
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+        // Récupérer l'utilisateur à partir de la base de données
+        const loggedInUser = await userCollection.findOne({ _id: myToken.user_id });
+        //Vérifier si l'utilisateur existe et si son compte est actif dans le système.
+        if (!loggedInUser || loggedInUser.active === false) {
+            return res.status(403).json({ msg: "Utilisateur présentant des problèmes avec le compte, contactez l'administrateur" });
+        }
 
+        return res.status(200).json({ msg: "Hello from edith user" });
+
+    } catch (error) {
+        console.error(`Erreur lors de la modification du mot de passe  : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
 
 
 
@@ -342,7 +369,8 @@ module.exports = {
     Logout,
     RefresLogin,
     GetUserById,
-    RestorePassword
+    RestorePassword,
+    EditUser
 };
 
 
