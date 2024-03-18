@@ -34,7 +34,6 @@ async function isActiveSession(req, res, next) {
         const tokenAlreadyRevoked = await isTokenRevoked(token);
 
         if (tokenAlreadyRevoked) {
-
             return res.status(401).json({ msg: "La session de l'utilisateur a expiré" });
         }
         

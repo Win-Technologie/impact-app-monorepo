@@ -16,6 +16,10 @@ const { body, validationResult } = require('express-validator');
 const User = require('../../modeles/users/user');
 // VARIABLES
 const VARS = require('../../../vars');
+// GLOBAL CONNECTIONS
+const mainDb = getDb(VARS.MAINDB);
+const userCollection = mainDb.collection(VARS.USERSCOLLECTION);// Initialiser la connexion à la base de données et définir la collection des utilisateurs
+
 
 async function validateRegisterOwnerFields(req) {
     // Validation de l'email
@@ -86,9 +90,6 @@ async function RegisterUser(req, res) {
         if (!validationErrors.isEmpty()) {
             return res.status(400).json({ errors: validationErrors.array() });
         }
-        // Initialiser la connexion à la base de données et définir la collection des utilisateurs
-        const mainDb = getDb(VARS.MAINDB);
-        const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
 
         // Vérifier si l'utilisateur existe déjà
         let userExisting = await userCollection.findOne({ email: emailLowerCase });
@@ -148,8 +149,7 @@ async function Login(req, res) {
         }
         // On convertit l'adresse e-mail en minuscules pour assurer une recherche insensible à la casse
         const emailLowerCase = email.toLowerCase();
-        const mainDb = getDb(VARS.MAINDB);
-        const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
+
         const loggedInUser = await userCollection.findOne({ "email": emailLowerCase });
 
         if (!loggedInUser) {
@@ -204,12 +204,12 @@ async function Logout(req, res) {
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
         }
         // Décoder le token pour obtenir les informations de l'utilisateur
-        const decodedToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
-        if (!decodedToken) {
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        // const userEmail = decodedToken.user_email; // Assurez-vous que le token contient bien l'email
+        // const userEmail = myToken.user_email; // Assurez-vous que le token contient bien l'email
         // Révoquer le jeton
         jwt.revokeToken(token);
 
@@ -255,10 +255,24 @@ async function RefresLogin(req, res) {
 }
 
 async function GetUserById(req, res) {
+
     try {
         const userId = req.params.id;
-        const mainDb = getDb(VARS.MAINDB);
-        const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
+
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
         const userProfile = await userCollection.findOne({ _id: userId });
 
         if (!userProfile) {
@@ -274,6 +288,50 @@ async function GetUserById(req, res) {
     }
 }
 
+async function RestorePassword(req, res) {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+        // Récupérer l'utilisateur à partir de la base de données
+        const loggedInUser = await userCollection.findOne({ _id: myToken.user_id });
+        //Vérifier si l'utilisateur existe et si son compte est actif dans le système.
+        if (!loggedInUser || loggedInUser.active === false) {
+            return res.status(403).json({ msg: "Utilisateur présentant des problèmes avec le compte, contactez l'administrateur" });
+        }
+        // Vérifier si le mot de passe actuel correspond à celui stocké dans la base de données
+        const passwordMatch = await bcrypt.compare(oldPassword, loggedInUser.password);
+        if (!passwordMatch) {
+            return res.status(403).json({ msg: "L'ancien mot de passe est incorrect" });
+        }
+        // Hasher le nouveau mot de passe
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        // Mettre à jour l'utilisateur dans la base de données avec le nouveau mot de passe
+        await userCollection.updateOne(
+            { _id: myToken.user_id },
+            {
+                $set: { password: hashedNewPassword }
+            });
+
+        return res.status(200).json({ msg: "Le mot de passe a été mis à jour avec succès" });
+
+    } catch (error) {
+        console.error(`Erreur lors de la modification du mot de passe  : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
+
+
 
 
 
@@ -283,7 +341,8 @@ module.exports = {
     Login,
     Logout,
     RefresLogin,
-    GetUserById
+    GetUserById,
+    RestorePassword
 };
 
 

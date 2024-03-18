@@ -3,7 +3,7 @@ const router = Router();
 //MIDDLEWARES
 const userAuth = require('../../auth/jwt.authenticated.js')
 //CONTROLLERS
-const userController = require ('../../controllers/user/user.controller.js');
+const userController = require('../../controllers/user/user.controller.js');
 
 // To register new users.
 router.post('/user/register', userController.RegisterUser);
@@ -15,7 +15,8 @@ router.post('/user/logout', [userAuth.ensureAuth], userController.Logout);
 router.post('/user/refresh', [userAuth.ensureAuth, userAuth.isActiveSession], userController.RefresLogin);
 // To obtain the authenticated user profile.
 router.get('/user/profile/:id', [userAuth.ensureAuth, userAuth.isActiveSession], userController.GetUserById);
-
+// To restore users's password
+router.post('/user/password/reset', [userAuth.ensureAuth, userAuth.isActiveSession], userController.RestorePassword);
 
 
 
