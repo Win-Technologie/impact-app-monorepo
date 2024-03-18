@@ -3,7 +3,7 @@
 // et getDb pour obtenir une référence à une base de données spécifique.
 const { MongoClient } = require('mongodb');
 
-const url = 'mongodb+srv://dbUser:dbUserPassword@ladb.opiabpu.mongodb.net/';
+const url = 'mongodb+srv://dbUser:Bp3itnn32VCGBdeX@ladb.opiabpu.mongodb.net/';
 const client = new MongoClient(url, { maxPoolSize: 20000 });
 
 // Connexion réutilisable

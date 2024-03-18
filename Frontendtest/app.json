@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "impactapp",
-    "slug": "impactapp",
-    "theme": "impactapp",
+    "name": "impact11",
+    "slug": "impact11",
+    "scheme":"impactapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/Icone mobile (1).png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splashscreen.png",
-      "resizeMode": "contain",
-      "backgroundColor": "green"
+      "resizeMode": "cover",
+      "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -29,10 +29,12 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
-    ],
-    "experiments":{
-      "typedRoutes": true
-    }
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/Font/InterDynamic.ttf"]
+        }
+      ]
+    ]
   }
 }
