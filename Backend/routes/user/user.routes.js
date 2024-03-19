@@ -4,11 +4,12 @@ const router = Router();
 const userAuth = require('../../auth/jwt.authenticated.js')
 //CONTROLLERS
 const userController = require('../../controllers/user/user.controller.js');
-// MULTER
-// const { avatarUpload, carImageUpload } = require('../../utils/multer.js');
-// const multer  = require('multer')
-// const uploadUserPhotos = multer({ dest: 'uploads/users/photos' })
-// const uploadAvatar = uploadUserPhotos.fields([{ name: 'avatar', maxCount: 5 }, { name: 'gallery', maxCount: 8 }])
+// VARIABLES
+const USER_ROUTER_IMG_PATH = process.env.USER_ROUTER_IMG_PATH;
+// ADMIN FILES AND IMAGES
+const multiparty = require('connect-multiparty');
+// IMAGES PATH
+const md_uploadUserImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_PATH}` });
 
 
 // To register new users.
@@ -24,10 +25,8 @@ router.get('/user/profile/:id', [userAuth.ensureAuth, userAuth.isActiveSession],
 // To restore users's password
 router.post('/user/password/reset', [userAuth.ensureAuth, userAuth.isActiveSession], userController.RestorePassword);
 // To edit usrs's information
-// router.patch('/user/:id', [userAuth.ensureAuth, userAuth.isActiveSession, avatarUpload], userController.EditUser);
-// router.patch('/user/:id', [userAuth.ensureAuth, userAuth.isActiveSession,
-//     uploadAvatar
-// ], userController.EditUser);
+router.patch('/user/:id', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserImg], userController.EditUser);
+
 
 
 module.exports = router;

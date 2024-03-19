@@ -5,7 +5,8 @@ const jwt = require('../../utils/jwt');
 // const Tenant = require('../modeles/Tenants');
 // //const imageCache = new NodeCache(); //instance de cache pour stocker les images
 const { body, validationResult } = require('express-validator');
-
+//const { deleteUploadedFiles, checkFileSize, checkFileQuantity, getFilePath , getFileName } = require('../../utils/files');
+const { deleteUploadedFiles, checkFileSize, checkFileQuantity, getFilePath, getFileName } = require('../../utils/files');
 // // DOCS PATHs AND NAMES
 // const fs = require('fs');
 // const path = require('path'); 
@@ -21,6 +22,60 @@ const USERSCOLLECTION = process.env.USERSCOLLECTION;
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
+
+async function validateRegisterOwnerFields01(req) {
+    // Validation de l'email
+    await body('email')
+        .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
+        .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req);
+    // Validation du nom
+    await body('name').notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req);
+
+    // Validation du nom
+    await body('lastName').notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req);
+
+    // Validation du mot de passe
+    await body('password').isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req);
+    //await body('password').matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre').run(req);
+
+    // Validation du numéro de téléphone
+    await body('phone').isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req);
+
+    // Validation de l'adresse
+    await body('address').isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req);
+
+    // Validation de postal code
+    await body('postalCode').isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req);
+
+    // Validation de province
+    await body('province').isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req);
+
+    // Validation de ville
+    await body('city').isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req);
+
+    // Validation de ville
+    await body('country').isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req);
+
+    // Validation de genre
+    await body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req);
+    // Validation de date
+    // await body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req);
+    // Validación de fecha
+    // await body('birthDay')
+    //     .custom(value => {
+    //         // Intenta crear un objeto Date a partir de la cadena
+    //         const date = new Date(value);
+    //         // Verifica si el objeto Date es válido
+    //         if (isNaN(date.getTime())) {
+    //             // Si no es válido, devuelve un mensaje de error
+    //             throw new Error('La date est requise et doit être du type date');
+    //         }
+    //         // Si es válido, devuelve true para indicar que la validación pasó
+    //         return true;
+    //     })
+    //     .run(req);
+    await body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req);
+}
 
 async function validateRegisterOwnerFields(req) {
     // Validation de l'email
@@ -331,6 +386,10 @@ async function RestorePassword(req, res) {
 
 async function EditUser(req, res) {
     try {
+
+        const userData = req.body;
+        const { id } = req.params;
+        // console.log(id);
         // Récupérer le jeton du header de la requête
         const token = req.headers.authorization?.replace("Bearer ", "");
         // Vérifier si le jeton est présent
@@ -343,17 +402,85 @@ async function EditUser(req, res) {
         if (!myToken) {
             return res.status(400).json({ msg: "Token invalide" });
         }
-        // Récupérer l'utilisateur à partir de la base de données
-        const loggedInUser = await userCollection.findOne({ _id: myToken.user_id });
+
+        // ..... VALIDATE FIELDS
+
+
+        // Utiliser Promise.all pour récupérer les données de de l'utilisateur à modifier 
+        // et vérifier si le statut de la personne qui exécute l'action est actif.
+        const [foundUser, isActiveUser] = await Promise.all([
+            userCollection.findOne({ _id: id }),
+            userCollection.findOne({ _id: myToken.user_id })
+        ]);
+
+        if (!foundUser) {
+            return res.status(403).json({ msg: "Utilisateur non trouvé" });
+        }
+
         //Vérifier si l'utilisateur existe et si son compte est actif dans le système.
-        if (!loggedInUser || loggedInUser.active === false) {
+        if (!isActiveUser || isActiveUser.active === false) {
             return res.status(403).json({ msg: "Utilisateur présentant des problèmes avec le compte, contactez l'administrateur" });
         }
 
-        return res.status(200).json({ msg: "Hello from edith user" });
+        // Mettre à jour les données de la propriété avec les nouvelles données
+        Object.assign(foundUser, userData);
+
+        // Convertir le champ " active " en booléen s'il s'agit d'une chaîne de texte.
+        if (typeof foundUser.active === 'string') {
+            foundUser.active = foundUser.active.toLowerCase() === 'true';
+        }
+
+        // Obtenez le nom des images et stockez-les dans le tableau s'il y en a
+        if (req.files && Object.keys(req.files).length > 0) {
+
+            // Vérifier que les fichiers respectent la taille maximale autorisée.
+            const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
+
+            // Vérifier que le nombre de fichiers ne dépasse pas la limite autorisée.
+            const maxFileQuantity = 3; // Définit le nombre maximum de fichiers autorisés.
+            const { isValid: isQuantityValid } = checkFileQuantity(req.files, maxFileQuantity);
+
+            // Si la taille des fichiers n'est pas valide
+            if (!isSizeValid) {
+                // Supprimer tous les fichiers téléchargés dans le système de fichiers
+                deleteUploadedFiles(req.files);
+                return res.status(400).json({ msg: `La taille du fichier ${oversizedFileName} doit être inférieure à 500KB` });
+            }
+
+            // Si la quantité de fichiers n'est pas valide
+            if (!isQuantityValid) {
+                // Supprimer tous les fichiers téléchargés dans le système de fichiers
+                deleteUploadedFiles(req.files);
+                return res.status(400).json({ msg: `Le nombre de fichiers ne peut pas dépasser ${maxFileQuantity}` });
+            }
+
+            // Initialiser un tableau pour les photos si des fichiers sont présents dans la requête
+            let photos_ = [];
+            // Parcourir les photos envoyées dans la requête et les ajouter au tableau de photos
+            for (let i = 1; i <= maxFileQuantity; i++) {
+                if (req.files && req.files[`image${i}`]) {
+                    const myImagePathName = getFileName(req.files[`image${i}`]);
+                    photos_.push(myImagePathName);
+                }
+            }
+            foundUser.photos = photos_;
+        }
+
+        
+        const result = await userCollection.updateOne(
+            { _id: id }, // Filtre pour trouver la propriété par son ID
+            { $set: foundUser } // Données actualisées souhaitées
+        );
+        // Verifier si la mise à jour s'est déroulée avec succès
+        if (result.modifiedCount === 0) {
+            // La mise à jour a échoué
+            return res.status(400).json({ msg: "Aucun changement n'a été effectué" });
+        }
+
+        return res.status(200).json({ msg: "user has been modified" });
 
     } catch (error) {
-        console.error(`Erreur lors de la modification du mot de passe  : ${error.message}`);
+        console.error(`Erreur interne du serveur : ${error.message}`);
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
