@@ -23,112 +23,129 @@ const USERSCOLLECTION = process.env.USERSCOLLECTION;
 const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
 
-async function validateRegisterOwnerFields01(req) {
-    // Validation de l'email
-    await body('email')
-        .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
-        .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req);
-    // Validation du nom
-    await body('name').notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req);
-
-    // Validation du nom
-    await body('lastName').notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req);
-
-    // Validation du mot de passe
-    await body('password').isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req);
-    //await body('password').matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre').run(req);
-
-    // Validation du numéro de téléphone
-    await body('phone').isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req);
-
-    // Validation de l'adresse
-    await body('address').isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req);
-
-    // Validation de postal code
-    await body('postalCode').isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req);
-
-    // Validation de province
-    await body('province').isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req);
-
-    // Validation de ville
-    await body('city').isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req);
-
-    // Validation de ville
-    await body('country').isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req);
-
-    // Validation de genre
-    await body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req);
-    // Validation de date
-    // await body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req);
-    // Validación de fecha
-    // await body('birthDay')
-    //     .custom(value => {
-    //         // Intenta crear un objeto Date a partir de la cadena
-    //         const date = new Date(value);
-    //         // Verifica si el objeto Date es válido
-    //         if (isNaN(date.getTime())) {
-    //             // Si no es válido, devuelve un mensaje de error
-    //             throw new Error('La date est requise et doit être du type date');
-    //         }
-    //         // Si es válido, devuelve true para indicar que la validación pasó
-    //         return true;
-    //     })
-    //     .run(req);
-    await body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req);
+async function validateUpdateRegisterUserFields(req) {
+    if (req.body.email) {
+        // Validation de l'email
+        await body('email')
+            .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
+            .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req);
+    }
+    if (req.body.name) {
+        // Validation du nom
+        await body('name').notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req);
+    }
+    if (req.body.lastName) {
+        // Validation du nom
+        await body('lastName').notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req);
+    }
+    // if (req.body.password) {
+    //     // Validation du mot de passe
+    //     // await body('password').isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req);
+    //     return Promise.reject('La modification du mot de passe n\'est pas autorisée depuis cette route');
+    // }
+    if (req.body.phone) {
+        // Validation du numéro de téléphone
+        await body('phone').isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req);
+    }
+    if (req.body.address) {
+        // Validation de l'adresse
+        await body('address').isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req);
+    }
+    if (req.body.postalCode) {
+        // Validation de postal code
+        await body('postalCode').isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req);
+    }
+    if (req.body.province) {
+        // Validation de province
+        await body('province').isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req);
+    }
+    if (req.body.city) {
+        // Validation de ville
+        await body('city').isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req);
+    }
+    if (req.body.country) {
+        // Validation de ville
+        await body('country').isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req);
+    }
+    if (req.body.gender) {
+        // Validation de genre
+        await body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req);
+    }
+    if (req.body.birthDay) {
+        // Validation de date
+        // await body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req);
+        // Validación de fecha
+        // await body('birthDay')
+        //     .custom(value => {
+        //         // Intenta crear un objeto Date a partir de la cadena
+        //         const date = new Date(value);
+        //         // Verifica si el objeto Date es válido
+        //         if (isNaN(date.getTime())) {
+        //             // Si no es válido, devuelve un mensaje de error
+        //             throw new Error('La date est requise et doit être du type date');
+        //         }
+        //         // Si es válido, devuelve true para indicar que la validación pasó
+        //         return true;
+        //     })
+        //     .run(req);
+        await body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req);
+    }
 }
 
-async function validateRegisterOwnerFields(req) {
-    // Validation de l'email
-    await body('email')
-        .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
-        .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req);
-    // Validation du nom
-    await body('name').notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req);
+async function validateRegisterUserFields(req) {
+    await Promise.all([
+        // Validation de l'email
+        body('email')
+            .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
+            .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req),
+        // Validation du nom
+        body('name').notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req),
 
-    // Validation du nom
-    await body('lastName').notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req);
+        // Validation du nom
+        body('lastName').notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req),
 
-    // Validation du mot de passe
-    await body('password').isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req);
-    //await body('password').matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre').run(req);
+        // Validation du mot de passe
+        body('password').isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req),
+        // body('password').matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre').run(req),
 
-    // Validation du numéro de téléphone
-    await body('phone').isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req);
+        // Validation du numéro de téléphone
+        body('phone').isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req),
 
-    // Validation de l'adresse
-    await body('address').isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req);
+        // Validation de l'adresse
+        body('address').isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req),
 
-    // Validation de postal code
-    await body('postalCode').isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req);
+        // Validation de postal code
+        body('postalCode').isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req),
 
-    // Validation de province
-    await body('province').isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req);
+        // Validation de province
+        body('province').isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req),
 
-    // Validation de ville
-    await body('city').isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req);
+        // Validation de ville
+        body('city').isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req),
 
-    // Validation de ville
-    await body('country').isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req);
+        // Validation de ville
+        body('country').isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req),
 
-    // Validation de genre
-    await body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req);
-    // Validation de date
-    // await body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req);
-    // Validación de fecha
-    // await body('birthDay')
-    //     .custom(value => {
-    //         // Intenta crear un objeto Date a partir de la cadena
-    //         const date = new Date(value);
-    //         // Verifica si el objeto Date es válido
-    //         if (isNaN(date.getTime())) {
-    //             // Si no es válido, devuelve un mensaje de error
-    //             throw new Error('La date est requise et doit être du type date');
-    //         }
-    //         // Si es válido, devuelve true para indicar que la validación pasó
-    //         return true;
-    //     })
-    //     .run(req);
-    await body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req);
+        // Validation de genre
+        body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req),
+        // Validation de date
+        //  body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req),
+        // Validación de fecha
+        //  body('birthDay')
+        //     .custom(value => {
+        //         // Intenta crear un objeto Date a partir de la cadena
+        //         const date = new Date(value);
+        //         // Verifica si el objeto Date es válido
+        //         if (isNaN(date.getTime())) {
+        //             // Si no es válido, devuelve un mensaje de error
+        //             throw new Error('La date est requise et doit être du type date');
+        //         }
+        //         // Si es válido, devuelve true para indicar que la validación pasó
+        //         return true;
+        //     })
+        //     .run(req),
+        body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req),
+    ]);
 }
 
 async function RegisterUser(req, res) {
@@ -140,7 +157,7 @@ async function RegisterUser(req, res) {
         const emailLowerCase = email.toLowerCase();
 
         // Validation des champs de la requête
-        await validateRegisterOwnerFields(req);
+        await validateRegisterUserFields(req);
         // Vérification des erreurs de validation
         const validationErrors = validationResult(req);
         if (!validationErrors.isEmpty()) {
@@ -403,7 +420,18 @@ async function EditUser(req, res) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
+        if (req.body.password) {
+            return res.status(403).json({ msg: 'La modification du mot de passe n\'est pas autorisée depuis cette route' });
+        }
+
         // ..... VALIDATE FIELDS
+        // Validation des champs de la requête
+        await validateUpdateRegisterUserFields(req);
+        // Vérification des erreurs de validation
+        const validationErrors = validationResult(req);
+        if (!validationErrors.isEmpty()) {
+            return res.status(400).json({ errors: validationErrors.array() });
+        }
 
 
         // Utiliser Promise.all pour récupérer les données de de l'utilisateur à modifier 
@@ -467,15 +495,15 @@ async function EditUser(req, res) {
         }
 
         
-        const result = await userCollection.updateOne(
-            { _id: id }, // Filtre pour trouver la propriété par son ID
-            { $set: foundUser } // Données actualisées souhaitées
-        );
-        // Verifier si la mise à jour s'est déroulée avec succès
-        if (result.modifiedCount === 0) {
-            // La mise à jour a échoué
-            return res.status(400).json({ msg: "Aucun changement n'a été effectué" });
-        }
+        // const result = await userCollection.updateOne(
+        //     { _id: id }, // Filtre pour trouver la propriété par son ID
+        //     { $set: foundUser } // Données actualisées souhaitées
+        // );
+        // // Verifier si la mise à jour s'est déroulée avec succès
+        // if (result.modifiedCount === 0) {
+        //     // La mise à jour a échoué
+        //     return res.status(400).json({ msg: "Aucun changement n'a été effectué" });
+        // }
 
         return res.status(200).json({ msg: "user has been modified" });
 
