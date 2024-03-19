@@ -15,11 +15,12 @@ const { body, validationResult } = require('express-validator');
 // MODELS
 const User = require('../../modeles/users/user');
 // VARIABLES
-const VARS = require('../../../vars');
-// GLOBAL CONNECTIONS
-const mainDb = getDb(VARS.MAINDB);
-const userCollection = mainDb.collection(VARS.USERSCOLLECTION);// Initialiser la connexion à la base de données et définir la collection des utilisateurs
+const MAINDB = process.env.MAINDB;
+const USERSCOLLECTION = process.env.USERSCOLLECTION;
 
+// GLOBAL CONNECTIONS
+const mainDb = getDb(MAINDB);
+const userCollection = mainDb.collection(USERSCOLLECTION);
 
 async function validateRegisterOwnerFields(req) {
     // Validation de l'email
@@ -231,9 +232,6 @@ async function RefresLogin(req, res) {
         if (!token) res.status(400).send({ msg: "Token required" });
 
         const { user_id } = jwt.decoded(token);
-
-        const mainDb = getDb(VARS.MAINDB);
-        const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
 
         const loggedInUser = await userCollection.findOne({ _id: user_id });
         //Vérifier si l'utilisateur existe et si son compte est actif dans le système.

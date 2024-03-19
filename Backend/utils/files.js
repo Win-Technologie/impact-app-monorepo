@@ -69,7 +69,7 @@ const deleteUploadedFiles = (files) => {
 // Vérifie la taille des fichiers dans une requête multipart/form-data
 const checkFileSize = (files) => {
    
-   console.log("Checking file sizes...");
+//    console.log("Checking file sizes...");
     // Vérifie s'il n'y a pas de fichiers ou si la liste de fichiers est vide.
     if (!files || Object.keys(files).length === 0) {
         // Il n'y a pas de fichiers, la limite de taille est donc respectée.
@@ -94,7 +94,7 @@ const checkFileSize = (files) => {
 };
 
 const checkFileQuantity = (files, maxAllowed) => {
-    console.log("Checking file quantity...");
+    // console.log("Checking file quantity...");
 
     // Vérifier s'il n'y a pas de fichiers ou si la liste des fichiers est vide.
     if (!files || Object.keys(files).length === 0) {
