@@ -3,6 +3,7 @@ import { View, Text, SafeAreaView, TouchableOpacity, StyleSheet } from 'react-na
 import ProgressOption from '../../components/SignUp/smallBox';
 import BoxComponent from '../../components/Home/boxComponent';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 export default function SignUpLandingPage() {
   // Exemple d'utilisation avec des données factices
@@ -12,12 +13,29 @@ export default function SignUpLandingPage() {
     { title: "Informations d'assurances", subtitle: "8 minutes", completion: 0 },
   ];
 
+  const handlePressOption = (item) => {
+    switch (item.title) {
+      case "Information personnelles":
+        router.push('PersonalInfoSteps/nameGender'); 
+        break;
+      case "Information du vehicules":
+        router.push('CarVehicleSteps/vehicleDetails'); 
+        break;
+      case "Informations d'assurances":
+        router.push('InsuranceSteps/insuranceDetails'); 
+        break;
+      default:
+        console.log('Aucune option');
+    }
+  };
+  
+
   const handlePressCancel = () => {
     console.log('Annuler pressed');
   };
 
   const handlePressRegister = () => {
-    console.log("M'inscrire pressed");
+    router.push('PersonalInfoSteps/nameGender');
   };
 
   return (
@@ -30,7 +48,7 @@ export default function SignUpLandingPage() {
             title={item.title}
             subtitle={item.subtitle}
             completion={item.completion}
-            onPress={() => console.log(`Pressed ${item.title}`)}
+            onPress={() => handlePressOption(item)}
           />
         ))}
 
