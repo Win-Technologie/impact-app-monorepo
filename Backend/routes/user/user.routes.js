@@ -26,7 +26,13 @@ router.get('/user/profile/:id', [userAuth.ensureAuth, userAuth.isActiveSession],
 router.post('/user/password/reset', [userAuth.ensureAuth, userAuth.isActiveSession], userController.RestorePassword);
 // To edit usrs's information
 router.patch('/user/:id', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserImg], userController.EditUser);
-
+// TWO STEP PASSWORD RECOVERY
+// To send a verification code for recover password account
+// router.post('/user/password/code', [userAuth.isActiveSession], userController.SendVerificationCode);
+router.post('/user/password/code',  userController.SendVerificationCode);
+// To verify the code already sent and recover password account
+// router.post('/user/password/verify', [userAuth.isActiveSession], userController.verifyAndChangePassword);
+router.post('/user/password/verify', userController.verifyAndChangePassword);
 
 
 module.exports = router;

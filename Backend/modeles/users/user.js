@@ -125,6 +125,22 @@ const userSchema = new mongoose.Schema({
         default: 0,
         required: true,
     },
+    // Campo para almacenar el código de verificación
+    verificationCode: {
+        type: String,
+        default: null
+    },
+    // Campo para controlar el número de intentos fallidos
+    verificationAttempts: {
+        type: Number,
+        default: 0
+    },
+
+    // Campo para controlar la fecha y hora de expiración del código
+    verificationCodeExpiration: {
+        type: Date,
+        default: null
+    }
 });
 
 const User = mongoose.model('User', userSchema);
