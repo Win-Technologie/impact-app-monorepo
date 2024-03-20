@@ -2,16 +2,14 @@
 const { getDb } = require('../../mongoConnection');
 const bcrypt = require('bcryptjs');
 const jwt = require('../../utils/jwt');
-// const Tenant = require('../modeles/Tenants');
-// //const imageCache = new NodeCache(); //instance de cache pour stocker les images
+// VALIDATE INFOS
 const { body, validationResult } = require('express-validator');
-//const { deleteUploadedFiles, checkFileSize, checkFileQuantity, getFilePath , getFileName } = require('../../utils/files');
+// FILES MANAGEMENT
 const { deleteUploadedFiles, checkFileSize, checkFileQuantity, getFilePath, getFileName } = require('../../utils/files');
-// // DOCS PATHs AND NAMES
-// const fs = require('fs');
-// const path = require('path'); 
-// const { myCache, encryptData, decryptData } = require("../utils/cache");
-// const filePath = require("../utils/filePath");
+// CODES GENERATOR
+const { generateVerificationCode } = require('../../utils/generatorcodes');
+// NODE MAILER
+const { sendVerificationEmail } = require('../../utils/nodemailer');
 
 // MODELS
 const User = require('../../modeles/users/user');
@@ -216,6 +214,9 @@ async function Login(req, res) {
         await body('password').notEmpty().withMessage('Le mot de passe est requis').run(req);
         // Vérification des erreurs de validation
         const validationErrors = validationResult(req);
+
+        // const randomCode = generateVerificationCode();
+        // await sendVerificationEmail('nelson.cuervo89@gmail.com', randomCode);
 
         if (!validationErrors.isEmpty()) {
             return res.status(400).json({ errors: validationErrors.array() });
