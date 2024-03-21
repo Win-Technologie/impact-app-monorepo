@@ -2,8 +2,10 @@
 // Il exporte deux fonctions réutilisables : connectToMongo pour établir la connexion,
 // et getDb pour obtenir une référence à une base de données spécifique.
 const { MongoClient } = require('mongodb');
+const MYDBCONNECTION = process.env.URLDBCONNECTION;
 
-const url = 'mongodb+srv://dbUser:Bp3itnn32VCGBdeX@ladb.opiabpu.mongodb.net/';
+// const url = 'mongodb+srv://dbUser:Bp3itnn32VCGBdeX@ladb.opiabpu.mongodb.net/';
+const url = MYDBCONNECTION;
 const client = new MongoClient(url, { maxPoolSize: 20000 });
 
 // Connexion réutilisable
