@@ -377,13 +377,6 @@ async function getAllCars(req, res) {
 }
 
 
-
-/**
- * Route POST /api/cars/toggle-activation/:id pour activer ou désactiver une voiture par son ID.
- * @param {Object} req - Requête HTTP contenant l'identifiant de la voiture.
- * @param {Object} res - Réponse HTTP pour renvoyer le résultat de l'opération d'activation ou de désactivation.
- * @returns {Object} Une réponse HTTP indiquant le succès ou l'échec de l'opération.
- */
 /**
  * Fonction pour activer ou désactiver une voiture par son ID.
  * @param {Object} req - Requête HTTP contenant l'identifiant de la voiture à activer ou désactiver.
