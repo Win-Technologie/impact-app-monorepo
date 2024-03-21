@@ -103,7 +103,7 @@ const ContactInfoPage = () => {
             rowTextForSelection={(item, index) => {
               return item;
             }}
-            buttonStyle={styles.dropdown1BtnStyle}
+            buttonStyle={styles.dropdown2BtnStyle}
             buttonTextStyle={styles.dropdown1BtnTxtStyle}
             renderDropdownIcon={() => {
               return <Text>▼</Text>;
@@ -160,19 +160,29 @@ const styles = StyleSheet.create({
     right: 0,
   },
   inputHalf: {
-    width: '60%',
+    width: '50%',
     marginRight: '10%',
   },
   inputQuarter: {
-    width: '30%',
+    width: '40%',
   },
   dropdown1BtnStyle: {
-    width: '80%',
+    width: '50%', 
     height: 50,
     backgroundColor: '#FFF',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#444',
+    borderColor: '#ccc',
+    marginBottom: 15,
+  },
+  dropdown2BtnStyle: {
+    width: '40%', 
+    height: 50,
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginBottom: 15, 
   },
   dropdown1BtnTxtStyle: {
     color: '#444',
