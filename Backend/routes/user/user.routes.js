@@ -29,10 +29,11 @@ router.patch('/user/:id', [userAuth.ensureAuth, userAuth.isActiveSession, md_upl
 // TWO STEP PASSWORD RECOVERY
 // To send a verification code for recover password account
 // router.post('/user/password/code', [userAuth.isActiveSession], userController.SendVerificationCode);
-router.post('/user/password/code',  userController.SendVerificationCode);
+router.post('/user/password/code', userController.SendVerificationCode);
 // To verify the code already sent and recover password account
 // router.post('/user/password/verify', [userAuth.isActiveSession], userController.verifyAndChangePassword);
 router.post('/user/password/verify', userController.verifyAndChangePassword);
-
+//To delete an user from DB
+router.delete('/user/:id', [userAuth.ensureAuth, userAuth.isActiveSession], userController.DeleteUser);
 
 module.exports = router;
