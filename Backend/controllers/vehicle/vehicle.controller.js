@@ -1,27 +1,44 @@
-const jwt = require('../../utils/jwt');
-const { body, validationResult } = require('express-validator');
-const Vehicle = require('../../modeles/vehicle/vehicle');
 const { getDb } = require('../../mongoConnection');
-const { myCache, encryptData, decryptData } = require("../../utils/cache");
-const VARS = require('../../../vars');
+const jwt = require('../../utils/jwt');
 
-const mainDb = getDb(VARS.MAINDB);
-const vehicleCollection = mainDb.collection(VARS.VEHICLESCOLLECTION);
-const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
+// VALIDATE INFOS
+const { body, validationResult } = require('express-validator');
+// FILES MANAGEMENT
+const { deleteUploadedFiles, checkFileSize, checkFileQuantity, getFilePath, getFileName } = require('../../utils/files');
+// MODELS
+const Vehicle = require('../../modeles/vehicle/vehicle');
+// NODE MAILER
+const { sendVerificationEmail } = require('../../utils/nodemailer');
+// CACHE
+const { myCache, encryptData, decryptData } = require("../../utils/cache");
+
+// VARIABLES
+const AES_KEY = process.env.AES_KEY
+const MAINDB = process.env.MAINDB;
+const USERSCOLLECTION = process.env.USERSCOLLECTION;
+const VEHICLESCOLLECTION = process.env.VEHICLESCOLLECTION;
+
+
+const mainDb = getDb(MAINDB);
+const vehicleCollection = mainDb.collection(VEHICLESCOLLECTION);
+const userCollection = mainDb.collection(USERSCOLLECTION);
 
 
 /**
- * Middleware pour valider les champs de la requête.
+ * 
+ * @param {*} req 
  */
-const validateFields = [
-  body('brand').notEmpty().withMessage('La marque est requise'),
-  body('model').notEmpty().withMessage('Le modèle est requis'),
-  body('year').isInt({ min: 1900, max: new Date().getFullYear() }).withMessage('L\'année doit être valide'),
-  body('color').notEmpty().withMessage('La couleur est requise'),
-  body('plate').notEmpty().withMessage('Le numéro de plaque est requis'),
-  body('registrationNumber').notEmpty().withMessage('Le numéro d\'immatriculation est requis'),
-  body('owner').notEmpty().withMessage('L\'identifiant du propriétaire est requis')
-];
+async function validateFields(req) {
+    await Promise.all([
+        body('brand').notEmpty().withMessage('La marque est requise').run(req),
+        body('model').notEmpty().withMessage('Le modèle est requis').run(req),
+        body('year').isInt({ min: 1900, max: new Date().getFullYear() }).withMessage('L\'année doit être valide').run(req),
+        body('color').notEmpty().withMessage('La couleur est requise').run(req),,
+        body('plate').notEmpty().withMessage('Le numéro de plaque est requis').run(req),,
+        body('serialNumber').notEmpty().withMessage('Le numéro de serie est requis').run(req),
+        body('owner').notEmpty().withMessage('L\'identifiant du propriétaire est requis').run(req)
+    ]);
+}
 
 /**
  * Route POST /api/cars/add pour ajouter une nouvelle voiture pour un utilisateur.
@@ -46,10 +63,16 @@ async function addCar(req, res) {
 
         const { brand, model, year, color, plate, serialNumber, owner } = req.body;
 
-        // Validation des champs de la requête
+        // Exécution des validations
+        await validateFields(req)
+
+        // Vérifie les erreurs de validation
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+          // Récupère seulement le premier message d'erreur
+          const errorMessage = errors.array()[0].msg;
+          console.log(`Erreurs de validation lors de la création du locataire : ${errorMessage}`);
+          return res.status(400).json({ error: errorMessage });
         }
 
         const [existingCarForOwner, existingCarSerialForOwner] = await Promise.all([
@@ -84,7 +107,7 @@ async function addCar(req, res) {
         ]);
 
         const cacheKey = `${userId}_${newCar._id}`;
-        const encryptedCarData = encryptData(newCar, VARS.AES_KEY);
+        const encryptedCarData = encryptData(newCar, AES_KEY);
         myCache.set(cacheKey, encryptedCarData, 600);
 
         return res.status(201).json({ message: 'Voiture ajoutée avec succès', car: newCar });
@@ -132,7 +155,7 @@ async function getCarById(req, res) {
       if (cachedData) {
       // Si les données sont en cache, les renvoyer directement
       console.log(`Données trouvées dans le cache. Retour du cache...`);
-      const decryptedData = decryptData(cachedData, VARS.AES_KEY);
+      const decryptedData = decryptData(cachedData, AES_KEY);
       return res.status(200).json({ vehicle: decryptedData });
       }
     
@@ -240,7 +263,7 @@ async function getCarById(req, res) {
         
         // Mise à jour du cache (si nécessaire)
         const cacheKey = `${userId}_${carId}`;
-        const encryptedTenantData = encryptData(carInDataBase, VARS.AES_KEY);
+        const encryptedTenantData = encryptData(carInDataBase, AES_KEY);
         myCache.set(cacheKey, encryptedTenantData, 600);
 
         // Renvoyer les informations de la voiture mises à jour directement depuis la mise à jour dans la base de données
@@ -414,7 +437,7 @@ async function toggleCarActivation(req, res) {
         
         // Mise à jour du cache (si nécessaire)
         const cacheKey = `${userId}_${carId}`;
-        const encryptedTenantData = encryptData(carInDataBase, VARS.AES_KEY);
+        const encryptedTenantData = encryptData(carInDataBase, AES_KEY);
         myCache.set(cacheKey, encryptedTenantData, 600);
 
         // Renvoyer les informations de la voiture mise à jour
@@ -426,56 +449,6 @@ async function toggleCarActivation(req, res) {
 }
 
 
-/**
- * Route GET /api/cars/search pour rechercher des voitures par marque, modèle ou couleur.
- * @param {Object} req - Requête HTTP contenant les critères de recherche dans le champ body.
- * @param {Object} res - Réponse HTTP pour renvoyer les voitures correspondant aux critères de recherche.
- * @returns {Object} Une réponse HTTP contenant les voitures correspondant aux critères de recherche.
- */
-async function searchCars(req, res) {
-    try {
-        const token = req.headers.authorization?.replace("Bearer ", "");
-        if (!token) {
-            console.error("Le Token n'est pas fourni");
-            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-        }
-
-        const myToken = jwt.decoded(token);
-        if (!myToken) {
-            return res.status(400).json({ msg: "Token invalide" });
-        }
-
-        const userId = myToken.user_id;
-
-        // Extraction des critères de recherche du champ body de la requête
-        const fieldsToUpdate = req.body;
-
-        // Vérification si au moins un critère de recherche est fourni
-        if (Object.keys(fieldsToUpdate).length === 0) {
-            return res.status(400).json({ error: "Au moins un critère de recherche est requis" });
-        }
-
-        // Vérification si les critères de recherche sont autorisés
-        const allowedFields = ['brand', 'model', 'color'];
-        const invalidFields = Object.keys(fieldsToUpdate).filter(field => !allowedFields.includes(field));
-        if (invalidFields.length > 0) {
-            return res.status(400).json({ error: `Champ(s) de recherche non autorisé(s) : ${invalidFields.join(', ')}` });
-        }
-
-        // Recherche des voitures correspondant aux critères de recherche pour l'utilisateur connecté
-        const cars = await vehicleCollection.find({ owner: userId, ...fieldsToUpdate }).toArray();
-
-        // Retourner les voitures correspondant aux critères de recherche
-        return res.status(200).json({ cars });
-    } catch (error) {
-        console.error("Erreur lors de la recherche des voitures :", error);
-        return res.status(500).json({ error: "Erreur interne du serveur" });
-    }
-}
-
-
-
-
 module.exports = {
     addCar, // Ajouter une voiture
     getCarById, // Obtenir une voiture par son ID
@@ -483,7 +456,6 @@ module.exports = {
     deleteCarById, // Supprimer une voiture par son ID
     getAllCars, // Obtenir toutes les voitures d'un utilisateur connecté 
     toggleCarActivation, // Activer ou désactiver une voiture par son ID
-    searchCars, // Rechercher des voitures par marque, modèle ou couleur
   };
   
   
