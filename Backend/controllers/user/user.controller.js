@@ -194,6 +194,14 @@ async function RegisterUser(req, res) {
             birthDay: birthDay,
             typeAccount: "free",
         });
+
+        newUSer.set('documents', undefined);
+        newUSer.set('verificationCodeExpiration', undefined);
+        newUSer.set('verificationAttempts', undefined);
+        newUSer.set('verificationCode', undefined);
+        newUSer.set('accidentReports', undefined);
+        newUSer.set('vehicles', undefined);
+
         /// Sauvegarde du nouveau propriétaire dans la collection 'users'
         const insertResult = await userCollection.insertOne(newUSer);
 
@@ -201,7 +209,7 @@ async function RegisterUser(req, res) {
             return res.status(500).json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
         }
 
-        res.status(201).json({ msg: "Utilisateur créé avec succès", newuser: newUSer });
+        res.status(201).json({ msg: "Utilisateur créé avec succès", newuser: newUSer._id });
 
     } catch (error) {
         console.error(error);
@@ -536,8 +544,8 @@ async function SendVerificationCode(req, res) {
         let currentVerificationAttempts = user.verificationAttempts;
         // console.log(currentVerificationAttempts);
 
-        // Vérifier si le nombre de tentatives de vérification est supérieur ou égal à 4
-        if (currentVerificationAttempts >= 4) {
+        // Vérifier si le nombre de tentatives de vérification est supérieur ou égal à 3
+        if (currentVerificationAttempts > 3) {
             // Si le nombre de tentatives dépasse 3, bloquer le compte utilisateur
             await userCollection.updateOne(
                 { _id: user._id },
@@ -640,6 +648,37 @@ async function verifyAndChangePassword(req, res) {
     }
 }
 
+async function DeleteUser(req, res) {
+    try {
+
+        const { id } = req.params;
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const userToDelete = await userCollection.findOne({ _id: id });
+
+        if (!userToDelete) {
+            return res.status(404).json({ msg: "Profil introuvable" });
+        }
+
+        await userCollection.deleteOne({ _id: userToDelete._id });
+
+        return res.status(200).json({ msg: 'User supprimé avec succès' });
+    } catch (error) {
+        console.error(`Delete User: Erreur interne du serveur : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
 
 
 
@@ -652,7 +691,8 @@ module.exports = {
     RestorePassword,
     EditUser,
     SendVerificationCode,
-    verifyAndChangePassword
+    verifyAndChangePassword,
+    DeleteUser
 };
 
 
