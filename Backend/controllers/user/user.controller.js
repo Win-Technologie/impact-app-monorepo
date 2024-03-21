@@ -5,7 +5,9 @@ const jwt = require('../../utils/jwt');
 // VALIDATE INFOS
 const { body, validationResult } = require('express-validator');
 // FILES MANAGEMENT
-const { deleteUploadedFiles, checkFileSize, checkFileQuantity, getFilePath, getFileName } = require('../../utils/files');
+const { deleteUploadedFiles, checkFileSize,
+    checkFileQuantity, getFilePath, getFileName,
+    processDocument, processLicenseText } = require('../../utils/files');
 // CODES GENERATOR
 const { generateVerificationCode } = require('../../utils/generatorcodes');
 // NODE MAILER
@@ -681,6 +683,31 @@ async function DeleteUser(req, res) {
 }
 
 
+async function UploadDocument(req, res) {
+    try {
+
+        const documentFile = req.files.document;
+
+        const documentText = await processDocument(documentFile);
+
+
+        if (!documentText || documentText === 'Incompatible_format') {
+            return res.status(400).json({ msg: 'Impossible de lire le document, vérifiez le format et la qualité de l\'image.' });
+        }
+
+        const extractedInfo = processLicenseText(documentText);
+
+        return res.status(200).json({ msg: 'Voici le document', document: documentText, extractedInfoText: extractedInfo });
+
+        // return res.status(200).json({ msg: 'Hello from yupload document ' });
+    } catch (error) {
+        console.error(`Delete User: Erreur interne du serveur : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
+
+
+
 
 module.exports = {
     RegisterUser,
@@ -692,7 +719,8 @@ module.exports = {
     EditUser,
     SendVerificationCode,
     verifyAndChangePassword,
-    DeleteUser
+    DeleteUser,
+    UploadDocument
 };
 
 

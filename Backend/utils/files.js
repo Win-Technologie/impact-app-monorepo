@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const tesseract = require('tesseract.js');
 
 //Get FilePath from files.
 function getFilePath(file, numSegments) {
@@ -112,11 +113,261 @@ const checkFileQuantity = (files, maxAllowed) => {
     return { isValid: true };
 };
 
+// GET TEXT INFORMATION FROM AN IMAGE
+async function processDocument(file) {
+    try {
+        // Vérifier si le fichier est une image
+        const fileInfo = path.parse(file.originalFilename);
+        const extension = fileInfo.ext.toLowerCase();
+
+        // Liste des extensions d'images supportées
+        const imageExtensions = ['.jpg', '.jpeg', '.png'];
+
+        if (imageExtensions.includes(extension)) {
+            // Traiter l'image à l'aide de tesseract.js
+            const imagePath = file.path;
+            const { data: { text } } = await tesseract.recognize(imagePath);
+            return text;
+        } else {
+            // Si le format n'est pas pris en charge, un message d'erreur est renvoyé.
+            return 'Incompatible_format';
+        }
+    } catch (error) {
+        console.error('Erreur de traitement du document :', error);
+        throw new Error('Erreur de traitement du document');
+    }
+}
+
+// PROCESS INFORMATION FROM A DOCUMENT
+// Fonction permettant de traiter le texte extrait du permis de conduire
+function processLicenseText01(text) {
+
+    console.log(text);
+    // Dividir el texto en líneas
+    const lines = text.split('\n');
+
+    // Objeto para almacenar la información extraída
+    const licenseInfo = {};
+
+    // Expresiones regulares multilingües
+    const nameRegex = /Nom|Name: (.+)/; // Busca "Nom" en francés o "Name" en inglés
+    const licenseNumberRegex = /Numéro de permis|License Number: (.+)/; // Busca "Numéro de permis" en francés o "License Number" en inglés
+    // Agrega más expresiones regulares para otros datos que deseas extraer
+
+    // Iterar sobre cada línea y buscar coincidencias con las expresiones regulares
+    lines.forEach(line => {
+        const nameMatch = line.match(nameRegex);
+        if (nameMatch) {
+            licenseInfo.name = nameMatch[1]; // Almacena el nombre encontrado
+        }
+
+        const licenseNumberMatch = line.match(licenseNumberRegex);
+        if (licenseNumberMatch) {
+            licenseInfo.licenseNumber = licenseNumberMatch[1]; // Almacena el número de licencia encontrado
+        }
+
+        // Agrega más lógica para otras coincidencias de expresiones regulares
+    });
+
+    console.log(licenseInfo);
+    // Devuelve el objeto con la información extraída
+    return licenseInfo;
+}
+
+function processLicenseText(text) {
+    try {
+        // Dividir el texto en líneas
+        const lines = text.split('\n');
+
+        // Objeto para almacenar la información extraída
+        const licenseInfo = {};
+
+        // Expresiones regulares actualizadas
+        // const nameRegex = /Nom|Name: (.+)/; // Busca "Nom" en francés o "Name" en inglés
+        // const licenseNumberRegex = /Numéro de permis|License Number: (.+)/; // Busca "Numéro de permis" en francés o "License Number" en inglés
+        // const classRegex = /Class:|Classe(s)|Classe (.+)/i; // Captura la clase del permiso
+        // const sexRegex = /sex:|sexe: ([MF])/i; // Captura el sexo del titular (M o F)
+        // const issuedRegex = /issued:|Valide le| valide de(\d{4}-\w{3}-\d{2})/i; // Captura la fecha de emisión
+        // //const expiredRegex = /Expires|expires|Expire le|expire le|expire|Expire: (\d{4}-\w{3}-\d{2})/;
+        // // const expiredRegex = /Expires|expires|Expire le|expire le|expire|Expire: (\d{4}-\w{3}-\d{2})/;
+        // //const expiredRegex = /Expires|expire le:?|Expire le: (\d{4}-\w{3}-\d{2})/i;
+        // const expiredRegex = /Expire\s*le\s*:\s*(\d{4}-\d{2}-\d{2})/i;
+        // const cardTypeRegex = /TEST CARD ([A-Z0-9]+)$/; // Captura el tipo de tarjeta (por ejemplo, "DL:1234562")
+        // const addressRegex = /^hl & (.+)/; // Captura la dirección
+
+        const classRegex = /Classe\(s\)|Classe:|Class:(.+)/i; // Captura la clase del permiso
+        const sexRegex = /sex[^\w]|sexe[^\w]:\s*([MF])/i; // Captura el sexo del titular (M o F)
+        const issuedRegex = /issued:|Valide(?:\sle)?(?:\sde)?:\s*(\d{4}-\w{3}-\d{2})/i; // Captura la fecha de emisión
+        const expiredRegex = /Expires|Expire[^\w]le[^\w]:(\d{4}-\w{3}-\d{2})/i; // Captura la fecha de expiración
+        const addressRegex = /(\d{1,5}\s+[^\d,]+),\s*(.*?),\s*([A-Z]{2}\s*\d[A-Z]\s*\d[A-Z]\d)/i; // Captura la dirección y el código postal
+        const cardTypeRegex = /TEST CARD\s([A-Z0-9]+)/i; // Captura el tipo de tarjeta (DL, etc.)
+        const nameRegex = /Nom|Name: (.+)/; // Busca "Nom" en francés o "Name" en inglés
+
+
+        // Iterar sobre cada línea y buscar coincidencias con las expresiones regulares
+        lines.forEach(line => {
+            const nameMatch = line.match(nameRegex);
+            if (nameMatch) {
+                licenseInfo.name = nameMatch[1].trim(); // Almacena el nombre encontrado
+            }
+            const expiredMatch = line.match(expiredRegex);
+           // console.log(expiredRegex);
+            // console.log(expiredMatch);
+            if (expiredMatch && expiredMatch[1]) {
+                licenseInfo.expirationDate = expiredMatch[1].trim();
+            }
+            
+
+            const licenseNumberMatch = line.match(licenseNumberRegex);
+            if (licenseNumberMatch) {
+                licenseInfo.licenseNumber = licenseNumberMatch[1].trim(); // Almacena el número de licencia encontrado
+            }
+
+            const classMatch = line.match(classRegex);
+            if (classMatch) {
+                licenseInfo.class = classMatch[1].trim(); // Almacena la clase del permiso
+            }
+
+            const sexMatch = line.match(sexRegex);
+            if (sexMatch) {
+                licenseInfo.sex = sexMatch[1]; // Almacena el sexo del titular
+            }
+
+            const issuedMatch = line.match(issuedRegex);
+            if (issuedMatch) {
+                licenseInfo.issued = issuedMatch[1]; // Almacena la fecha de emisión
+            }
+
+            const cardTypeMatch = line.match(cardTypeRegex);
+            if (cardTypeMatch) {
+                licenseInfo.cardType = cardTypeMatch[1]; // Almacena el tipo de tarjeta (DL, etc.)
+            }
+
+            const addressMatch = line.match(addressRegex);
+            if (addressMatch) {
+                licenseInfo.address = addressMatch[1].trim(); // Almacena la dirección
+            }
+        });
+
+        // Devuelve el objeto con la información extraída
+        return licenseInfo;
+
+    } catch (error) {
+        console.error("Error processLicenseText", error);
+    }
+}
 
 module.exports = {
     getFilePath,
     getFileName,
     deleteUploadedFiles,
     checkFileSize,
-    checkFileQuantity
+    checkFileQuantity,
+    processDocument,
+    processLicenseText
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// async function processDocument(file) {
+
+//     try {
+//         const imagePath = file.path;
+//         console.log(imagePath);
+//         // Procesar el documento utilizando tesseract.js
+//         const { data: { text } } = await tesseract.recognize(imagePath);
+//         return text;
+//     } catch (error) {
+//         console.error('Error al procesar el documento:', error);
+//         throw new Error('Error al procesar el documento');
+//     }
+// }
+
+// async function processDocument(file) {
+//     try {
+//         // Verificar si el archivo es una imagen o un PDF
+//         const extension = extname(file.name).toLowerCase();
+        
+//         if (extension === '.pdf') {
+//             // Procesar el documento PDF
+//             const pdfPath = file.path;
+//             const text = await extractTextFromPDF(pdfPath);
+//             return text;
+//         } else if (extension === '.jpg' || extension === '.jpeg' || extension === '.png') {
+//             // Procesar la imagen utilizando tesseract.js
+//             const imagePath = file.path;
+//             const { data: { text } } = await tesseract.recognize(imagePath);
+//             return text;
+//         } else {
+//             // Si el formato no es compatible, lanzar un error
+//             throw new Error('Formato de archivo no compatible');
+//         }
+//     } catch (error) {
+//         console.error('Error al procesar el documento:', error);
+//         throw new Error('Error al procesar el documento');
+//     }
+// }
+
+// async function processDocument(file) {
+//     try {
+//         // Verificar si el archivo es una imagen o un PDF
+//         // console.log(file);
+//         // const extension = extname(file.name).toLowerCase();
+//         console.log(file);
+//         const fileInfo = path.parse(file.originalFilename);
+//         const extension = fileInfo.ext.toLowerCase();
+//         // console.log("extention : " , extension);
+
+//         if (extension === '.pdf') {
+//             // Procesar el documento PDF
+//             const pdfPath = file.path;
+//             const text = await extractTextFromPDF(pdfPath);
+//             return text;
+//         } else if (extension === '.jpg' || extension === '.jpeg' || extension === '.png') {
+//             // Procesar la imagen utilizando tesseract.js
+//             const imagePath = file.path;
+//             const { data: { text } } = await tesseract.recognize(imagePath);
+//             return text;
+//         } else {
+//             // Si el formato no es compatible, devolver un mensaje de error
+//             return 'Incompatible_format';
+//         }
+//     } catch (error) {
+//         console.error('Error al procesar el documento:', error);
+//         throw new Error('Error al procesar el documento');
+//     }
+// }
+
+// // Función para extraer texto de un documento PDF
+// function extractTextFromPDF(pdfPath) {
+//     console.log('pdf function format')
+//     return new Promise((resolve, reject) => {
+//         // Leer el contenido del archivo PDF
+//         fs.readFile(pdfPath, (err, data) => {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 // Convertir el contenido del PDF a texto utilizando tesseract.js
+//                 tesseract.recognize(data, { lang: 'eng' })
+//                     .then(result => resolve(result.data.text))
+//                     .catch(err => reject(err));
+//             }
+//         });
+//     });
+// }
