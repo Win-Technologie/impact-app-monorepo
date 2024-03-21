@@ -74,7 +74,7 @@ const userSchema = new mongoose.Schema({
     },
     vehicles: [{
         type: String,
-        ref: 'Vehicle',
+        ref: 'Vehicles',
         index: true
     }],
     // documents: [{

@@ -20,6 +20,7 @@ const PORT = process.env.PORT || 8000;
 
 // Routes
 const userRoutes = require('./routes/user/user.routes');
+const vehicleRoutes = require('./routes/vehicle/vehicle.routes');
 
 connectToMongo();
 
@@ -58,6 +59,7 @@ app.use((req, res, next) => {
 //app.use("/Backend/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use('/api/users', userRoutes);
+app.use('/api/vehicles', vehicleRoutes);
 
 
 
