@@ -2,77 +2,153 @@
 const { getDb } = require('../../mongoConnection');
 const bcrypt = require('bcryptjs');
 const jwt = require('../../utils/jwt');
-// const Tenant = require('../modeles/Tenants');
-// //const imageCache = new NodeCache(); //instance de cache pour stocker les images
+// VALIDATE INFOS
 const { body, validationResult } = require('express-validator');
-
-// // DOCS PATHs AND NAMES
-// const fs = require('fs');
-// const path = require('path'); 
-// const { myCache, encryptData, decryptData } = require("../utils/cache");
-// const filePath = require("../utils/filePath");
+// FILES MANAGEMENT
+const { deleteUploadedFiles, checkFileSize, checkFileQuantity, getFilePath, getFileName } = require('../../utils/files');
+// CODES GENERATOR
+const { generateVerificationCode } = require('../../utils/generatorcodes');
+// NODE MAILER
+const { sendVerificationEmail } = require('../../utils/nodemailer');
 
 // MODELS
 const User = require('../../modeles/users/user');
 // VARIABLES
-const VARS = require('../../../vars');
+const MAINDB = process.env.MAINDB;
+const USERSCOLLECTION = process.env.USERSCOLLECTION;
+
 // GLOBAL CONNECTIONS
-const mainDb = getDb(VARS.MAINDB);
-const userCollection = mainDb.collection(VARS.USERSCOLLECTION);// Initialiser la connexion à la base de données et définir la collection des utilisateurs
+const mainDb = getDb(MAINDB);
+const userCollection = mainDb.collection(USERSCOLLECTION);
 
+async function validateUpdateRegisterUserFields(req) {
+    if (req.body.email) {
+        // Validation de l'email
+        await body('email')
+            .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
+            .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req);
+    }
+    if (req.body.name) {
+        // Validation du nom
+        await body('name').notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req);
+    }
+    if (req.body.lastName) {
+        // Validation du nom
+        await body('lastName').notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req);
+    }
+    // if (req.body.password) {
+    //     // Validation du mot de passe
+    //     // await body('password').isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req);
+    //     return Promise.reject('La modification du mot de passe n\'est pas autorisée depuis cette route');
+    // }
+    if (req.body.phone) {
+        // Validation du numéro de téléphone
+        await body('phone').isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req);
+    }
+    if (req.body.address) {
+        // Validation de l'adresse
+        await body('address').isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req);
+    }
+    if (req.body.postalCode) {
+        // Validation de postal code
+        await body('postalCode').isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req);
+    }
+    if (req.body.province) {
+        // Validation de province
+        await body('province').isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req);
+    }
+    if (req.body.city) {
+        // Validation de ville
+        await body('city').isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req);
+    }
+    if (req.body.country) {
+        // Validation de ville
+        await body('country').isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req);
+    }
+    if (req.body.gender) {
+        // Validation de genre
+        await body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req);
+    }
+    if (req.body.birthDay) {
+        // Validation de date
+        // await body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req);
+        // Validación de fecha
+        // await body('birthDay')
+        //     .custom(value => {
+        //         // Intenta crear un objeto Date a partir de la cadena
+        //         const date = new Date(value);
+        //         // Verifica si el objeto Date es válido
+        //         if (isNaN(date.getTime())) {
+        //             // Si no es válido, devuelve un mensaje de error
+        //             throw new Error('La date est requise et doit être du type date');
+        //         }
+        //         // Si es válido, devuelve true para indicar que la validación pasó
+        //         return true;
+        //     })
+        //     .run(req);
+        await body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req);
+    }
+    if (req.body.newPassword) {
+        // console.log(req.body.newPassword);
+        await body('newPassword').notEmpty().withMessage('Le mot de passe est requis').isLength({ min: 8 }).withMessage('Le mot de passe doit contenir au moins 8 caractères').run(req);
+    }
 
-async function validateRegisterOwnerFields(req) {
-    // Validation de l'email
-    await body('email')
-        .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
-        .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req);
-    // Validation du nom
-    await body('name').notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req);
+}
 
-    // Validation du nom
-    await body('lastName').notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req);
+async function validateRegisterUserFields(req) {
+    await Promise.all([
+        // Validation de l'email
+        body('email')
+            .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
+            .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req),
+        // Validation du nom
+        body('name').notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req),
 
-    // Validation du mot de passe
-    await body('password').isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req);
-    //await body('password').matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre').run(req);
+        // Validation du nom
+        body('lastName').notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req),
 
-    // Validation du numéro de téléphone
-    await body('phone').isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req);
+        // Validation du mot de passe
+        body('password').isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req),
+        // body('password').matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre').run(req),
 
-    // Validation de l'adresse
-    await body('address').isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req);
+        // Validation du numéro de téléphone
+        body('phone').isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req),
 
-    // Validation de postal code
-    await body('postalCode').isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req);
+        // Validation de l'adresse
+        body('address').isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req),
 
-    // Validation de province
-    await body('province').isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req);
+        // Validation de postal code
+        body('postalCode').isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req),
 
-    // Validation de ville
-    await body('city').isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req);
+        // Validation de province
+        body('province').isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req),
 
-    // Validation de ville
-    await body('country').isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req);
+        // Validation de ville
+        body('city').isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req),
 
-    // Validation de genre
-    await body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req);
-    // Validation de date
-    // await body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req);
-    // Validación de fecha
-    // await body('birthDay')
-    //     .custom(value => {
-    //         // Intenta crear un objeto Date a partir de la cadena
-    //         const date = new Date(value);
-    //         // Verifica si el objeto Date es válido
-    //         if (isNaN(date.getTime())) {
-    //             // Si no es válido, devuelve un mensaje de error
-    //             throw new Error('La date est requise et doit être du type date');
-    //         }
-    //         // Si es válido, devuelve true para indicar que la validación pasó
-    //         return true;
-    //     })
-    //     .run(req);
-    await body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req);
+        // Validation de ville
+        body('country').isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req),
+
+        // Validation de genre
+        body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req),
+        // Validation de date
+        //  body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req),
+        // Validación de fecha
+        //  body('birthDay')
+        //     .custom(value => {
+        //         // Intenta crear un objeto Date a partir de la cadena
+        //         const date = new Date(value);
+        //         // Verifica si el objeto Date es válido
+        //         if (isNaN(date.getTime())) {
+        //             // Si no es válido, devuelve un mensaje de error
+        //             throw new Error('La date est requise et doit être du type date');
+        //         }
+        //         // Si es válido, devuelve true para indicar que la validación pasó
+        //         return true;
+        //     })
+        //     .run(req),
+        body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req),
+    ]);
 }
 
 async function RegisterUser(req, res) {
@@ -84,7 +160,7 @@ async function RegisterUser(req, res) {
         const emailLowerCase = email.toLowerCase();
 
         // Validation des champs de la requête
-        await validateRegisterOwnerFields(req);
+        await validateRegisterUserFields(req);
         // Vérification des erreurs de validation
         const validationErrors = validationResult(req);
         if (!validationErrors.isEmpty()) {
@@ -143,6 +219,9 @@ async function Login(req, res) {
         await body('password').notEmpty().withMessage('Le mot de passe est requis').run(req);
         // Vérification des erreurs de validation
         const validationErrors = validationResult(req);
+
+        // const randomCode = generateVerificationCode();
+        // await sendVerificationEmail('nelson.cuervo89@gmail.com', randomCode);
 
         if (!validationErrors.isEmpty()) {
             return res.status(400).json({ errors: validationErrors.array() });
@@ -231,9 +310,6 @@ async function RefresLogin(req, res) {
         if (!token) res.status(400).send({ msg: "Token required" });
 
         const { user_id } = jwt.decoded(token);
-
-        const mainDb = getDb(VARS.MAINDB);
-        const userCollection = mainDb.collection(VARS.USERSCOLLECTION);
 
         const loggedInUser = await userCollection.findOne({ _id: user_id });
         //Vérifier si l'utilisateur existe et si son compte est actif dans le système.
@@ -331,7 +407,238 @@ async function RestorePassword(req, res) {
     }
 }
 
+async function EditUser(req, res) {
+    try {
 
+        const userData = req.body;
+        const { id } = req.params;
+        // console.log(id);
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        if (req.body.password) {
+            return res.status(403).json({ msg: 'La modification du mot de passe n\'est pas autorisée depuis cette route' });
+        }
+
+        // ..... VALIDATE FIELDS
+        // Validation des champs de la requête
+        await validateUpdateRegisterUserFields(req);
+        // Vérification des erreurs de validation
+        const validationErrors = validationResult(req);
+        if (!validationErrors.isEmpty()) {
+            return res.status(400).json({ errors: validationErrors.array() });
+        }
+
+
+        // Utiliser Promise.all pour récupérer les données de de l'utilisateur à modifier 
+        // et vérifier si le statut de la personne qui exécute l'action est actif.
+        const [foundUser, isActiveUser] = await Promise.all([
+            userCollection.findOne({ _id: id }),
+            userCollection.findOne({ _id: myToken.user_id })
+        ]);
+
+        if (!foundUser) {
+            return res.status(403).json({ msg: "Utilisateur non trouvé" });
+        }
+
+        //Vérifier si l'utilisateur existe et si son compte est actif dans le système.
+        if (!isActiveUser || isActiveUser.active === false) {
+            return res.status(403).json({ msg: "Utilisateur présentant des problèmes avec le compte, contactez l'administrateur" });
+        }
+
+        // Mettre à jour les données de la propriété avec les nouvelles données
+        Object.assign(foundUser, userData);
+
+        // Convertir le champ " active " en booléen s'il s'agit d'une chaîne de texte.
+        if (typeof foundUser.active === 'string') {
+            foundUser.active = foundUser.active.toLowerCase() === 'true';
+        }
+
+        // Obtenez le nom des images et stockez-les dans le tableau s'il y en a
+        if (req.files && Object.keys(req.files).length > 0) {
+
+            // Vérifier que les fichiers respectent la taille maximale autorisée.
+            const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
+
+            // Vérifier que le nombre de fichiers ne dépasse pas la limite autorisée.
+            const maxFileQuantity = 3; // Définit le nombre maximum de fichiers autorisés.
+            const { isValid: isQuantityValid } = checkFileQuantity(req.files, maxFileQuantity);
+
+            // Si la taille des fichiers n'est pas valide
+            if (!isSizeValid) {
+                // Supprimer tous les fichiers téléchargés dans le système de fichiers
+                deleteUploadedFiles(req.files);
+                return res.status(400).json({ msg: `La taille du fichier ${oversizedFileName} doit être inférieure à 500KB` });
+            }
+
+            // Si la quantité de fichiers n'est pas valide
+            if (!isQuantityValid) {
+                // Supprimer tous les fichiers téléchargés dans le système de fichiers
+                deleteUploadedFiles(req.files);
+                return res.status(400).json({ msg: `Le nombre de fichiers ne peut pas dépasser ${maxFileQuantity}` });
+            }
+
+            // Initialiser un tableau pour les photos si des fichiers sont présents dans la requête
+            let photos_ = [];
+            // Parcourir les photos envoyées dans la requête et les ajouter au tableau de photos
+            for (let i = 1; i <= maxFileQuantity; i++) {
+                if (req.files && req.files[`image${i}`]) {
+                    const myImagePathName = getFileName(req.files[`image${i}`]);
+                    photos_.push(myImagePathName);
+                }
+            }
+            foundUser.photos = photos_;
+        }
+
+        
+        const result = await userCollection.updateOne(
+            { _id: id }, // Filtre pour trouver la propriété par son ID
+            { $set: foundUser } // Données actualisées souhaitées
+        );
+        // Verifier si la mise à jour s'est déroulée avec succès
+        if (result.modifiedCount === 0) {
+            // La mise à jour a échoué
+            return res.status(400).json({ msg: "Aucun changement n'a été effectué" });
+        }
+
+        return res.status(200).json({ msg: "user has been modified" });
+
+    } catch (error) {
+        console.error(`Erreur interne du serveur : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
+
+async function SendVerificationCode(req, res) {
+    try {
+        const { email } = req.body;
+
+        // Vérifier si l'utilisateur existe
+        const user = await userCollection.findOne({ email });
+        // Si l'utilisateur n'existe pas ou s'il n'est pas actif, renvoyer une erreur 404
+        if (!user || !user.active) {
+            return res.status(404).json({ msg: "Impossible d'exécuter cette action" });
+        }
+
+        // Générer le code de vérification
+        const verificationCode = generateVerificationCode();
+        // Récupérer le nombre actuel de tentatives de vérification de l'utilisateur
+        let currentVerificationAttempts = user.verificationAttempts;
+        // console.log(currentVerificationAttempts);
+
+        // Vérifier si le nombre de tentatives de vérification est supérieur ou égal à 4
+        if (currentVerificationAttempts >= 4) {
+            // Si le nombre de tentatives dépasse 3, bloquer le compte utilisateur
+            await userCollection.updateOne(
+                { _id: user._id },
+                {
+                    $set: { active: false }
+                });
+            // Renvoyer un code d'erreur 429 (Trop de requêtes) pour indiquer que la limite de tentatives de vérification a été dépassée
+            return res.status(429).json({ msg: "Accès protégé, contacter un administrateur" });
+        }
+
+        // Mettre à jour l'utilisateur dans la base de données avec le nouveau code de vérification et d'autres champs
+        await userCollection.updateOne(
+            { $and: [{ _id: user._id }, { email: user.email }] }, // Filtre pour trouver l'utilisateur par son ID et  adresse e-mail
+            {
+                $set: {
+                    verificationCode,
+                    verificationAttempts: currentVerificationAttempts + 1,
+                    verificationCodeExpiration: new Date(new Date().getTime() + 15 * 60000) // 15 minutes d'expiration
+                }
+            }
+        );
+
+        // Envoyer le code de vérification par e-mail à l'utilisateur
+        // await sendVerificationEmail(user.email, verificationCode);
+
+        return res.status(200).json({ msg: "Un code de vérification a été envoyé à votre adresse électronique.", code: verificationCode });
+    } catch (error) {
+        console.error(`Erreur lors de la récupération de l'utilisateur ou lors de l'envoi du code de vérification : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
+
+async function verifyAndChangePassword(req, res) {
+    try {
+        const { email, verificationCode, newPassword } = req.body;
+        // Vérifier si le nouveau mot de passe est fourni
+        if (!newPassword) {
+            return res.status(400).json({ msg: "Veuillez introduire votre nouveau mot de passe" });
+        }
+
+        // Validation des champs de la requête
+        await validateUpdateRegisterUserFields(req);
+        // Vérification des erreurs de validation
+        const validationErrors = validationResult(req);
+        if (!validationErrors.isEmpty()) {
+            return res.status(400).json({ errors: validationErrors.array() });
+        }
+
+        // Rechercher l'utilisateur par son adresse e-mail
+        const user = await userCollection.findOne({ email });
+        if (!user || !user.active) {
+            return res.status(404).json({ msg: "Utilisateur non trouvé ou compte non actif" });
+        }
+
+        // Vérifier si le code de vérification est correct et non expiré
+        if (user.verificationCode !== verificationCode || new Date() > user.verificationCodeExpiration) {
+            // Incrémenter le compteur de tentatives de vérification
+            await userCollection.updateOne(
+                { $and: [{ _id: user._id }, { email: user.email }] }, // Filtrer par _id et email
+                {
+                    $set: {
+                        verificationAttempts: user.verificationAttempts + 1,
+                    }
+                }
+            );
+
+            // Vérifier si le nombre de tentatives de vérification a été dépassé
+            if (user.verificationAttempts > 3) {
+                // Bloquer le compte utilisateur s'il y a eu trop de tentatives
+                await userCollection.updateOne(
+                    { _id: user._id },
+                    { $set: { active: false } }
+                );
+                return res.status(423).json({ msg: "Accès protégé, contacter un administrateur" });
+            }
+
+            return res.status(403).json({ msg: "Code de vérification incorrect ou expiré. Veuillez réessayer." });
+        }
+
+        // Hasher le nouveau mot de passe
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+        // Mettre à jour le mot de passe et réinitialiser le code de vérification
+        await userCollection.updateOne(
+            { email },
+            {
+                $set: {
+                    password: hashedNewPassword,
+                    verificationCode: undefined,
+                    verificationAttempts: 0,
+                    verificationCodeExpiration: undefined
+                }
+            }
+        );
+
+        return res.status(200).json({ msg: "Le mot de passe a été modifié avec succès." });
+    } catch (error) {
+        console.error(`Erreur lors de la vérification du code de vérification ou du changement de mot de passe : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
 
 
 
@@ -342,7 +649,10 @@ module.exports = {
     Logout,
     RefresLogin,
     GetUserById,
-    RestorePassword
+    RestorePassword,
+    EditUser,
+    SendVerificationCode,
+    verifyAndChangePassword
 };
 
 

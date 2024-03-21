@@ -9,15 +9,16 @@ const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const flash = require('connect-flash');
+const path = require('path');
 const cors = require('cors');
 const cron = require('node-cron');
 const { connectToMongo } = require('./mongoConnection');
-const VARS = require('../vars');
 const { removeRevokedTokens } = require('./utils/jwt');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
-
+// TIMER
+const MYCRONTIMER = process.env.CRONTIMER_EVERYHOUR;
 // Routes
 const userRoutes = require('./routes/user/user.routes');
 const vehicleRoutes = require('./routes/vehicle/vehicle.routes');
@@ -27,7 +28,6 @@ connectToMongo();
 // // Express body parser
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Augmentez la limite selon vos besoins
 app.use(express.json({ limit: '10mb' })); // Augmentez la limite selon vos besoins
-
 
 // // Express body parser
 app.use(express.urlencoded({ extended: true }));
@@ -43,7 +43,6 @@ app.use(session({
 // // Utilisation de CORS middleware
 app.use(cors());
 
-
 // // Express flash middleware
 app.use(flash());
 
@@ -56,15 +55,13 @@ app.use((req, res, next) => {
 });
 
 // Configuration pour utiliser les fichiers statiques du dossier "uploads".
-//app.use("/Backend/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/Backend/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 
-
-
 // Programmation de tâches qui s'exécutent automatiquement après un certain laps de temps
-cron.schedule(`${VARS.CRONTIMER.EVERYHOUR}`, async () => {
+cron.schedule(`${MYCRONTIMER}`, async () => {
     console.log('Exécution du nettoyage des tokens révoqués...');
     // await removeRevokedTokens();
     removeRevokedTokens()
@@ -83,7 +80,6 @@ cron.schedule(`${VARS.CRONTIMER.EVERYHOUR}`, async () => {
     scheduled: true,
     timezone: "America/New_York" // Régler le fuseau horaire en fonction de votre lieu de résidence
 });
-
 
 
 // Start the server
