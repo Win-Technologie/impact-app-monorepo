@@ -39,3 +39,4 @@ test.rest
 
 #VARIABLES BACKEND
 #vars.js
+.gitignore
