@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const tesseract = require('tesseract.js');
+// const natural = require('natural');
+// const tokenizer = new natural.WordTokenizer();
+// const pos = new natural.BrillPOSTagger();
 
 //Get FilePath from files.
 function getFilePath(file, numSegments) {
@@ -140,122 +143,117 @@ async function processDocument(file) {
 
 // PROCESS INFORMATION FROM A DOCUMENT
 // Fonction permettant de traiter le texte extrait du permis de conduire
-function processLicenseText01(text) {
-
-    console.log(text);
-    // Dividir el texto en líneas
-    const lines = text.split('\n');
-
-    // Objeto para almacenar la información extraída
-    const licenseInfo = {};
-
-    // Expresiones regulares multilingües
-    const nameRegex = /Nom|Name: (.+)/; // Busca "Nom" en francés o "Name" en inglés
-    const licenseNumberRegex = /Numéro de permis|License Number: (.+)/; // Busca "Numéro de permis" en francés o "License Number" en inglés
-    // Agrega más expresiones regulares para otros datos que deseas extraer
-
-    // Iterar sobre cada línea y buscar coincidencias con las expresiones regulares
-    lines.forEach(line => {
-        const nameMatch = line.match(nameRegex);
-        if (nameMatch) {
-            licenseInfo.name = nameMatch[1]; // Almacena el nombre encontrado
-        }
-
-        const licenseNumberMatch = line.match(licenseNumberRegex);
-        if (licenseNumberMatch) {
-            licenseInfo.licenseNumber = licenseNumberMatch[1]; // Almacena el número de licencia encontrado
-        }
-
-        // Agrega más lógica para otras coincidencias de expresiones regulares
-    });
-
-    console.log(licenseInfo);
-    // Devuelve el objeto con la información extraída
-    return licenseInfo;
-}
-
 function processLicenseText(text) {
-    try {
-        // Dividir el texto en líneas
-        const lines = text.split('\n');
-
-        // Objeto para almacenar la información extraída
-        const licenseInfo = {};
-
-        // Expresiones regulares actualizadas
-        // const nameRegex = /Nom|Name: (.+)/; // Busca "Nom" en francés o "Name" en inglés
-        // const licenseNumberRegex = /Numéro de permis|License Number: (.+)/; // Busca "Numéro de permis" en francés o "License Number" en inglés
-        // const classRegex = /Class:|Classe(s)|Classe (.+)/i; // Captura la clase del permiso
-        // const sexRegex = /sex:|sexe: ([MF])/i; // Captura el sexo del titular (M o F)
-        // const issuedRegex = /issued:|Valide le| valide de(\d{4}-\w{3}-\d{2})/i; // Captura la fecha de emisión
-        // //const expiredRegex = /Expires|expires|Expire le|expire le|expire|Expire: (\d{4}-\w{3}-\d{2})/;
-        // // const expiredRegex = /Expires|expires|Expire le|expire le|expire|Expire: (\d{4}-\w{3}-\d{2})/;
-        // //const expiredRegex = /Expires|expire le:?|Expire le: (\d{4}-\w{3}-\d{2})/i;
-        // const expiredRegex = /Expire\s*le\s*:\s*(\d{4}-\d{2}-\d{2})/i;
-        // const cardTypeRegex = /TEST CARD ([A-Z0-9]+)$/; // Captura el tipo de tarjeta (por ejemplo, "DL:1234562")
-        // const addressRegex = /^hl & (.+)/; // Captura la dirección
-
-        const classRegex = /Classe\(s\)|Classe:|Class:(.+)/i; // Captura la clase del permiso
-        const sexRegex = /sex[^\w]|sexe[^\w]:\s*([MF])/i; // Captura el sexo del titular (M o F)
-        const issuedRegex = /issued:|Valide(?:\sle)?(?:\sde)?:\s*(\d{4}-\w{3}-\d{2})/i; // Captura la fecha de emisión
-        const expiredRegex = /Expires|Expire[^\w]le[^\w]:(\d{4}-\w{3}-\d{2})/i; // Captura la fecha de expiración
-        const addressRegex = /(\d{1,5}\s+[^\d,]+),\s*(.*?),\s*([A-Z]{2}\s*\d[A-Z]\s*\d[A-Z]\d)/i; // Captura la dirección y el código postal
-        const cardTypeRegex = /TEST CARD\s([A-Z0-9]+)/i; // Captura el tipo de tarjeta (DL, etc.)
-        const nameRegex = /Nom|Name: (.+)/; // Busca "Nom" en francés o "Name" en inglés
-
-
-        // Iterar sobre cada línea y buscar coincidencias con las expresiones regulares
-        lines.forEach(line => {
-            const nameMatch = line.match(nameRegex);
-            if (nameMatch) {
-                licenseInfo.name = nameMatch[1].trim(); // Almacena el nombre encontrado
-            }
-            const expiredMatch = line.match(expiredRegex);
-           // console.log(expiredRegex);
-            // console.log(expiredMatch);
-            if (expiredMatch && expiredMatch[1]) {
-                licenseInfo.expirationDate = expiredMatch[1].trim();
-            }
-            
-
-            const licenseNumberMatch = line.match(licenseNumberRegex);
-            if (licenseNumberMatch) {
-                licenseInfo.licenseNumber = licenseNumberMatch[1].trim(); // Almacena el número de licencia encontrado
-            }
-
-            const classMatch = line.match(classRegex);
-            if (classMatch) {
-                licenseInfo.class = classMatch[1].trim(); // Almacena la clase del permiso
-            }
-
-            const sexMatch = line.match(sexRegex);
-            if (sexMatch) {
-                licenseInfo.sex = sexMatch[1]; // Almacena el sexo del titular
-            }
-
-            const issuedMatch = line.match(issuedRegex);
-            if (issuedMatch) {
-                licenseInfo.issued = issuedMatch[1]; // Almacena la fecha de emisión
-            }
-
-            const cardTypeMatch = line.match(cardTypeRegex);
-            if (cardTypeMatch) {
-                licenseInfo.cardType = cardTypeMatch[1]; // Almacena el tipo de tarjeta (DL, etc.)
-            }
-
-            const addressMatch = line.match(addressRegex);
-            if (addressMatch) {
-                licenseInfo.address = addressMatch[1].trim(); // Almacena la dirección
-            }
-        });
-
-        // Devuelve el objeto con la información extraída
-        return licenseInfo;
-
-    } catch (error) {
-        console.error("Error processLicenseText", error);
+    if (!text || typeof text !== 'string') {
+        console.error('Invalid input text');
+        return {};
     }
+
+    const information = {};
+
+    // Nombre y Apellido
+    const nameRegex = /\d\s*([^0-9\n]+)\s+(\w+)\s*(?=\n)/;
+    const nameMatches = text.match(nameRegex);
+    if (nameMatches) {
+        information.firstName = nameMatches[2].trim();
+        information.lastName = nameMatches[1].trim();
+    }
+
+    // Fecha de nacimiento
+    const dobRegex = /Date de naissance \(A-M-J\) : (\d{4}-\d{2}-\d{2})/;
+    const dobMatch = text.match(dobRegex);
+    if (dobMatch) {
+        information.birthDate = dobMatch[1];
+    }
+
+    // Dirección
+    const addressRegex = /\d+,\s*([^\n]+)\n+\s*f\s*([^\n]*)\n-\s*([^\n]*)\n-\s*([^\n]*)\n/;
+    const addressMatches = text.match(addressRegex);
+    if (addressMatches) {
+        const [, address, app, city, zip] = addressMatches;
+        information.address = [address.trim(), app.trim(), city.trim()].filter(Boolean).join(', ');
+        // information.zipCode = zip.trim();
+    }
+
+    // Clase de licencia
+    const licenseClassRegex = /Classe\(s\) (.+?)\n/;
+    const licenseClassMatch = text.match(licenseClassRegex);
+    if (licenseClassMatch) {
+        information.licenseClass = licenseClassMatch[1];
+    }
+
+    // Sexo
+    const genderRegex = /— Sexe\s*:\s*([^\n]+)/;
+    const genderMatch = text.match(genderRegex);
+    if (genderMatch) {
+        information.gender = genderMatch[1];
+    }
+
+    // Condiciones
+    const conditionsRegex = /Cond\.\s*:\s*(\w+)/;
+    const conditionsMatch = text.match(conditionsRegex);
+    if (conditionsMatch) {
+        information.conditions = conditionsMatch[1];
+    }
+
+    // Altura
+    const heightRegex = /Taille \(cm\) : (\d+)/;
+    const heightMatch = text.match(heightRegex);
+    if (heightMatch) {
+        information.height = heightMatch[1];
+    }
+
+    // Menciones
+    const mentionsRegex = /Mention\(s\) : (\w+)/;
+    const mentionsMatch = text.match(mentionsRegex);
+    if (mentionsMatch) {
+        information.mentions = mentionsMatch[1];
+    }
+
+    // Color de ojos
+    const eyeColorRegex = /Yeux\s*:\s*([^\n]+)/;
+    const eyeColorMatch = text.match(eyeColorRegex);
+    if (eyeColorMatch) {
+        information.eyeColor = eyeColorMatch[1];
+    }
+
+    // Número de referencia
+    const referenceNumberRegex = /N° de référence: (\w+)/;
+    const referenceNumberMatch = text.match(referenceNumberRegex);
+    if (referenceNumberMatch) {
+        information.referenceNumber = referenceNumberMatch[1];
+    }
+
+    // Validez de la licencia - Fecha de inicio
+    const validityStartRegex = /Valide le\s*:\s*(\d{4}-\d{2}-\d{2})/;
+    const validityStartMatch = text.match(validityStartRegex);
+    if (validityStartMatch) {
+        information.validityStart = validityStartMatch[1];
+    }
+
+    // // Validez de la licencia - Fecha de expiración
+    // const validityEndRegex = /Expire le\s*:\s*(\d{4}-\d{2}-\d{2})/;
+    // const validityEndMatch = text.match(validityEndRegex);
+    // if (validityEndMatch) {
+    //     information.validityEnd = validityEndMatch[1];
+    // }
+
+
+    // Validez de la licencia - Fecha de expiración
+    const validityEndRegex = /Expire le\s*:?\s*(\d{4}-\d{2}-\d{2})/;
+    const validityEndMatch = text.match(validityEndRegex);
+    if (validityEndMatch) {
+        information.validityEnd = validityEndMatch[1];
+    }
+
+
+
+
+
+
+    return information;
 }
+
 
 module.exports = {
     getFilePath,
@@ -371,3 +369,4 @@ module.exports = {
 //         });
 //     });
 // }
+//
