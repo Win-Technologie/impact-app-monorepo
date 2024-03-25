@@ -146,7 +146,7 @@ async function verifyDocuments(user) {
     }
 }
 
-
+ 
 
 /**
  * Récupère un demandeur par son email
