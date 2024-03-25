@@ -5,11 +5,11 @@ const userAuth = require('../../auth/jwt.authenticated.js')
 //CONTROLLERS
 const vehicleController = require('../../controllers/vehicle/vehicle.controller.js');
 // VARIABLES
-const USER_ROUTER_IMG_PATH = process.env.USER_ROUTER_IMG_PATH;
+const CARS_ROUTER_IMG_PATH = process.env.CARS_ROUTER_IMG_PATH;
 // ADMIN FILES AND IMAGES
 const multiparty = require('connect-multiparty');
 // IMAGES PATH
-const md_uploadUserImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_PATH}` });
+const md_uploadUserImg = multiparty({ uploadDir: `${CARS_ROUTER_IMG_PATH}` });
 
 
 

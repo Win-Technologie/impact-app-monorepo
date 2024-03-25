@@ -10,6 +10,8 @@ const { deleteUploadedFiles, checkFileSize, checkFileQuantity, getFilePath, getF
 const { generateVerificationCode } = require('../../utils/generatorcodes');
 // NODE MAILER
 const { sendVerificationEmail } = require('../../utils/nodemailer');
+// ONFIDO
+const { createApplicant } = require('../onfido/onfido.controller');
 
 // MODELS
 const User = require('../../modeles/users/user');
@@ -151,7 +153,7 @@ async function validateRegisterUserFields(req) {
     ]);
 }
 
-async function RegisterUser(req, res) {
+/*async function RegisterUser(req, res) {
     try {
         const { email, name, lastName, password, phone, address, postalCode,
             province, city, country, gender, birthDay, companyName
@@ -216,7 +218,87 @@ async function RegisterUser(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
 
     }
+}*/
+
+
+
+async function RegisterUser(req, res) {
+    try {
+        const { email, name, lastName, password, phone, address, postalCode,
+            province, city, country, gender, birthDay, companyName
+        } = req.body;
+
+        const emailLowerCase = email.toLowerCase();
+
+        // Validation des champs de la requête
+        await validateRegisterUserFields(req);
+        // Vérification des erreurs de validation
+        const validationErrors = validationResult(req);
+        if (!validationErrors.isEmpty()) {
+            return res.status(400).json({ errors: validationErrors.array() });
+        }
+
+        // Vérifier si l'utilisateur existe déjà dans Onfido
+        let userExisting = await userCollection.findOne({ email: emailLowerCase });
+
+        if (userExisting) {
+            return res.status(400).json({ msg: "Cet utilisateur existe déjà dans Onfido" });
+        }
+
+        // Hachage du mot de passe
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newUser = new User({
+            email: emailLowerCase,
+            name: name,
+            lastName: lastName,
+            password: hashedPassword,
+            phone: phone,
+            address: address,
+            postalCode: postalCode,
+            companyName: companyName,
+            province: province,
+            city: city,
+            country: country,
+            gender: gender,
+            birthDay: birthDay,
+            typeAccount: "free",
+        });
+
+        newUser.set('documents', undefined);
+        newUser.set('verificationCodeExpiration', undefined);
+        newUser.set('verificationAttempts', undefined);
+        newUser.set('verificationCode', undefined);
+        newUser.set('accidentReports', undefined);
+        newUser.set('vehicles', undefined);
+
+        // Création de l'applicant dans Onfido
+        const applicantResult = await createApplicant(newUser);
+
+        // Vérifier le résultat de la création de l'applicant dans Onfido
+        if (applicantResult.message === "Utilisateur existant dans Onfido") {
+            // Arrêter le processus si l'utilisateur existe déjà dans Onfido
+            return res.status(400).json({ msg: "Cet utilisateur existe déjà dans Onfido" });
+        }
+
+        // Sauvegarde du nouvel utilisateur dans la collection 'users'
+        const insertResult = await userCollection.insertOne(newUser);
+        
+
+        if (!insertResult.acknowledged) {
+            return res.status(500).json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
+        }
+
+        res.status(201).json({ msg: "Utilisateur créé avec succès", newUser: newUser._id });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
 }
+
+
 
 async function Login(req, res) {
     try {
