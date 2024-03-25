@@ -1,0 +1,19 @@
+const { Router } = require("express");
+const router = Router();
+// MIDDLEWARES
+const userAuth = require('../../auth/jwt.authenticated.js')
+// CONTROLLERS
+const insuranceController = require('../../controllers/insurance/insurance.controller.js');
+// VARIABLES
+const INSURANCE_ROUTER_IMG_PATH = process.env.INSURANCE_ROUTER_IMG_PATH;
+// ADMIN FILES AND IMAGES
+const multiparty = require('connect-multiparty');
+// IMAGES PATH
+const md_uploadInsuranceImg = multiparty({ uploadDir: `${INSURANCE_ROUTER_IMG_PATH}` });
+
+// Route pour ajouter une assurance
+router.post('/add', [userAuth.ensureAuth], insuranceController.addInsurance);
+
+
+
+module.exports = router;
