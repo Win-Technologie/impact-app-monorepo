@@ -1,5 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const tesseract = require('tesseract.js');
+// const natural = require('natural');
+// const tokenizer = new natural.WordTokenizer();
+// const pos = new natural.BrillPOSTagger();
 
 //Get FilePath from files.
 function getFilePath(file, numSegments) {
@@ -112,11 +116,257 @@ const checkFileQuantity = (files, maxAllowed) => {
     return { isValid: true };
 };
 
+// GET TEXT INFORMATION FROM AN IMAGE
+async function processDocument(file) {
+    try {
+        // Vérifier si le fichier est une image
+        const fileInfo = path.parse(file.originalFilename);
+        const extension = fileInfo.ext.toLowerCase();
+
+        // Liste des extensions d'images supportées
+        const imageExtensions = ['.jpg', '.jpeg', '.png'];
+
+        if (imageExtensions.includes(extension)) {
+            // Traiter l'image à l'aide de tesseract.js
+            const imagePath = file.path;
+            const { data: { text } } = await tesseract.recognize(imagePath);
+            return text;
+        } else {
+            // Si le format n'est pas pris en charge, un message d'erreur est renvoyé.
+            return 'Incompatible_format';
+        }
+    } catch (error) {
+        console.error('Erreur de traitement du document :', error);
+        throw new Error('Erreur de traitement du document');
+    }
+}
+
+// PROCESS INFORMATION FROM A DOCUMENT
+// Fonction permettant de traiter le texte extrait du permis de conduire
+function processLicenseText(text) {
+    if (!text || typeof text !== 'string') {
+        console.error('Invalid input text');
+        return {};
+    }
+
+    const information = {};
+
+    // Nombre y Apellido
+    const nameRegex = /\d\s*([^0-9\n]+)\s+(\w+)\s*(?=\n)/;
+    const nameMatches = text.match(nameRegex);
+    if (nameMatches) {
+        information.firstName = nameMatches[2].trim();
+        information.lastName = nameMatches[1].trim();
+    }
+
+    // Fecha de nacimiento
+    const dobRegex = /Date de naissance \(A-M-J\) : (\d{4}-\d{2}-\d{2})/;
+    const dobMatch = text.match(dobRegex);
+    if (dobMatch) {
+        information.birthDate = dobMatch[1];
+    }
+
+    // Dirección
+    const addressRegex = /\d+,\s*([^\n]+)\n+\s*f\s*([^\n]*)\n-\s*([^\n]*)\n-\s*([^\n]*)\n/;
+    const addressMatches = text.match(addressRegex);
+    if (addressMatches) {
+        const [, address, app, city, zip] = addressMatches;
+        information.address = [address.trim(), app.trim(), city.trim()].filter(Boolean).join(', ');
+        // information.zipCode = zip.trim();
+    }
+
+    // Clase de licencia
+    const licenseClassRegex = /Classe\(s\) (.+?)\n/;
+    const licenseClassMatch = text.match(licenseClassRegex);
+    if (licenseClassMatch) {
+        information.licenseClass = licenseClassMatch[1];
+    }
+
+    // Sexo
+    const genderRegex = /— Sexe\s*:\s*([^\n]+)/;
+    const genderMatch = text.match(genderRegex);
+    if (genderMatch) {
+        information.gender = genderMatch[1];
+    }
+
+    // Condiciones
+    const conditionsRegex = /Cond\.\s*:\s*(\w+)/;
+    const conditionsMatch = text.match(conditionsRegex);
+    if (conditionsMatch) {
+        information.conditions = conditionsMatch[1];
+    }
+
+    // Altura
+    const heightRegex = /Taille \(cm\) : (\d+)/;
+    const heightMatch = text.match(heightRegex);
+    if (heightMatch) {
+        information.height = heightMatch[1];
+    }
+
+    // Menciones
+    const mentionsRegex = /Mention\(s\) : (\w+)/;
+    const mentionsMatch = text.match(mentionsRegex);
+    if (mentionsMatch) {
+        information.mentions = mentionsMatch[1];
+    }
+
+    // Color de ojos
+    const eyeColorRegex = /Yeux\s*:\s*([^\n]+)/;
+    const eyeColorMatch = text.match(eyeColorRegex);
+    if (eyeColorMatch) {
+        information.eyeColor = eyeColorMatch[1];
+    }
+
+    // Número de referencia
+    const referenceNumberRegex = /N° de référence: (\w+)/;
+    const referenceNumberMatch = text.match(referenceNumberRegex);
+    if (referenceNumberMatch) {
+        information.referenceNumber = referenceNumberMatch[1];
+    }
+
+    // Validez de la licencia - Fecha de inicio
+    const validityStartRegex = /Valide le\s*:\s*(\d{4}-\d{2}-\d{2})/;
+    const validityStartMatch = text.match(validityStartRegex);
+    if (validityStartMatch) {
+        information.validityStart = validityStartMatch[1];
+    }
+
+    // // Validez de la licencia - Fecha de expiración
+    // const validityEndRegex = /Expire le\s*:\s*(\d{4}-\d{2}-\d{2})/;
+    // const validityEndMatch = text.match(validityEndRegex);
+    // if (validityEndMatch) {
+    //     information.validityEnd = validityEndMatch[1];
+    // }
+
+
+    // Validez de la licencia - Fecha de expiración
+    const validityEndRegex = /Expire le\s*:?\s*(\d{4}-\d{2}-\d{2})/;
+    const validityEndMatch = text.match(validityEndRegex);
+    if (validityEndMatch) {
+        information.validityEnd = validityEndMatch[1];
+    }
+
+
+
+
+
+
+    return information;
+}
+
 
 module.exports = {
     getFilePath,
     getFileName,
     deleteUploadedFiles,
     checkFileSize,
-    checkFileQuantity
+    checkFileQuantity,
+    processDocument,
+    processLicenseText
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// async function processDocument(file) {
+
+//     try {
+//         const imagePath = file.path;
+//         console.log(imagePath);
+//         // Procesar el documento utilizando tesseract.js
+//         const { data: { text } } = await tesseract.recognize(imagePath);
+//         return text;
+//     } catch (error) {
+//         console.error('Error al procesar el documento:', error);
+//         throw new Error('Error al procesar el documento');
+//     }
+// }
+
+// async function processDocument(file) {
+//     try {
+//         // Verificar si el archivo es una imagen o un PDF
+//         const extension = extname(file.name).toLowerCase();
+        
+//         if (extension === '.pdf') {
+//             // Procesar el documento PDF
+//             const pdfPath = file.path;
+//             const text = await extractTextFromPDF(pdfPath);
+//             return text;
+//         } else if (extension === '.jpg' || extension === '.jpeg' || extension === '.png') {
+//             // Procesar la imagen utilizando tesseract.js
+//             const imagePath = file.path;
+//             const { data: { text } } = await tesseract.recognize(imagePath);
+//             return text;
+//         } else {
+//             // Si el formato no es compatible, lanzar un error
+//             throw new Error('Formato de archivo no compatible');
+//         }
+//     } catch (error) {
+//         console.error('Error al procesar el documento:', error);
+//         throw new Error('Error al procesar el documento');
+//     }
+// }
+
+// async function processDocument(file) {
+//     try {
+//         // Verificar si el archivo es una imagen o un PDF
+//         // console.log(file);
+//         // const extension = extname(file.name).toLowerCase();
+//         console.log(file);
+//         const fileInfo = path.parse(file.originalFilename);
+//         const extension = fileInfo.ext.toLowerCase();
+//         // console.log("extention : " , extension);
+
+//         if (extension === '.pdf') {
+//             // Procesar el documento PDF
+//             const pdfPath = file.path;
+//             const text = await extractTextFromPDF(pdfPath);
+//             return text;
+//         } else if (extension === '.jpg' || extension === '.jpeg' || extension === '.png') {
+//             // Procesar la imagen utilizando tesseract.js
+//             const imagePath = file.path;
+//             const { data: { text } } = await tesseract.recognize(imagePath);
+//             return text;
+//         } else {
+//             // Si el formato no es compatible, devolver un mensaje de error
+//             return 'Incompatible_format';
+//         }
+//     } catch (error) {
+//         console.error('Error al procesar el documento:', error);
+//         throw new Error('Error al procesar el documento');
+//     }
+// }
+
+// // Función para extraer texto de un documento PDF
+// function extractTextFromPDF(pdfPath) {
+//     console.log('pdf function format')
+//     return new Promise((resolve, reject) => {
+//         // Leer el contenido del archivo PDF
+//         fs.readFile(pdfPath, (err, data) => {
+//             if (err) {
+//                 reject(err);
+//             } else {
+//                 // Convertir el contenido del PDF a texto utilizando tesseract.js
+//                 tesseract.recognize(data, { lang: 'eng' })
+//                     .then(result => resolve(result.data.text))
+//                     .catch(err => reject(err));
+//             }
+//         });
+//     });
+// }
+//
