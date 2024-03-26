@@ -35,8 +35,7 @@ async function validateFields(req) {
         body('year').isInt({ min: 1900, max: new Date().getFullYear() }).withMessage('L\'année doit être valide').run(req),
         body('color').notEmpty().withMessage('La couleur est requise').run(req),,
         body('plate').notEmpty().withMessage('Le numéro de plaque est requis').run(req),,
-        body('serialNumber').notEmpty().withMessage('Le numéro de serie est requis').run(req),
-        body('owner').notEmpty().withMessage('L\'identifiant du propriétaire est requis').run(req)
+        body('serialNumber').notEmpty().withMessage('Le numéro de serie est requis').run(req)
     ]);
 }
 
@@ -61,7 +60,7 @@ async function addCar(req, res) {
 
         const userId = myToken.user_id;
 
-        const { brand, model, year, color, plate, serialNumber, owner } = req.body;
+        const { brand, model, year, color, plate, serialNumber } = req.body;
 
         // Exécution des validations
         await validateFields(req)
@@ -98,12 +97,12 @@ async function addCar(req, res) {
             color, 
             plate, 
             serialNumber, 
-            owner 
+            owner: userId 
         });
 
         await Promise.all([
             vehicleCollection.insertOne(newCar),
-            userCollection.updateOne({ _id: owner }, { $addToSet: { vehicles: plate } })
+            userCollection.updateOne({ _id: userId }, { $addToSet: { vehicles: plate } })
         ]);
 
         const cacheKey = `${userId}_${newCar._id}`;

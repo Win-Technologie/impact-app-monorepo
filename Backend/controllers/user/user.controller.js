@@ -12,6 +12,9 @@ const { deleteUploadedFiles, checkFileSize,
 const { generateVerificationCode } = require('../../utils/generatorcodes');
 // NODE MAILER
 const { sendVerificationEmail } = require('../../utils/nodemailer');
+// ONFIDO
+const { createApplicant, verifyDocuments } = require('../onfido/onfido.controller');
+
 
 // MODELS
 const User = require('../../modeles/users/user');
@@ -153,7 +156,7 @@ async function validateRegisterUserFields(req) {
     ]);
 }
 
-async function RegisterUser(req, res) {
+/*async function RegisterUser(req, res) {
     try {
         const { email, name, lastName, password, phone, address, postalCode,
             province, city, country, gender, birthDay, companyName
@@ -202,7 +205,7 @@ async function RegisterUser(req, res) {
         newUSer.set('verificationAttempts', undefined);
         newUSer.set('verificationCode', undefined);
         newUSer.set('accidentReports', undefined);
-        newUSer.set('vehicles', undefined);
+        //newUSer.set('vehicles', undefined);
 
         /// Sauvegarde du nouveau propriétaire dans la collection 'users'
         const insertResult = await userCollection.insertOne(newUSer);
@@ -219,6 +222,78 @@ async function RegisterUser(req, res) {
 
     }
 }
+*/
+
+
+async function RegisterUser(req, res) {
+    try {
+        // Extraction des données de la requête
+        const { email, name, lastName, password, phone, address, postalCode,
+            province, city, country, gender, birthDay, companyName
+        } = req.body;
+        const emailLowerCase = email.toLowerCase();
+
+        // Validation des champs de la requête
+        await validateRegisterUserFields(req);
+        const validationErrors = validationResult(req);
+        if (!validationErrors.isEmpty()) {
+            return res.status(400).json({ errors: validationErrors.array() });
+        }
+
+        // Vérification si l'utilisateur existe déjà dans Onfido
+        let userExisting = await userCollection.findOne({ email: emailLowerCase });
+        if (userExisting) {
+            return res.status(400).json({ msg: "Cet utilisateur existe déjà dans Onfido" });
+        }
+
+        // Hachage du mot de passe
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Création de l'objet User
+        const newUser = new User({
+            email: emailLowerCase,
+            name: name,
+            lastName: lastName,
+            password: hashedPassword,
+            phone: phone,
+            address: address,
+            postalCode: postalCode,
+            companyName: companyName,
+            province: province,
+            city: city,
+            country: country,
+            gender: gender,
+            birthDay: birthDay,
+            typeAccount: "free",
+        });
+        
+
+        // Création de l'applicant dans Onfido
+        const applicantResult = await createApplicant(newUser);
+
+        // Vérification du résultat de la création de l'applicant dans Onfido
+        if (!applicantResult.success) {
+            return res.status(400).json({ msg: applicantResult.msg });
+        }
+
+        // Sauvegarde du nouvel utilisateur dans la collection 'users'
+        const insertResult = await userCollection.insertOne(newUser);
+
+        if (!insertResult.acknowledged) {
+            return res.status(500).json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
+        }
+
+        res.status(201).json({ msg: "Utilisateur créé avec succès", newUser: newUser._id });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
+
+
+
 
 async function Login(req, res) {
     try {
@@ -510,7 +585,17 @@ async function EditUser(req, res) {
             foundUser.photos = photos_;
         }
 
-        
+            // Appel de verifyDocuments pour vérifier les documents de l'utilisateur
+            const verificationResult = await verifyDocuments(foundUser);
+
+            // Récupération des résultats de la vérification des documents
+            const drivingLicenseVerificationResult = verificationResult.drivingLicense;
+    
+            if (!drivingLicenseVerificationResult.success) {
+                // Si la vérification du permis de conduire a échoué
+                return res.status(400).json({ msg: "La vérification du permis de conduire a échoué", error: drivingLicenseVerificationResult.msg });
+            }
+
         const result = await userCollection.updateOne(
             { _id: id }, // Filtre pour trouver la propriété par son ID
             { $set: foundUser } // Données actualisées souhaitées
