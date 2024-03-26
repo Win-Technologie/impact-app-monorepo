@@ -5,8 +5,8 @@ const Insurance = require('../../modeles/insurance/insurance');
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
 
 const MAINDB = process.env.MAINDB;
-const INSURANCES_COLLECTION = process.env.INSURANCES_COLLECTION;
-const VEHICLES_COLLECTION = process.env.VEHICLES_COLLECTION;
+const INSURANCES_COLLECTION = process.env.INSURANCESCOLLECTION;
+const VEHICLES_COLLECTION = process.env.VEHICLESCOLLECTION;
 
 const mainDb = getDb(MAINDB);
 const insuranceCollection = mainDb.collection(INSURANCES_COLLECTION);
@@ -16,7 +16,6 @@ async function validateInsuranceFields(req) {
     await Promise.all([
         body('insuranceNumber').notEmpty().withMessage('Le numéro d\'assurance est requis').run(req),
         body('insuranceCompany').notEmpty().withMessage('La compagnie d\'assurance est requise').run(req),
-        body('subscriber').notEmpty().withMessage('Le souscripteur est requis').run(req),
         body('vehicle').notEmpty().withMessage('Le véhicule est requis').run(req)
         // Vous pouvez ajouter plus de validations selon les champs de votre modèle d'assurance
     ]);
@@ -24,7 +23,20 @@ async function validateInsuranceFields(req) {
 
 async function addInsurance(req, res) {
     try {
-        // Similar JWT and validation handling as addCar
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            console.error("Le Token n'est pas fourni");
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const subscriber = myToken.user_id;
+        console.log("Subscriber", subscriber);
+
         await validateInsuranceFields(req);
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -32,10 +44,11 @@ async function addInsurance(req, res) {
             return res.status(400).json({ error: errorMessage });
         }
 
-        // Assuming you have decoded the JWT to get userId
-        const { insuranceNumber, insuranceCompany, subscriber, vehicle } = req.body;
+        const { insuranceNumber, insuranceCompany, vehicle } = req.body;
 
-        // Check for existing insurance with the same insuranceNumber
+        console.log("Insurance Number", insuranceNumber);
+
+        
         const existingInsurance = await insuranceCollection.findOne({ insuranceNumber });
         if (existingInsurance) {
             return res.status(400).json({ message: "Une assurance avec ce numéro existe déjà." });
@@ -46,12 +59,10 @@ async function addInsurance(req, res) {
             insuranceCompany,
             subscriber,
             vehicle
-            // Ajoutez d'autres champs ici selon le besoin
         });
 
         // Insert the new insurance document
         await insuranceCollection.insertOne(newInsurance);
-        // Optionally, update the vehicle document or other related documents
 
         return res.status(201).json({ message: 'Assurance ajoutée avec succès', insurance: newInsurance });
     } catch (error) {
@@ -62,7 +73,6 @@ async function addInsurance(req, res) {
 
 async function getInsuranceById(req, res) {
     try {
-        // Similar JWT handling as getCarById
         const insuranceId = req.params.id;
         if (!insuranceId) {
             return res.status(400).json({ error: "Identifiant de l'assurance manquant dans la requête" });
