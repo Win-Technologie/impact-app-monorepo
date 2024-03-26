@@ -22,7 +22,7 @@ async function validateInsuranceFields(req) {
 }
 
 
-// FONCTIONNEL | Manque le cache 
+// FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache
 async function addInsurance(req, res) {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");
@@ -63,8 +63,13 @@ async function addInsurance(req, res) {
             vehicle
         });
 
-        // Insert the new insurance document
+        // Insérer le nouveau document d'assurance
         await insuranceCollection.insertOne(newInsurance);
+
+        // Construire la clé de cache et mettre en cache les données de l'assurance
+        const cacheKey = `${subscriber}_${insuranceId}`;
+        const encryptedData = encryptData(newInsurance, AES_KEY);
+        myCache.set(cacheKey, encryptedData, 600);
 
         return res.status(201).json({ message: 'Assurance ajoutée avec succès', insurance: newInsurance });
     } catch (error) {
@@ -73,6 +78,7 @@ async function addInsurance(req, res) {
     }
 }
 
+// FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache
 async function getInsuranceById(req, res) {
     try {
         const insuranceId = req.params.id;
@@ -80,17 +86,46 @@ async function getInsuranceById(req, res) {
             return res.status(400).json({ error: "Identifiant de l'assurance manquant dans la requête" });
         }
 
+        // Extraire le token et décoder pour obtenir l'userId
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            return res.status(400).json({ error: "Le Token n'est pas fourni" });
+        }
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ error: "Token invalide" });
+        }
+        const userId = myToken.user_id;
+
+        // Construire la clé de cache
+        const cacheKey = `${userId}_${insuranceId}`;
+
+        // Vérifier si les données de l'assurance sont en cache
+        const cachedData = myCache.get(cacheKey);
+        if (cachedData) {
+            console.log("Données trouvées dans le cache. Retour du cache...");
+            const decryptedData = decryptData(cachedData, AES_KEY);
+            return res.status(200).json({ insurance: decryptedData });
+        }
+
+        // Si non en cache, récupérer depuis la base de données
         const insurance = await insuranceCollection.findOne({ _id: insuranceId });
         if (!insurance) {
             return res.status(404).json({ error: "Assurance non trouvée" });
         }
 
+        // Mettre en cache les données de l'assurance
+        const encryptedData = encryptData(insurance, AES_KEY);
+        myCache.set(cacheKey, encryptedData, 600); // Expiration du cache après 600 secondes
+
+        // Retourner les données de l'assurance
         return res.status(200).json({ insurance });
     } catch (error) {
         console.error("Erreur lors de la récupération de l'assurance :", error);
         return res.status(500).json({ error: "Erreur interne du serveur" });
     }
 }
+
 
 // PATCH /api/insurances/:id
 async function editInsurance(req, res) {
