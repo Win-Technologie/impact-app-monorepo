@@ -21,6 +21,8 @@ async function validateInsuranceFields(req) {
     ]);
 }
 
+
+// FONCTIONNEL | Manque le cache 
 async function addInsurance(req, res) {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");
@@ -113,35 +115,34 @@ async function editInsurance(req, res) {
     } catch (error) {
         console.error("Erreur lors de la mise à jour de l'assurance :", error);
         return res.status(500).json({ error: "Erreur interne du serveur" });
-        }
-        }
+    }
+}
         
-        // DELETE /api/insurances/:id
-        async function deleteInsurance(req, res) {
-        try {
+// DELETE /api/insurances/:id
+async function deleteInsurance(req, res) {
+    try {
         // Similar JWT handling as deleteCarById
         const insuranceId = req.params.id;
         if (!insuranceId) {
-        return res.status(400).json({ error: "Identifiant de l'assurance manquant dans la requête" });
+            return res.status(400).json({ error: "Identifiant de l'assurance manquant dans la requête" });
         }
 
          // Check for the existence of the insurance
-    const existingInsurance = await insuranceCollection.findOne({ _id: insuranceId });
-    if (!existingInsurance) {
-        return res.status(404).json({ error: "Cette assurance n'existe pas" });
-    }
+        const existingInsurance = await insuranceCollection.findOne({ _id: insuranceId });
+        if (!existingInsurance) {
+            return res.status(404).json({ error: "Cette assurance n'existe pas" });
+        }
 
     // Optionally, handle any cleanup like removing references to this insurance from vehicles or other entities
 
     // Delete the insurance document
-    await insuranceCollection.deleteOne({ _id: insuranceId });
+        await insuranceCollection.deleteOne({ _id: insuranceId });
 
-    return res.status(200).json({ message: "Assurance supprimée avec succès" });
-} catch (error) {
-    console.error("Erreur lors de la suppression de l'assurance :", error);
-    return res.status(500).json({ error: "Erreur interne du serveur" });
-}
-
+        return res.status(200).json({ message: "Assurance supprimée avec succès" });
+    } catch (error) {
+        console.error("Erreur lors de la suppression de l'assurance :", error);
+        return res.status(500).json({ error: "Erreur interne du serveur" });
+    }
 }
 
 module.exports = {
