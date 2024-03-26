@@ -1,7 +1,7 @@
 const { getDb } = require('../../mongoConnection');
 const jwt = require('../../utils/jwt');
 const { body, validationResult } = require('express-validator');
-const Insurance = require('../../models/insurance/insurance');
+const Insurance = require('../../modeles/insurance/insurance');
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
 
 const MAINDB = process.env.MAINDB;

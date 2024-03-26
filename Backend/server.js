@@ -22,6 +22,7 @@ const MYCRONTIMER = process.env.CRONTIMER_EVERYHOUR;
 // Routes
 const userRoutes = require('./routes/user/user.routes');
 const vehicleRoutes = require('./routes/vehicle/vehicle.routes');
+const insuranceRoutes = require('./routes/insurance/insurance.routes');
 
 connectToMongo();
 
@@ -59,6 +60,7 @@ app.use("/Backend/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/insurances', insuranceRoutes);
 
 // Programmation de tâches qui s'exécutent automatiquement après un certain laps de temps
 cron.schedule(`${MYCRONTIMER}`, async () => {
