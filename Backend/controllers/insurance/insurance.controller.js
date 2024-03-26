@@ -127,33 +127,64 @@ async function getInsuranceById(req, res) {
 }
 
 
-// PATCH /api/insurances/:id
+// MANQUE LA VERIFICATION SUR LES CHAMPS MODIFIABLES | CACHE IMPLEMENTE | Manque le test sur le cache
 async function editInsurance(req, res) {
     try {
-        // Similar JWT and validation handling as editCar
-        const insuranceId = req.params.id;
-        const fieldsToUpdate = req.body;
+        // (Votre logique existante pour vérifier le token et les données...)
 
-        // Check for the existence of the insurance
-        const existingInsurance = await insuranceCollection.findOne({ _id: insuranceId });
-        if (!existingInsurance) {
-            return res.status(404).json({ error: "Cette assurance n'existe pas" });
+        const updatedInsurance = await insuranceCollection.findOneAndUpdate(
+            { _id: insuranceId },
+            { $set: fieldsToUpdate },
+            { returnDocument: 'after' } // Assurez-vous de renvoyer le document mis à jour
+        );
+
+        // Mettre à jour le cache
+        if (updatedInsurance.value) {
+            const cacheKey = `${subscriber}_${insuranceId}`;
+            const encryptedData = encryptData(updatedInsurance.value, AES_KEY);
+            myCache.set(cacheKey, encryptedData, 600);
+
+            return res.status(200).json({ message: "Assurance mise à jour avec succès", insurance: updatedInsurance.value });
+        } else {
+            return res.status(404).json({ error: "Assurance non trouvée" });
         }
-
-        // Update the insurance document
-        await insuranceCollection.updateOne({ _id: insuranceId }, { $set: fieldsToUpdate });
-
-        // Fetch the updated document to return
-        const updatedInsurance = await insuranceCollection.findOne({ _id: insuranceId });
-
-        return res.status(200).json({ message: "Assurance mise à jour avec succès", insurance: updatedInsurance });
     } catch (error) {
         console.error("Erreur lors de la mise à jour de l'assurance :", error);
         return res.status(500).json({ error: "Erreur interne du serveur" });
     }
 }
+
+// ANCIENNE VERSION FONCTIONNEL SANS CACHE | A MODIFIER
+// async function editInsurance(req, res) {
+//     try {
+//         // Similar JWT and validation handling as editCar
+//         const insuranceId = req.params.id;
+//         const fieldsToUpdate = req.body;
+
+//         // Check for the existence of the insurance
+//         const existingInsurance = await insuranceCollection.findOne({ _id: insuranceId });
+//         if (!existingInsurance) {
+//             return res.status(404).json({ error: "Cette assurance n'existe pas" });
+//         }
+
+//         // Update the insurance document
+//         await insuranceCollection.updateOne({ _id: insuranceId }, { $set: fieldsToUpdate });
+
+//         // Fetch the updated document to return
+//         const updatedInsurance = await insuranceCollection.findOne({ _id: insuranceId });
+
+//         return res.status(200).json({ message: "Assurance mise à jour avec succès", insurance: updatedInsurance });
+//     } catch (error) {
+//         console.error("Erreur lors de la mise à jour de l'assurance :", error);
+//         return res.status(500).json({ error: "Erreur interne du serveur" });
+//     }
+// }
         
 // FONCTIONNEL | Manque le cache
+
+
+
+// FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache
 async function deleteInsurance(req, res) {
     try {
         // Similar JWT handling as deleteCarById
@@ -168,7 +199,10 @@ async function deleteInsurance(req, res) {
             return res.status(404).json({ error: "Cette assurance n'existe pas" });
         }
 
-    // Optionally, handle any cleanup like removing references to this insurance from vehicles or other entities
+    
+    // Supprimer les données de cache associées à cette assurance
+    const cacheKey = `${subscriber}_${insuranceId}`;
+    myCache.del(cacheKey);    
 
     // Delete the insurance document
         await insuranceCollection.deleteOne({ _id: insuranceId });
