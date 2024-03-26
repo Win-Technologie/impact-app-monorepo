@@ -204,7 +204,7 @@ async function validateRegisterUserFields(req) {
         newUSer.set('verificationAttempts', undefined);
         newUSer.set('verificationCode', undefined);
         newUSer.set('accidentReports', undefined);
-        newUSer.set('vehicles', undefined);
+        //newUSer.set('vehicles', undefined);
 
         /// Sauvegarde du nouveau propriétaire dans la collection 'users'
         const insertResult = await userCollection.insertOne(newUSer);
@@ -220,8 +220,8 @@ async function validateRegisterUserFields(req) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
 
     }
-}*/
-
+}
+*/
 
 
 async function RegisterUser(req, res) {
@@ -268,12 +268,14 @@ async function RegisterUser(req, res) {
             typeAccount: "free",
         });
 
+        /*
         newUser.set('documents', undefined);
         newUser.set('verificationCodeExpiration', undefined);
         newUser.set('verificationAttempts', undefined);
         newUser.set('verificationCode', undefined);
         newUser.set('accidentReports', undefined);
         newUser.set('vehicles', undefined);
+        */
 
         // Création de l'applicant dans Onfido
         const applicantResult = await createApplicant(newUser);
