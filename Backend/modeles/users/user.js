@@ -76,6 +76,9 @@ const userSchema = new mongoose.Schema({
     photo: {
         type: String
     },
+    applicantId: {
+        type: String
+    },
     vehicles: [{
         type: String,
         ref: 'Vehicles',

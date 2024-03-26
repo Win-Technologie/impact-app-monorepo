@@ -1,5 +1,10 @@
+const jwt = require('../../utils/jwt');
+
 const { getDb } = require('../../mongoConnection');
 const { Onfido, Region } = require("@onfido/api");
+
+const path = require('path');
+const fs = require('fs/promises');
 
 // VARIABLES
 const ONFIDO_API_TOKEN = process.env.ONFIDO_API_TOKEN;
@@ -27,18 +32,14 @@ const onfido = new Onfido({
  */
 async function createApplicant(newUser) {
     try {
-        // Récupérer la liste des candidats depuis Onfido
         const applicants = await onfido.applicant.list();
 
-        // Parcourir la liste des candidats pour vérifier si l'utilisateur existe
         for (const applicant of applicants) {
             if (applicant.email === newUser.email) {
-                // L'utilisateur a été trouvé, retourner un msg
-                return { msg: "Utilisateur existant dans Onfido" };
+                return { success: false, msg: "Utilisateur existant dans Onfido" };
             }
         }
 
-        // Créer un nouvel applicant dans Onfido
         const newApplicant = await onfido.applicant.create({
             firstName: newUser.name,
             lastName: newUser.lastName,
@@ -51,15 +52,24 @@ async function createApplicant(newUser) {
                 province: newUser.province,
                 postcode: newUser.postalCode,
                 street: newUser.address
-            }]         
+            }]
         });
 
-        // Retourner un objet contenant le résultat de la création du candidat
-        return { msg: "Client ONFIDO créé avec succès" };
+        // Assigner l'ID de l'applicant à newUser.applicantId
+        newUser.applicantId = newApplicant.id;
+
+        // Mise à jour du champ 'applicantId' dans la collection 'userCollection'
+        await userCollection.updateOne(
+            { email: newUser.email },
+            { $set: { applicantId: newApplicant.id } }
+        );
+
+        return { success: true, msg: "Client ONFIDO créé avec succès"};
     } catch (error) {
-        throw error; // Renvoyer l'erreur pour qu'elle soit traitée à un niveau supérieur
+        throw error;
     }
 }
+
 
 /**
  * Récupère tous les demandeurs Onfido
@@ -173,47 +183,79 @@ async function getApplicantByEmail(req, res) {
  * @param {Object} res Réponse HTTP
  * @returns {Promise<void>} Retourne une promesse vide
  */
+
 async function verifyDocuments(user) {
     try {
 
-        const insuranceDocument = user.documents;
-        const drivingLicensePhoto = user.photo;
+        const applicantId = user.applicantId;
 
+        const photosDirectory = '../../uploads/users/images/';
 
-        // Effectuez les vérifications nécessaires sur les fichiers téléchargés
-        const drivingLicenseVerificationResult = await verifyDrivingLicense(drivingLicensePhoto);
-        const vehicleInsuranceVerificationResult = await verifyVehicleInsurance(insuranceDocument);
+        // Construire le chemin absolu du dossier des photos
+        const absolutePhotosDirectory = path.resolve(__dirname, photosDirectory);
+
+        // Initialiser un tableau pour stocker les résultats de la vérification de chaque photo
+        const verificationResults = [];
+
+        // Parcourir chaque nom de photo dans le tableau user.photos
+        for (const photoName of user.photos) {
+            // Récupérer le chemin absolu de chaque photo
+            const photoPath = path.join(absolutePhotosDirectory, photoName);
+
+            // Lire le fichier de chaque photo
+            const photoContent = await fs.readFile(photoPath);
+
+            // Effectuez les vérifications nécessaires sur les fichiers téléchargés
+            const verificationResult = await verifyDrivingLicense(photoContent, applicantId);
+            //const verificationResult = await verifyVehicleInsurance(insuranceDocument);
+
+            // Ajouter le résultat de vérification au tableau de résultats
+            verificationResults.push(verificationResult);
+        }
 
         // Renvoyer les résultats de vérification
-        return res.status(200).json({
-            drivingLicense: drivingLicenseVerificationResult,
-            vehicleInsurance: vehicleInsuranceVerificationResult
-        });
+        return {
+            drivingLicense: verificationResults,
+            //vehicleInsurance: vehicleInsuranceVerificationResult
+        };
     } catch (error) {
         console.error("Erreur lors de la vérification des documents :", error);
-        return res.status(500).json({ msg: "Erreur interne du serveur lors de la vérification des documents" });
+        throw new Error("Erreur interne du serveur lors de la vérification des documents");
     }
 }
-
 
 
 /**
  * Vérifie le permis de conduire à partir de la photo.
  * @param {Object} drivingLicensePhoto Photo du permis de conduire
+ * @param {string} userId ID de l'utilisateur
+ * @param {Object} userData Données de l'utilisateur nécessaires à la vérification
  * @returns {Object} Résultat de la vérification du permis de conduire
  */
-async function verifyDrivingLicense(drivingLicensePhoto) {
+async function verifyDrivingLicense(drivingLicensePhoto, userId, userData) {
     try {
-        // Soumettez la photo du permis de conduire à Onfido pour vérification
-        const check = await onfido.document.check({
-            file: drivingLicensePhoto, // La photo du permis de conduire
-            type: "driving_licence" // Type de document à vérifier
-        });
+        // Soumettre la photo du permis de conduire à Onfido pour vérification
+        const checkData = {
+            applicantId: userId,
+            reportNames: ["identity_enhanced"],
+            applicantProvidesData: true, // Indique que l'applicant fournit les données
+            userData: {
+                drivingLicenseNumber: userData.drivingLicenseNumber, // Numéro de permis de conduire
+                fullName: userData.fullName, // Nom complet du titulaire du permis
+                dateOfIssue: userData.dateOfIssue, // Date de délivrance
+                expirationDate: userData.expirationDate, // Date d'expiration
+                categories: userData.categories, // Catégories de permis
+            },
+            file: drivingLicensePhoto // La photo du permis de conduire
+        };
 
-        // Vérifiez le statut de la vérification
-        if (check.result === "clear") {
+        const check = await onfido.check.create(checkData);
+
+        // Vérifier le statut de la vérification
+        if (check.status === 'complete' && check.result === 'clear') {
             return { success: true, msg: "Le permis de conduire est valide" };
         } else {
+            console.log("Détails de l'erreur de vérification :", check); // Afficher les détails de l'erreur dans la console
             return { success: false, msg: "Le permis de conduire n'est pas valide" };
         }
     } catch (error) {
@@ -223,37 +265,13 @@ async function verifyDrivingLicense(drivingLicensePhoto) {
 }
 
 
-/**
- * Vérifie l'assurance du véhicule à partir du document.
- * @param {Object} vehicleInsuranceDocument Document d'assurance du véhicule
- * @returns {Object} Résultat de la vérification de l'assurance du véhicule
- */
-async function verifyVehicleInsurance(vehicleInsuranceDocument) {
-    try {
-        // Soumettez le document d'assurance du véhicule à Onfido pour vérification
-        const check = await onfido.document.check({
-            file: vehicleInsuranceDocument, // Le document d'assurance du véhicule
-            type: "driving_licence" // Type de document à vérifier (cela peut varier selon le type de document d'assurance)
-        });
-
-        // Vérifiez le statut de la vérification
-        if (check.result === "clear") {
-            return { success: true, msg: "L'assurance du véhicule est valide" };
-        } else {
-            return { success: false, msg: "L'assurance du véhicule n'est pas valide" };
-        }
-    } catch (error) {
-        console.error("Erreur lors de la vérification de l'assurance du véhicule :", error);
-        throw error;
-    }
-}
-
 
 module.exports = {
     createApplicant,
     verifyDocuments,
     getApplicantByEmail,
     deleteApplicantByEmail,
-    getAllApplicants
+    getAllApplicants,
+    verifyDocuments
 };
 
