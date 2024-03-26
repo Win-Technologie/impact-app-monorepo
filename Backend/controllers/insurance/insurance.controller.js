@@ -118,7 +118,7 @@ async function editInsurance(req, res) {
     }
 }
         
-// DELETE /api/insurances/:id
+// FONCTIONNEL | Manque le cache
 async function deleteInsurance(req, res) {
     try {
         // Similar JWT handling as deleteCarById
