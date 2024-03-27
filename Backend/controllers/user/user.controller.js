@@ -7,7 +7,7 @@ const { body, validationResult } = require('express-validator');
 // FILES MANAGEMENT
 const { deleteUploadedFiles, checkFileSize,
     checkFileQuantity, getFilePath, getFileName,
-    processDocument, processLicenseText } = require('../../utils/files');
+    processDocument, processLicenseText, processInsuranceText } = require('../../utils/files');
 // CODES GENERATOR
 const { generateVerificationCode } = require('../../utils/generatorcodes');
 // NODE MAILER
@@ -103,7 +103,7 @@ async function validateUpdateRegisterUserFields(req) {
     }
 
 }
-
+/*
 async function validateRegisterUserFields(req) {
     await Promise.all([
         // Validation de l'email
@@ -158,7 +158,50 @@ async function validateRegisterUserFields(req) {
         //     .run(req),
         body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req),
     ]);
+} */
+
+async function validateRegisterUserFields(req) {
+    await Promise.all([
+        // Validación del correo electrónico
+        body('email')
+            .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
+            .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req),
+
+        // Validación del nombre
+        body('firstName').optional().notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req),
+
+        // Validación del apellido
+        body('lastName').optional().notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req),
+
+        // Validación de la contraseña
+        body('password').notEmpty().isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req),
+
+        // Validación del número de teléfono
+        body('phone').optional().isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req),
+
+        // Validación de la dirección
+        body('address').optional().isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req),
+
+        // Validación del código postal
+        body('postalCode').optional().isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req),
+
+        // Validación de la provincia
+        body('province').optional().isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req),
+
+        // Validación de la ciudad
+        body('city').optional().isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req),
+
+        // Validación del país
+        body('country').optional().isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req),
+
+        // Validación del género
+        body('gender').optional().isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req),
+
+        // Validación de la fecha de nacimiento
+        body('birthDate').optional().notEmpty().withMessage('La date est requise et doit être du type date').run(req),
+    ]);
 }
+
 
 /*async function RegisterUser(req, res) {
     try {
@@ -247,7 +290,7 @@ async function RegisterUser(req, res) {
         // Vérification si l'utilisateur existe déjà dans Onfido
         let userExisting = await userCollection.findOne({ email: emailLowerCase });
         if (userExisting) {
-            return res.status(400).json({ msg: "Cet utilisateur existe déjà dans Onfido" });
+            return res.status(400).json({ msg: "Cet utilisateur existe déjà" });
         }
 
         // Hachage du mot de passe
@@ -255,7 +298,7 @@ async function RegisterUser(req, res) {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Création de l'objet User
-        const newUser = new User({
+        const newUser01 = new User({
             email: emailLowerCase,
             name: name,
             lastName: lastName,
@@ -271,15 +314,38 @@ async function RegisterUser(req, res) {
             birthDay: birthDay,
             typeAccount: "free",
         });
+
+        const newUser = new User({
+            email: emailLowerCase,
+            name: "pending",
+            lastName: "pending",
+            password: hashedPassword,
+            phone: "pending",
+            address: "pending",
+            postalCode: "pending",
+            province: "pending",
+            city: "penging",
+            country: "pending",
+            gender: "pending",
+            birthDay: "pending",
+            typeAccount: "free",
+        });
+        
+        newUser.set('documents', undefined);
+        newUser.set('verificationCodeExpiration', undefined);
+        newUser.set('verificationAttempts', undefined);
+        newUser.set('verificationCode', undefined);
+        newUser.set('accidentReports', undefined);
+        //newUser.set('vehicles', undefined);
         
 
-        // Création de l'applicant dans Onfido
-        const applicantResult = await createApplicant(newUser);
+        // // Création de l'applicant dans Onfido
+        // const applicantResult = await createApplicant(newUser);
 
-        // Vérification du résultat de la création de l'applicant dans Onfido
-        if (!applicantResult.success) {
-            return res.status(400).json({ msg: applicantResult.msg });
-        }
+        // // Vérification du résultat de la création de l'applicant dans Onfido
+        // if (!applicantResult.success) {
+        //     return res.status(400).json({ msg: applicantResult.msg });
+        // }
 
         // Sauvegarde du nouvel utilisateur dans la collection 'users'
         const insertResult = await userCollection.insertOne(newUser);
@@ -299,9 +365,6 @@ async function RegisterUser(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
-
-
-
 
 async function Login(req, res) {
     try {
@@ -826,17 +889,20 @@ async function DeleteUser(req, res) {
     }
 }
 
-
 async function UploadDocument(req, res) {
     try {
         const { docType } = req.body;
         const documentFile = req.files.document;
 
-        const docsAdmitedTypes = ['driverLicence', 'autoAssurance'];
+        const docsAdmitedTypes = ['driverLicence', 'carInsurance'];
 
 
         if (!docsAdmitedTypes.includes(docType) || !docType) {
             return res.status(400).json({ msg: "Doc type not valid" });
+        }
+
+        if(!documentFile){
+            return res.status(400).json({ msg: "You must introduce a valid photo" });
         }
 
         const documentText = await processDocument(documentFile);
@@ -845,14 +911,16 @@ async function UploadDocument(req, res) {
             return res.status(400).json({ msg: 'Impossible de lire le document, vérifiez le format et la qualité de l\'image.' });
         }
 
-        const extractedInfo = processLicenseText(documentText);
+        let  extractedInfo 
 
         
         if(docType === 'driverLicence'){
             console.log("Hello from driver licence");
+            extractedInfo = processLicenseText(documentText);
         }
 
-        if(docType === 'autoAssurance'){
+        if(docType === 'carInsurance'){
+            extractedInfo = processInsuranceText(documentText);
             console.log("Hello from auto Assurance");
         }
 

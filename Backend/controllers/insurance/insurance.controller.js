@@ -67,7 +67,7 @@ async function addInsurance(req, res) {
         await insuranceCollection.insertOne(newInsurance);
 
         // Construire la clé de cache et mettre en cache les données de l'assurance
-        const cacheKey = `${subscriber}_${insuranceId}`;
+        const cacheKey = `${subscriber}_${newInsurance._id}`;
         const encryptedData = encryptData(newInsurance, AES_KEY);
         myCache.set(cacheKey, encryptedData, 600);
 
@@ -130,7 +130,21 @@ async function getInsuranceById(req, res) {
 // MANQUE LA VERIFICATION SUR LES CHAMPS MODIFIABLES | CACHE IMPLEMENTE | Manque le test sur le cache
 async function editInsurance(req, res) {
     try {
-        // (Votre logique existante pour vérifier le token et les données...)
+        const insuranceId = req.params.id;
+        if (!insuranceId) {
+            return res.status(400).json({ error: "Identifiant de l'assurance manquant dans la requête" });
+        }
+
+        // Extraire le token et décoder pour obtenir l'userId
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            return res.status(400).json({ error: "Le Token n'est pas fourni" });
+        }
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ error: "Token invalide" });
+        }
+        const subscriber = myToken.user_id;
 
         const updatedInsurance = await insuranceCollection.findOneAndUpdate(
             { _id: insuranceId },
@@ -187,7 +201,17 @@ async function editInsurance(req, res) {
 // FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache
 async function deleteInsurance(req, res) {
     try {
-        // Similar JWT handling as deleteCarById
+        // Extraire le token et décoder pour obtenir l'userId
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            return res.status(400).json({ error: "Le Token n'est pas fourni" });
+        }
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ error: "Token invalide" });
+        }
+        const subscriber = myToken.user_id;
+        
         const insuranceId = req.params.id;
         if (!insuranceId) {
             return res.status(400).json({ error: "Identifiant de l'assurance manquant dans la requête" });
