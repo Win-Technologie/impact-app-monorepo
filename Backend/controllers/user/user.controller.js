@@ -7,7 +7,7 @@ const { body, validationResult } = require('express-validator');
 // FILES MANAGEMENT
 const { deleteUploadedFiles, checkFileSize,
     checkFileQuantity, getFilePath, getFileName,
-    processDocument, processLicenseText } = require('../../utils/files');
+    processDocument, processLicenseText, processInsuranceText } = require('../../utils/files');
 // CODES GENERATOR
 const { generateVerificationCode } = require('../../utils/generatorcodes');
 // NODE MAILER
@@ -773,11 +773,15 @@ async function UploadDocument(req, res) {
         const { docType } = req.body;
         const documentFile = req.files.document;
 
-        const docsAdmitedTypes = ['driverLicence', 'autoAssurance'];
+        const docsAdmitedTypes = ['driverLicence', 'carInsurance'];
 
 
         if (!docsAdmitedTypes.includes(docType) || !docType) {
             return res.status(400).json({ msg: "Doc type not valid" });
+        }
+
+        if(!documentFile){
+            return res.status(400).json({ msg: "You must introduce a valid photo" });
         }
 
         const documentText = await processDocument(documentFile);
@@ -786,14 +790,16 @@ async function UploadDocument(req, res) {
             return res.status(400).json({ msg: 'Impossible de lire le document, vérifiez le format et la qualité de l\'image.' });
         }
 
-        const extractedInfo = processLicenseText(documentText);
+        let  extractedInfo 
 
         
         if(docType === 'driverLicence'){
             console.log("Hello from driver licence");
+            extractedInfo = processLicenseText(documentText);
         }
 
-        if(docType === 'autoAssurance'){
+        if(docType === 'carInsurance'){
+            extractedInfo = processInsuranceText(documentText);
             console.log("Hello from auto Assurance");
         }
 

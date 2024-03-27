@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const tesseract = require('tesseract.js');
+const { createWorker, createScheduler } = require('tesseract.js');
 // const natural = require('natural');
 // const tokenizer = new natural.WordTokenizer();
 // const pos = new natural.BrillPOSTagger();
@@ -129,10 +130,20 @@ async function processDocument(file) {
         if (imageExtensions.includes(extension)) {
             // Traiter l'image à l'aide de tesseract.js
             const imagePath = file.path;
+
+            // Configurar tesseract para utilizar múltiples workers
+            tesseract.workerOptions = {
+                workerPath: 'tesseract.js-worker.js', // Ruta al worker de tesseract.js
+                numberOfWorkers: 4, // Número de workers a utilizar (puedes ajustarlo según tu CPU)
+                path: 'tesseract', // Ruta al ejecutable de Tesseract (opcional, si no está en el PATH)
+            };
+
+            // Reconocer texto en la imagen
             const { data: { text } } = await tesseract.recognize(imagePath);
+
             return text;
         } else {
-            // Si le format n'est pas pris en charge, un message d'erreur est renvoyé.
+            // Si el formato no está soportado, devuelve un mensaje de error.
             return 'Incompatible_format';
         }
     } catch (error) {
@@ -151,6 +162,7 @@ function processLicenseText(text) {
 
     const information = {};
 
+    // REGULAR EXPRESIONS
     // Nombre y Apellido
     const nameRegex = /\d\s*([^0-9\n]+)\s+(\w+)\s*(?=\n)/;
     const nameMatches = text.match(nameRegex);
@@ -158,6 +170,19 @@ function processLicenseText(text) {
         information.firstName = nameMatches[2].trim();
         information.lastName = nameMatches[1].trim();
     }
+
+    // const nameRegex01 = /\d\s*([^0-9\n]+)\s+(\w+)\s*(?=\n)/
+    // const nameRegex01 = /\d\s*([^0-9\n]+)\s+([^0-9\n]+)\n/;
+    // const nameRegex01 = /\d\s*([^\n]+)\s([^\n]+)\n/;
+    // const nameRegex01 =  /\d\s*([^\n]+)\n\d\s*([^\n]+)/;
+    const nameRegex01 = /\d\s*([^0-9\n]+)\n2\s*([^0-9\n]+)/
+    const nameMatche01 = text.match(nameRegex01);
+    if (nameMatche01) {
+        information.firstName1 = nameMatche01[2].trim();
+        information.lastName1 = nameMatche01[1].trim();
+    }
+
+
 
     // Fecha de nacimiento
     const dobRegex = /Date de naissance \(A-M-J\) : (\d{4}-\d{2}-\d{2})/;
@@ -224,6 +249,13 @@ function processLicenseText(text) {
         information.referenceNumber = referenceNumberMatch[1];
     }
 
+    const referenceNumberRegex01 = /N° de référence:\s*(\w+)/;
+    const referenceNumberMatch01 = text.match(referenceNumberRegex01);
+    if (referenceNumberMatch01) {
+        information.referenceNumber1 = referenceNumberMatch01[1];
+    }
+
+
     // Validez de la licencia - Fecha de inicio
     const validityStartRegex = /Valide le\s*:\s*(\d{4}-\d{2}-\d{2})/;
     const validityStartMatch = text.match(validityStartRegex);
@@ -247,13 +279,67 @@ function processLicenseText(text) {
     }
 
 
-
-
-
+    const expiryDateRegex = /Expire le\s*:?\s*(\d{4}-\d{2}-\d{2})\s*(\d{4}-\d{2}-\d{2})?/;
+    const expiryDateMatch = text.match(expiryDateRegex);
+    if (expiryDateMatch) {
+        information.expiryDate = expiryDateMatch[1];
+    }
 
     return information;
 }
 
+
+function processInsuranceText(text) {
+
+
+    if (!text || typeof text !== 'string') {
+        console.error('Invalid input text');
+        return {};
+    }
+
+    const info = {};
+
+    // Nombre y dirección de la compañía de seguros
+    const companyRegex = /NOM ET ADRESSE DE LA COMPAGNIE\n([^]+?)NAME AND ADDRESS OF INSURANCE COMPANY ([^]+?)DARRURANGE\n/;
+    const companyMatches = text.match(companyRegex);
+    if (companyMatches) {
+        info.insuranceCompany = companyMatches[2].trim();
+        info.companyAddress = companyMatches[1].trim();
+    }
+
+    // Nombre y dirección del asegurado
+    const insuredRegex = /NOM ET ADDRESSE DE ASSURE\n([^]+?)INSURED VEHICLE/;
+    const insuredMatches = text.match(insuredRegex);
+    if (insuredMatches) {
+        info.insuredNameAddress = insuredMatches[1].trim();
+    }
+
+    // Detalles del vehículo asegurado
+    const vehicleRegex = /VEHICULE ASSURE “ ANNEE, MARQUE,\n([^]+?)EFFECTIVE DATE/;
+    const vehicleMatches = text.match(vehicleRegex);
+    if (vehicleMatches) {
+        info.vehicleDetails = vehicleMatches[1].trim();
+    }
+
+    // Fechas de vigencia
+    const datesRegex = /EFFECTIVE DATE DATE DENTREE EN VIGUEUR (\d+-[a-zA-Z]+-[\d]+) DATE OF EXPIRY DATE D'EXPIRATION (\d+-[a-zA-Z]+-[\d]+)/;
+    const datesMatches = text.match(datesRegex);
+    if (datesMatches) {
+        info.effectiveDate = datesMatches[1].trim();
+        info.expirationDate = datesMatches[2].trim();
+    }
+
+    // Número de póliza y agente
+    const policyRegex = /POLICY NUMBER - POLICE NUMERO ([^]+?)AGENT\n([^]+?)NOM ET ADRESSEE DE LA COMPAGNIE/;
+    const policyMatches = text.match(policyRegex);
+    if (policyMatches) {
+        info.policyNumber = policyMatches[1].trim();
+        info.agent = policyMatches[2].trim();
+    }
+
+    return info;
+
+}
 
 module.exports = {
     getFilePath,
@@ -262,7 +348,8 @@ module.exports = {
     checkFileSize,
     checkFileQuantity,
     processDocument,
-    processLicenseText
+    processLicenseText,
+    processInsuranceText
 }
 
 
@@ -273,13 +360,32 @@ module.exports = {
 
 
 
+/*
+async function processDocument01(file) {
+    try {
+        // Vérifier si le fichier est une image
+        const fileInfo = path.parse(file.originalFilename);
+        const extension = fileInfo.ext.toLowerCase();
 
+        // Liste des extensions d'images supportées
+        const imageExtensions = ['.jpg', '.jpeg', '.png'];
 
+        if (imageExtensions.includes(extension)) {
+            // Traiter l'image à l'aide de tesseract.js
+            const imagePath = file.path;
+            const { data: { text } } = await tesseract.recognize(imagePath);
+            return text;
+        } else {
+            // Si le format n'est pas pris en charge, un message d'erreur est renvoyé.
+            return 'Incompatible_format';
+        }
+    } catch (error) {
+        console.error('Erreur de traitement du document :', error);
+        throw new Error('Erreur de traitement du document');
+    }
+}
 
-
-
-
-
+*/
 
 
 
