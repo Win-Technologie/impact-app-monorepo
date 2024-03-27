@@ -55,21 +55,47 @@ async function addInsurance(req, res) {
             return res.status(400).json({ error: errorMessage });
         }
 
-        const { insuranceNumber, insuranceCompany, vehicle } = req.body;
+        const vehicleId = req.params;
+        const { insuranceNumber, insuranceCompany, policyNumber, coverageType, startDate, expirationDate } = req.body;
+        
 
-        console.log("Insurance Number", insuranceNumber);
+        // Extraire les données du véhicule à partir de la base de données
+        // vehicle, vehicleRegistrationNumber, vehicleBrand, vehicleModel, vehicleYear
+
+        const vehicle = vehicleId;
+
+        const vehicleData = await vehicleCollection.findOne({ _id: vehicle });
+        if (!vehicleData) {
+            return res.status(404).json({ error: "Véhicule non trouvé" });
+        }
+
+        const { plate, brand, model, year } = vehicleData;
+        const vehicleRegistrationNumber = plate;
+        const vehicleBrand = brand;
+        const vehicleModel = model;
+        const vehicleYear = year;
 
         
+        // Vérification de l'existence préalable d'une assurance avec le même numéro
         const existingInsurance = await insuranceCollection.findOne({ insuranceNumber });
         if (existingInsurance) {
             return res.status(400).json({ message: "Une assurance avec ce numéro existe déjà." });
         }
 
+        // Création de la nouvelle assurance
         const newInsurance = new Insurance({
             insuranceNumber,
             insuranceCompany,
-            subscriber,
-            vehicle
+            subscriber: subscriber, // récupéré depuis le token
+            vehicle,
+            vehicleRegistrationNumber,
+            vehicleBrand,
+            vehicleModel,
+            vehicleYear,
+            policyNumber,
+            coverageType,
+            startDate: new Date(startDate),
+            expirationDate: new Date(expirationDate)
         });
 
         // Insérer le nouveau document d'assurance
