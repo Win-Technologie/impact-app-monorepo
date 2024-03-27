@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const Insurance = require('../../modeles/insurance/insurance');
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
 
+const AES_KEY = process.env.AES_KEY
 const MAINDB = process.env.MAINDB;
 const INSURANCES_COLLECTION = process.env.INSURANCESCOLLECTION;
 const VEHICLES_COLLECTION = process.env.VEHICLESCOLLECTION;
@@ -16,7 +17,7 @@ async function validateInsuranceFields(req) {
     await Promise.all([
         body('insuranceNumber').notEmpty().withMessage('Le numéro d\'assurance est requis').run(req),
         body('insuranceCompany').notEmpty().withMessage('La compagnie d\'assurance est requise').run(req),
-        body('vehicle').notEmpty().withMessage('Le véhicule est requis').run(req),
+        // body('vehicle').notEmpty().withMessage('Le véhicule est requis').run(req),
         // body('vehicleRegistrationNumber').notEmpty().withMessage('Le numéro d\'immatriculation du véhicule est requis').run(req),
         // body('vehicleBrand').notEmpty().withMessage('La marque du véhicule est requise').run(req),
         // body('vehicleModel').notEmpty().withMessage('Le modèle du véhicule est requis').run(req),
@@ -55,7 +56,7 @@ async function addInsurance(req, res) {
             return res.status(400).json({ error: errorMessage });
         }
 
-        const vehicleId = req.params;
+        const {vehicleId} = req.params;
         const { insuranceNumber, insuranceCompany, policyNumber, coverageType, startDate, expirationDate } = req.body;
         
 
@@ -63,6 +64,7 @@ async function addInsurance(req, res) {
         // vehicle, vehicleRegistrationNumber, vehicleBrand, vehicleModel, vehicleYear
 
         const vehicle = vehicleId;
+        console.log("Vehicle", vehicle);
 
         const vehicleData = await vehicleCollection.findOne({ _id: vehicle });
         if (!vehicleData) {
