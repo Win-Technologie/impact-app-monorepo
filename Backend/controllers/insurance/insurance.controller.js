@@ -30,7 +30,17 @@ async function validateInsuranceFields(req) {
     ]);
 }
 
-
+// Fonction de validation pour les champs à mettre à jour
+async function validateUpdateInsuranceFields(req) {
+    await Promise.all([
+        body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
+        body('coverageType').notEmpty().withMessage('Le type de couverture est requis').run(req),
+        body('startDate').notEmpty().isISO8601().withMessage('La date de début est requise et doit être une date valide').run(req),
+        body('expirationDate').notEmpty().isISO8601().withMessage('La date d\'expiration est requise et doit être une date valide').run(req),
+        // Assurez-vous de valider également les champs du véhicule si nécessaire
+        body('vehicleId').notEmpty().withMessage('L\'identifiant du véhicule est requis').run(req)  // Assurez-vous que ce champ est requis si vous permettez la mise à jour du véhicule associé
+    ]);
+}
 
 // FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache
 async function addInsurance(req, res) {
@@ -172,7 +182,6 @@ async function editInsurance(req, res) {
             return res.status(400).json({ error: "Identifiant de l'assurance manquant dans la requête" });
         }
 
-        // Extraire le token et décoder pour obtenir l'userId
         const token = req.headers.authorization?.replace("Bearer ", "");
         if (!token) {
             return res.status(400).json({ error: "Le Token n'est pas fourni" });
@@ -183,10 +192,35 @@ async function editInsurance(req, res) {
         }
         const subscriber = myToken.user_id;
 
+        
+        // Exécution des validations
+        await validateUpdateInsuranceFields(req);
+
+        const { policyNumber, coverageType, startDate, expirationDate, vehicleId } = req.body;
+
+        // Supposons que vous souhaitez mettre à jour l'assurance avec les nouvelles informations du véhicule
+        const vehicleData = await vehicleCollection.findOne({ _id: vehicleId });
+        if (!vehicleData) {
+            return res.status(404).json({ error: "Véhicule non trouvé" });
+        }
+        const { plate, brand, model, year } = vehicleData;
+
+        const fieldsToUpdate = {
+            policyNumber,
+            coverageType,
+            startDate: new Date(startDate),
+            expirationDate: new Date(expirationDate),
+            vehicle: vehicleId, // Vous pouvez choisir de ne pas permettre la modification du véhicule associé
+            vehicleRegistrationNumber: plate,
+            vehicleBrand: brand,
+            vehicleModel: model,
+            vehicleYear: year
+        };
+
         const updatedInsurance = await insuranceCollection.findOneAndUpdate(
             { _id: insuranceId },
             { $set: fieldsToUpdate },
-            { returnDocument: 'after' } // Assurez-vous de renvoyer le document mis à jour
+            { returnDocument: 'after' }
         );
 
         // Mettre à jour le cache
@@ -204,35 +238,7 @@ async function editInsurance(req, res) {
         return res.status(500).json({ error: "Erreur interne du serveur" });
     }
 }
-
-// ANCIENNE VERSION FONCTIONNEL SANS CACHE | A MODIFIER
-// async function editInsurance(req, res) {
-//     try {
-//         // Similar JWT and validation handling as editCar
-//         const insuranceId = req.params.id;
-//         const fieldsToUpdate = req.body;
-
-//         // Check for the existence of the insurance
-//         const existingInsurance = await insuranceCollection.findOne({ _id: insuranceId });
-//         if (!existingInsurance) {
-//             return res.status(404).json({ error: "Cette assurance n'existe pas" });
-//         }
-
-//         // Update the insurance document
-//         await insuranceCollection.updateOne({ _id: insuranceId }, { $set: fieldsToUpdate });
-
-//         // Fetch the updated document to return
-//         const updatedInsurance = await insuranceCollection.findOne({ _id: insuranceId });
-
-//         return res.status(200).json({ message: "Assurance mise à jour avec succès", insurance: updatedInsurance });
-//     } catch (error) {
-//         console.error("Erreur lors de la mise à jour de l'assurance :", error);
-//         return res.status(500).json({ error: "Erreur interne du serveur" });
-//     }
-// }
         
-// FONCTIONNEL | Manque le cache
-
 
 
 // FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache

@@ -193,7 +193,7 @@ async function getCarById(req, res) {
    * @param {*} res 
    * @returns 
    */
-  async function editCar(req, res) {
+async function editCar(req, res) {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");
         if (!token) {
