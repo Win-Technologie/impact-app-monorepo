@@ -241,7 +241,8 @@ async function verifyDrivingLicense(drivingLicensePhoto, userId, userData) {
             applicantProvidesData: true, // Indique que l'applicant fournit les données
             userData: {
                 drivingLicenseNumber: userData.drivingLicenseNumber, // Numéro de permis de conduire
-                fullName: userData.fullName, // Nom complet du titulaire du permis
+                name: userData.fullName.split(' ')[0], // Prénom du titulaire du permis
+                lastname: userData.fullName.split(' ').slice(1).join(' '), // Nom de famille du titulaire du permis
                 dateOfIssue: userData.dateOfIssue, // Date de délivrance
                 expirationDate: userData.expirationDate, // Date d'expiration
                 categories: userData.categories, // Catégories de permis

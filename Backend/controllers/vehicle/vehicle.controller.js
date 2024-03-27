@@ -158,7 +158,7 @@ async function getCarById(req, res) {
       return res.status(200).json({ vehicle: decryptedData });
       }
     
-      // Vérifier si la voiture existe pas dans la base de donnée dans son champ vehicles
+      // Vérifier si la voiture existe pas dans la base de donnée 
       const carFunded = await vehicleCollection.findOne({ _id: carId });
       if (!carFunded) {
         return res.status(403).json({ error: "Ce vehicule n'existe pas dans la base de donnée" });
