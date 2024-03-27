@@ -16,10 +16,19 @@ async function validateInsuranceFields(req) {
     await Promise.all([
         body('insuranceNumber').notEmpty().withMessage('Le numéro d\'assurance est requis').run(req),
         body('insuranceCompany').notEmpty().withMessage('La compagnie d\'assurance est requise').run(req),
-        body('vehicle').notEmpty().withMessage('Le véhicule est requis').run(req)
+        body('vehicle').notEmpty().withMessage('Le véhicule est requis').run(req),
+        // body('vehicleRegistrationNumber').notEmpty().withMessage('Le numéro d\'immatriculation du véhicule est requis').run(req),
+        // body('vehicleBrand').notEmpty().withMessage('La marque du véhicule est requise').run(req),
+        // body('vehicleModel').notEmpty().withMessage('Le modèle du véhicule est requis').run(req),
+        // body('vehicleYear').isInt().withMessage('L\'année du véhicule doit être un nombre entier').run(req),
+        body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
+        body('coverageType').notEmpty().withMessage('Le type de couverture est requis').run(req),
+        body('startDate').notEmpty().isISO8601().withMessage('La date de début est requise et doit être une date valide').run(req),
+        body('expirationDate').notEmpty().isISO8601().withMessage('La date d\'expiration est requise et doit être une date valide').run(req)
         // Vous pouvez ajouter plus de validations selon les champs de votre modèle d'assurance
     ]);
 }
+
 
 
 // FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache
