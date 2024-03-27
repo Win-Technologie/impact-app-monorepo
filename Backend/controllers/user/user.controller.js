@@ -18,13 +18,16 @@ const { createApplicant, verifyDocuments } = require('../onfido/onfido.controlle
 
 // MODELS
 const User = require('../../modeles/users/user');
+const DriverLicense = require('../../modeles/driver_license/driverLicense')
 // VARIABLES
 const MAINDB = process.env.MAINDB;
 const USERSCOLLECTION = process.env.USERSCOLLECTION;
+const DRIVERLICENSECOLLECTION = process.env.DRIVERSLICENSECOLLECTION;
 
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
+const drivingLicensesCollection = mainDb.collection(DRIVERLICENSECOLLECTION);
 
 async function validateUpdateRegisterUserFields(req) {
     if (req.body.email) {
@@ -197,6 +200,32 @@ async function validateRegisterUserFields(req) {
         body('birthDate').optional().notEmpty().withMessage('La date est requise et doit être du type date').run(req),
     ]);
 }
+
+// verify driver license info from request
+async function validateLicenseData(req) {
+    await Promise.all([
+        body('number').isLength({ min: 8 }).withMessage('Le numéro de licence doit contenir au moins 8 caractères').run(req),
+        body('name').isLength({ min: 3 }).withMessage('Le prénom doit contenir au moins 3 caractères').run(req),
+        body('lastName').isLength({ min: 3 }).withMessage('Le nom de famille doit contenir au moins 3 caractères').run(req),
+        body('birthdate').optional().isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date de naissance doit être au format yyyy/mm/dd').run(req),
+        body('address').isLength({ min: 4 }).withMessage('L\'adresse doit contenir au moins 4 caractères').run(req),
+        body('appartment').optional().isLength({ min: 2 }).withMessage('L\'appartement doit contenir au moins deux caractères').run(req),
+        body('province').isLength({ min: 2 }).withMessage('La province doit contenir au moins deux caractères').run(req),
+        body('postalCode').isLength({ min: 4 }).withMessage('Le code postal doit contenir au moins 4 caractères').run(req),
+        body('licenseClass').isLength({ min: 1 }).withMessage('La classe de licence doit contenir au moins 1 caractère').run(req),
+        body('sex').isLength({ min: 1 }).withMessage('Le sexe doit contenir au moins 1 caractère').run(req),
+        body('rest').isLength({ min: 2 }).withMessage('Le champ "rest" doit contenir au moins 2 caractères').run(req),
+        body('mention').isLength({ min: 2 }).withMessage('Le champ "mention" doit contenir au moins 2 caractères').run(req),
+        body('referenceNumber').optional().isLength({ min: 4 }).withMessage('Le numéro de référence doit contenir au moins 4 caractères').run(req),
+        body('height').optional().isLength({ min: 2 }).withMessage('La hauteur doit contenir au moins 2 caractères').run(req),
+        body('weight').optional().isLength({ min: 2 }).withMessage('Le poids doit contenir au moins 2 caractères').run(req),
+        body('issued').isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date d\'émission doit être au format yyyy/mm/dd').run(req),
+        body('expires').isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date d\'expiration doit être au format yyyy/mm/dd').run(req),
+        body('city').isString().isLength({ min: 4 }).withMessage('La ville doit contenir au moins 4 caractères').run(req),
+        body('country').optional().isString().isLength({ min: 4 }).withMessage('Le pays doit contenir au moins 4 caractères').run(req)
+    ]);
+}
+
 
 
 /*async function RegisterUser(req, res) {
@@ -875,6 +904,130 @@ async function UploadDocument(req, res) {
     }
 }
 
+async function UploadDriverLicense(req, res) {
+    try {
+        const licenseInfo = req.body;
+        const documentFile = req.files.document;
+
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        // if (!documentFile) {
+        //     return res.status(400).json({ msg: "You must introduce a valid driver licence photo" });
+        // }
+
+        // Validation des champs de la requête
+        await validateLicenseData(req);
+        const validationErrors = validationResult(req);
+        if (!validationErrors.isEmpty()) {
+            return res.status(400).json({ errors: validationErrors.array() });
+        }
+
+        const { number, name, lastName, birthdate, address, appartment, province,
+            postalCode, licenseClass, sex, rest, mention, referenceNumber, height,
+            weight, issued, expires, city, country
+        } = req.body;
+
+
+        let licenseExisting = await drivingLicensesCollection.findOne({ number: number });
+
+        if (licenseExisting) {
+            return res.status(400).json({ msg: "License already exist" });
+        }
+
+
+        let photoPath;
+
+        if (documentFile) {
+
+            // Vérifier que les fichiers respectent la taille maximale autorisée.
+            const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
+
+            // Vérifier que le nombre de fichiers ne dépasse pas la limite autorisée.
+            const maxFileQuantity = 1; // Définit le nombre maximum de fichiers autorisés.
+            const { isValid: isQuantityValid } = checkFileQuantity(req.files, maxFileQuantity);
+
+            // Si la taille des fichiers n'est pas valide
+            if (!isSizeValid) {
+                // Supprimer tous les fichiers téléchargés dans le système de fichiers
+                deleteUploadedFiles(req.files);
+                return res.status(400).json({ msg: `La taille du fichier ${oversizedFileName} doit être inférieure à 500KB` });
+            }
+
+            // Si la quantité de fichiers n'est pas valide
+            if (!isQuantityValid) {
+                // Supprimer tous les fichiers téléchargés dans le système de fichiers
+                deleteUploadedFiles(req.files);
+                return res.status(400).json({ msg: `Le nombre de fichiers ne peut pas dépasser ${maxFileQuantity}` });
+            }
+            console.log("antes de obtener el path");
+            photoPath = getFileName(req.files[`photo`]);
+            console.log("despues de obtener el path");
+        }
+
+        const issuedDate = new Date(issued);
+        const expiresDate = new Date(expires);
+        const birthdateDate = new Date(birthdate);
+
+        // Formatea las fechas en el formato YYYY-MM-DD
+        const formattedIssuedDate = issuedDate.toISOString().split('T')[0];
+        const formattedExpiresDate = expiresDate.toISOString().split('T')[0];
+        const formattedBirthdateDate = birthdateDate.toISOString().split('T')[0];
+
+
+        const newDriverLicense = new DriverLicense({
+            number: number,
+            name: name,
+            lastName: lastName,
+            birthdate: formattedBirthdateDate,
+            address: address,
+            appartment: appartment,
+            province: province,
+            postalCode: postalCode,
+            licenseClass: licenseClass,
+            sex: sex,
+            rest: rest,
+            mention: mention,
+            height: height,
+            weight: weight,
+            issued: formattedIssuedDate,
+            expires: formattedExpiresDate,
+            city: city,
+            country: country,
+            photo: photoPath,
+        });
+
+        console.log(newDriverLicense);
+
+        const insertDriverLicense = await drivingLicensesCollection.insertOne(newDriverLicense);
+
+
+        if (!insertDriverLicense.acknowledged) {
+            return res.status(500).json({ msg: "Error al insertar la nueva licencia" });
+        }
+
+
+
+        //    // return res.status(200).json({ msg: 'Voici le document'});
+        //     return res.status(200).json({ msg: 'Voici le document', document: documentText, extractedInfoText: extractedInfo });
+
+        return res.status(200).json({ msg: 'Nueva lisencia adjuntada con exito' });
+    } catch (error) {
+        console.error(`UploadDriverLicense: Erreur interne du serveur : ${error.message}, ${error}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+}
+
 
 
 
@@ -889,7 +1042,8 @@ module.exports = {
     SendVerificationCode,
     verifyAndChangePassword,
     DeleteUser,
-    UploadDocument
+    UploadDocument,
+    UploadDriverLicense
 };
 
 

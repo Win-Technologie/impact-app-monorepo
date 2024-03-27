@@ -10,6 +10,11 @@ const fs = require('fs/promises');
 const ONFIDO_API_TOKEN = process.env.ONFIDO_API_TOKEN;
 const MAINDB = process.env.MAINDB;
 const USERSCOLLECTION = process.env.USERSCOLLECTION;
+const DOCPATH = process.env.USER_CONTROLLER_IMG_PATHX2;
+const CONNECTION_PATH = process.env.BASE_PATH;
+const PORT = process.env.PORT;
+const DOCBASICPATH = process.env.USER_DOC_PATH;
+
 
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
@@ -30,7 +35,7 @@ const onfido = new Onfido({
  * @param {*} newUser Les informations du nouvel utilisateur.
  * @returns {Object} Un objet contenant le résultat de l'opération.
  */
-async function createApplicant(newUser) {
+async function createApplicant01(newUser) {
     try {
         const applicants = await onfido.applicant.list();
 
@@ -63,6 +68,68 @@ async function createApplicant(newUser) {
             { email: newUser.email },
             { $set: { applicantId: newApplicant.id } }
         );
+
+        return { success: true, msg: "Client ONFIDO créé avec succès"};
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function createApplicant(req,res) {
+    try {
+
+        const newUser = req.body;
+
+        const applicants = await onfido.applicant.list();
+
+        for (const applicant of applicants) {
+            if (applicant.email === newUser.email) {
+                return { success: false, msg: "Utilisateur existant dans Onfido" };
+            }
+        }
+
+
+        const newApplicant =({
+            firstName: newUser.name,
+            lastName: newUser.lastName,
+            email: newUser.email,
+            gender: newUser.gender,
+            href: `${CONNECTION_PATH + PORT + DOCBASICPATH}/${newUser.docImage}`,
+            phone_number: newUser.phone,
+            addresses: [{
+                country: newUser.country,
+                town: newUser.city,
+                state: newUser.province,
+                postcode: newUser.postalCode,
+                street: newUser.address
+            }]
+        });
+
+        // const newApplicant = await onfido.applicant.create({
+        //     firstName: newUser.name,
+        //     lastName: newUser.lastName,
+        //     email: newUser.email,
+        //     gender: newUser.gender,
+        //     telephone: newUser.phone, 
+        //     addresses: [{
+        //         country: newUser.country,
+        //         city: newUser.city,
+        //         province: newUser.province,
+        //         postcode: newUser.postalCode,
+        //         street: newUser.address
+        //     }]
+        // });
+
+        // Assigner l'ID de l'applicant à newUser.applicantId
+        // newUser.applicantId = newApplicant.id;
+
+        console.log(newApplicant);
+
+        // Mise à jour du champ 'applicantId' dans la collection 'userCollection'
+        // await userCollection.updateOne(
+        //     { email: newUser.email },
+        //     { $set: { applicantId: newApplicant.id } }
+        // );
 
         return { success: true, msg: "Client ONFIDO créé avec succès"};
     } catch (error) {
@@ -189,7 +256,8 @@ async function verifyDocuments(user) {
 
         const applicantId = user.applicantId;
 
-        const photosDirectory = '../../uploads/users/images/';
+       // const photosDirectory = '../../uploads/users/images/';
+        const photosDirectory = DOCPATH;
 
         // Construire le chemin absolu du dossier des photos
         const absolutePhotosDirectory = path.resolve(__dirname, photosDirectory);

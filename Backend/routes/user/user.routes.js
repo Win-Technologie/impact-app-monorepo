@@ -36,9 +36,13 @@ router.post('/user/password/code', userController.SendVerificationCode);
 router.post('/user/password/verify', userController.verifyAndChangePassword);
 //To delete an user from DB
 router.delete('/user/:id', [userAuth.ensureAuth, userAuth.isActiveSession], userController.DeleteUser);
-
+// To upload Documents
 router.post('/user/uploads', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserDocs],
     userController.UploadDocument
-)
+);
+// To upload driver licence
+router.post('/user/license', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserDocs],
+    userController.UploadDriverLicense
+);
 
 module.exports = router;
