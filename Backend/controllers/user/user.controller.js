@@ -15,10 +15,14 @@ const { sendVerificationEmail } = require('../../utils/nodemailer');
 // ONFIDO
 const { createApplicant, verifyDocuments } = require('../onfido/onfido.controller');
 
+// CACHE
+const { myCache, encryptData, decryptData } = require("../../utils/cache");
+
 
 // MODELS
 const User = require('../../modeles/users/user');
 // VARIABLES
+const AES_KEY = process.env.AES_KEY
 const MAINDB = process.env.MAINDB;
 const USERSCOLLECTION = process.env.USERSCOLLECTION;
 
@@ -284,6 +288,10 @@ async function RegisterUser(req, res) {
             return res.status(500).json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
         }
 
+        const cacheKey = `${newUser._id}`;
+        const encryptedCarData = encryptData(newUser, AES_KEY);
+        myCache.set(cacheKey, encryptedCarData, 600);
+
         res.status(201).json({ msg: "Utilisateur créé avec succès", newUser: newUser._id });
 
     } catch (error) {
@@ -415,7 +423,7 @@ async function RefresLogin(req, res) {
     }
 }
 
-async function GetUserById(req, res) {
+/*async function GetUserById(req, res) {
 
     try {
         const userId = req.params.id;
@@ -447,7 +455,58 @@ async function GetUserById(req, res) {
         console.error(`Erreur lors de la déconnexion : ${error.message}`);
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
+}*/
+
+async function GetUserById(req, res) {
+    try {
+        const userId = req.params.id;
+        
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error("Le Token n'est pas fourni");
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+        
+        const ownerId = myToken.user_id;
+
+        if (ownerId !== userId) {
+            return res.status(400).json({ msg: "Impossible d'afficher cette utilisateur" });
+        }
+        
+        // Vérification si les données du locataire sont en cache
+        const cacheKey = `${ownerId}`;
+        const cachedData = myCache.get(cacheKey);
+        if (cachedData) {
+            // Si les données sont en cache, les renvoyer directement
+            console.log("Données trouvées dans le cache. Retour du cache...");
+            const decryptedData = decryptData(cachedData, AES_KEY);
+            return res.status(200).json({ vehicle: decryptedData });
+        }
+        
+        const userProfile = await userCollection.findOne({ _id: userId });
+        
+        if (!userProfile) {
+            return res.status(404).json({ msg: "Profil introuvable" });
+        }
+        
+        res.status(200).json({ user: userProfile });
+    } catch (error) {
+        // Gérer les erreurs et renvoyer une réponse d'erreur du serveur
+        console.error(`Erreur lors de la déconnexion : ${error.message}`);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
 }
+
+
 
 async function RestorePassword(req, res) {
     try {

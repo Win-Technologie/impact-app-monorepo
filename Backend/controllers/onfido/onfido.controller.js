@@ -266,6 +266,44 @@ async function verifyDrivingLicense(drivingLicensePhoto, userId, userData) {
 }
 
 
+async function verifyInsurance(insuranceDocument, userId, vehicleData) {
+    try {
+        // Soumettre le document d'assurance à Onfido pour vérification
+        const checkData = {
+            applicantId: userId,
+            reportNames: ["insurance_enhanced"],
+            applicantProvidesData: true, // Indique que l'applicant fournit les données
+            userData: {
+                vehicleRegistrationNumber: vehicleData.registrationNumber, // Numéro d'immatriculation du véhicule
+                vehicleMake: vehicleData.make, // Marque du véhicule
+                vehicleModel: vehicleData.model, // Modèle du véhicule
+                vehicleYear: vehicleData.year, // Année du véhicule
+                insuranceProvider: vehicleData.insuranceProvider, // Fournisseur d'assurance
+                policyNumber: vehicleData.policyNumber, // Numéro de police d'assurance
+                coverageType: vehicleData.coverageType, // Type de couverture
+                startDate: vehicleData.startDate, // Date de début de la couverture
+                expirationDate: vehicleData.expirationDate, // Date d'expiration de la couverture
+            },
+            file: insuranceDocument // Le document d'assurance
+        };
+
+        const check = await onfido.check.create(checkData);
+
+        // Vérifier le statut de la vérification
+        if (check.status === 'complete' && check.result === 'clear') {
+            return { success: true, msg: "Le document d'assurance est valide" };
+        } else {
+            console.log("Détails de l'erreur de vérification :", check); // Afficher les détails de l'erreur dans la console
+            return { success: false, msg: "Le document d'assurance n'est pas valide" };
+        }
+    } catch (error) {
+        console.error("Erreur lors de la vérification du document d'assurance :", error);
+        throw error;
+    }
+}
+
+
+
 
 module.exports = {
     createApplicant,

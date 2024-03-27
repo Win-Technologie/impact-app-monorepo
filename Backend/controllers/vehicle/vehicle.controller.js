@@ -58,30 +58,32 @@ async function addCar(req, res) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        const userId = myToken.user_id;
+        const ownerId = myToken.user_id;
 
         const { brand, model, year, color, plate, serialNumber } = req.body;
 
         // Exécution des validations
-        await validateFields(req)
+        await validateFields(req);
 
         // Vérifie les erreurs de validation
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-          // Récupère seulement le premier message d'erreur
-          const errorMessage = errors.array()[0].msg;
-          console.log(`Erreurs de validation lors de la création du locataire : ${errorMessage}`);
-          return res.status(400).json({ error: errorMessage });
+            // Récupère seulement le premier message d'erreur
+            const errorMessage = errors.array()[0].msg;
+            console.log(`Erreurs de validation lors de la création du locataire : ${errorMessage}`);
+            return res.status(400).json({ error: errorMessage });
         }
 
+        // Vérifie si la voiture est déjà associée à ce propriétaire
         const [existingCarForOwner, existingCarSerialForOwner] = await Promise.all([
-            userCollection.findOne({ _id: userId, vehicles: plate }),
-            userCollection.findOne({ _id: userId, serialNumber: serialNumber })
+            userCollection.findOne({ _id: ownerId, vehicles: plate }),
+            userCollection.findOne({ _id: ownerId, serialNumber: serialNumber })
         ]);
         if (existingCarForOwner || existingCarSerialForOwner) {
             return res.status(400).json({ message: "Cette voiture est déjà associée à ce propriétaire." });
         }
 
+        // Vérifie si une voiture avec cette plaque d'immatriculation existe déjà
         const [existingCar, existingCarSerial] = await Promise.all([
             vehicleCollection.findOne({ plate }),
             vehicleCollection.findOne({ serialNumber })
@@ -90,6 +92,7 @@ async function addCar(req, res) {
             return res.status(400).json({ message: "Une voiture avec cette plaque d'immatriculation existe déjà." });
         }
 
+        // Crée une nouvelle voiture
         const newCar = new Vehicle({ 
             brand, 
             model, 
@@ -97,17 +100,32 @@ async function addCar(req, res) {
             color, 
             plate, 
             serialNumber, 
-            owner: userId 
+            owner: ownerId 
         });
 
+        // Insère la nouvelle voiture dans la collection et met à jour les informations du propriétaire
         await Promise.all([
             vehicleCollection.insertOne(newCar),
-            userCollection.updateOne({ _id: userId }, { $addToSet: { vehicles: plate } })
+            userCollection.updateOne({ _id: ownerId }, { $addToSet: { vehicles: plate } })
         ]);
 
-        const cacheKey = `${userId}_${newCar._id}`;
+        // Met à jour le cache avec les informations de la nouvelle voiture
+        const cacheKeyCar = `${ownerId}_${newCar._id}`;
         const encryptedCarData = encryptData(newCar, AES_KEY);
-        myCache.set(cacheKey, encryptedCarData, 600);
+        myCache.set(cacheKeyCar, encryptedCarData, 600);
+        
+        // Met à jour la clé associée au propriétaire dans le cache avec les informations de la nouvelle voiture
+        const cacheKey = `${ownerId}`;
+        const cachedData = myCache.get(cacheKey);
+        if (cachedData) {
+            // Si les données sont en cache, les renvoyer directement
+            console.log("Données trouvées dans le cache. Mise à jour du cache...");
+            const decryptedData = decryptData(cachedData, AES_KEY);
+            decryptedData.vehicles.push(newCar.plate); // Ajout de la nouvelle plaque
+            const reencryptedData = encryptData(decryptedData, AES_KEY); // Rechiffrement des données mises à jour
+            myCache.set(cacheKey, reencryptedData, 600); // Mise à jour du cache
+            return res.status(200).json({ vehicle: decryptedData });
+        }
 
         return res.status(201).json({ message: 'Voiture ajoutée avec succès', car: newCar });
     } catch (error) {
@@ -115,6 +133,8 @@ async function addCar(req, res) {
         return res.status(500).json({ error: 'Erreur interne du serveur' });
     }
 }
+
+
 
 
 
@@ -138,7 +158,7 @@ async function getCarById(req, res) {
         return res.status(400).json({ msg: "Token invalide" });
       }
       
-      const userId = myToken.user_id;
+      const ownerId = myToken.user_id;
   
       // Récupérer l'identifiant de la voiture depuis les paramètres de la requête
       const carId = req.params.id;
@@ -149,7 +169,7 @@ async function getCarById(req, res) {
       }
 
       // Vérification si les données du locataire sont en cache
-      const cacheKey = `${userId}_${carId}`;
+      const cacheKey = `${ownerId}_${carId}`;
       const cachedData = myCache.get(cacheKey);
       if (cachedData) {
       // Si les données sont en cache, les renvoyer directement
@@ -165,7 +185,7 @@ async function getCarById(req, res) {
       } 
 
       // Vérifier si l'utilisateur a la voiture dans son champ vehicles
-      const user = await userCollection.findOne({ _id: userId, vehicles: carFunded.plate });
+      const user = await userCollection.findOne({ _id: ownerId, vehicles: carFunded.plate });
       if (!user) {
         return res.status(403).json({ error: "L'utilisateur n'a pas accès à cette voiture" });
       }
@@ -206,7 +226,7 @@ async function getCarById(req, res) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        const userId = myToken.user_id;
+        const ownerId = myToken.user_id;
 
         // Récupérer l'identifiant de la voiture depuis les paramètres de la requête
         const carId = req.params.id;
@@ -226,7 +246,7 @@ async function getCarById(req, res) {
         }
 
         // Vérifier si l'utilisateur a accès à cette voiture
-        const user = await userCollection.findOne({ _id: userId, vehicles: carFunded.plate });
+        const user = await userCollection.findOne({ _id: ownerId, vehicles: carFunded.plate });
         if (!user) {
             return res.status(403).json({ error: "L'utilisateur n'a pas accès à cette voiture" });
         }
@@ -235,13 +255,13 @@ async function getCarById(req, res) {
         if (fieldsToUpdate.plate) {
             // Retirer l'ancien "plate" de la liste des véhicules de l'utilisateur
             await userCollection.updateOne(
-                { _id: userId },
+                { _id: ownerId },
                 { $pull: { vehicles: carFunded.plate } }
             );
 
             // Ajouter le nouveau "plate" à la liste des véhicules de l'utilisateur
             await userCollection.updateOne(
-                { _id: userId },
+                { _id: ownerId },
                 { $addToSet: { vehicles: fieldsToUpdate.plate } }
             );
         }
@@ -261,7 +281,7 @@ async function getCarById(req, res) {
         const carInDataBase = await vehicleCollection.findOne({ _id: carId });
         
         // Mise à jour du cache (si nécessaire)
-        const cacheKey = `${userId}_${carId}`;
+        const cacheKey = `${ownerId}_${carId}`;
         const encryptedTenantData = encryptData(carInDataBase, AES_KEY);
         myCache.set(cacheKey, encryptedTenantData, 600);
 
@@ -294,7 +314,7 @@ async function deleteCarById(req, res) {
           return res.status(400).json({ msg: "Token invalide" });
       }
 
-      const userId = myToken.user_id;
+      const ownerId = myToken.user_id;
 
       // Récupérer l'identifiant de la voiture depuis les paramètres de la requête
       const carId = req.params.id;
@@ -311,14 +331,14 @@ async function deleteCarById(req, res) {
       }
 
       // Vérifier si l'utilisateur a accès à cette voiture
-      const user = await userCollection.findOne({ _id: userId, vehicles: carFunded.plate });
+      const user = await userCollection.findOne({ _id: ownerId, vehicles: carFunded.plate });
       if (!user) {
           return res.status(403).json({ error: "L'utilisateur n'a pas accès à cette voiture" });
       }
 
       // Retirer carFunded.plate du champ vehicles de l'utilisateur
       await userCollection.updateOne(
-          { _id: userId },
+          { _id: ownerId },
           { $pull: { vehicles: carFunded.plate } }
       );
 
@@ -326,7 +346,7 @@ async function deleteCarById(req, res) {
       await vehicleCollection.deleteOne({ _id: carId });
 
       // Supprimer les données de cache associées à cette voiture (si présentes)
-      const cacheKey = `${userId}_${carId}`;
+      const cacheKey = `${ownerId}_${carId}`;
       myCache.del(cacheKey);
 
       // Renvoyer une réponse indiquant que la voiture a été supprimée avec succès
@@ -356,16 +376,16 @@ async function getAllCars(req, res) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        const userId = myToken.user_id;
+        const ownerId = myToken.user_id;
 
         // Verification de l'utilisateur dans la base de donne
-        const user = await userCollection.findOne({ _id: userId });
+        const user = await userCollection.findOne({ _id: ownerId });
         if (!user) {
             return res.status(404).json({ error: "Utilisateur non trouvé" });
         }
 
         // Récupérer les voitures de l'utilisateur à partir de la collection des véhicules
-        const cars = await vehicleCollection.find({ owner: userId }).toArray();
+        const cars = await vehicleCollection.find({ owner: ownerId }).toArray();
 
         // Retourner les voitures de l'utilisateur
         return res.status(200).json({ cars });
@@ -395,7 +415,7 @@ async function toggleCarActivation(req, res) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        const userId = myToken.user_id;
+        const ownerId = myToken.user_id;
 
         // Récupérer l'identifiant de la voiture depuis les paramètres de la requête
         const carId = req.params.id;
@@ -412,7 +432,7 @@ async function toggleCarActivation(req, res) {
         }
 
         // Vérifier si l'utilisateur a accès à cette voiture
-        const user = await userCollection.findOne({ _id: userId, vehicles: car.plate });
+        const user = await userCollection.findOne({ _id: ownerId, vehicles: car.plate });
         if (!user) {
             return res.status(403).json({ error: "L'utilisateur n'a pas accès à cette voiture" });
         }
@@ -428,7 +448,7 @@ async function toggleCarActivation(req, res) {
         const carInDataBase = await vehicleCollection.findOne({ _id: carId });
         
         // Mise à jour du cache (si nécessaire)
-        const cacheKey = `${userId}_${carId}`;
+        const cacheKey = `${ownerId}_${carId}`;
         const encryptedTenantData = encryptData(carInDataBase, AES_KEY);
         myCache.set(cacheKey, encryptedTenantData, 600);
 
