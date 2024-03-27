@@ -6,46 +6,78 @@ const assuranceSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  insuranceNumber: { // Numéro d'assurance
+  insuranceNumber: {
     type: String,
     required: true,
     unique: true,
     index: true
   },
-  insuranceCompany: { // Nom de la société d'assurance
+  insuranceCompany: {
     type: String,
     required: true
   },
-  subscriber: { // Souscripteur de l'assurance
+  subscriber: {
     type: String,
     required: true
   },
-  subscriberPhone: { // Numéro de téléphone du souscripteur
+  subscriberPhone: {
     type: String,
     required: true
   },
-  subscriberAddress: { // Adresse du souscripteur
+  subscriberAddress: {
     type: String,
     required: true
   },
-  subscriberFullName: { // Nom complet du souscripteur
+  subscriberFullName: {
     type: String,
     required: true
   },
-  vehicle: { // Référence au véhicule assuré
+  vehicle: {
     type: String,
     ref: 'Vehicle',
     required: true
   },
-  documents: [{ // Documents liés à l'assurance
+  vehicleRegistrationNumber: {
+    type: String,
+    required: true
+  },
+  vehicleBrand: {
+    type: String,
+    required: true
+  },
+  vehicleModel: {
+    type: String,
+    required: true
+  },
+  vehicleYear: {
+    type: Number,
+    required: true
+  },
+  policyNumber: {
+    type: String,
+    required: true
+  },
+  coverageType: {
+    type: String,
+    required: true
+  },
+  startDate: {
+    type: Date,
+    required: true
+  },
+  expirationDate: {
+    type: Date,
+    required: true
+  },
+  documents: [{
     type: String
   }],
-  isActive: { // Statut de l'assurance
+  isActive: {
     type: Boolean,
     required: true,
     default: true
   },
-  dateAdded: { // Date d'ajout de l'assurance
+  dateAdded: {
     type: Date,
     default: Date.now
   }
