@@ -379,5 +379,7 @@ module.exports = {
 addInsurance,
 getInsuranceById,
 editInsurance,
-deleteInsurance
+deleteInsurance,
+getInsuranceByUserId,
+getInsuranceByVehicle
 };
