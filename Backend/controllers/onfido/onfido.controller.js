@@ -27,16 +27,14 @@ const onfido = new Onfido({
     region: Region.CA
 });
 
-
-
-
 /**
- * Crée un nouveau candidat dans le système Onfido s'il n'existe pas déjà.
- * @param {*} newUser Les informations du nouvel utilisateur.
- * @returns {Object} Un objet contenant le résultat de l'opération.
+ * 
+ * @param {*} newUser 
+ * @returns 
  */
-async function createApplicant01(newUser) {
+async function createApplicant(newUser) {
     try {
+
         const applicants = await onfido.applicant.list();
 
         for (const applicant of applicants) {
@@ -58,78 +56,18 @@ async function createApplicant01(newUser) {
                 postcode: newUser.postalCode,
                 street: newUser.address
             }]
-        });
+         });
 
         // Assigner l'ID de l'applicant à newUser.applicantId
         newUser.applicantId = newApplicant.id;
+
+        console.log(newApplicant);
 
         // Mise à jour du champ 'applicantId' dans la collection 'userCollection'
         await userCollection.updateOne(
             { email: newUser.email },
             { $set: { applicantId: newApplicant.id } }
         );
-
-        return { success: true, msg: "Client ONFIDO créé avec succès"};
-    } catch (error) {
-        throw error;
-    }
-}
-
-async function createApplicant(req,res) {
-    try {
-
-        const newUser = req.body;
-
-        const applicants = await onfido.applicant.list();
-
-        for (const applicant of applicants) {
-            if (applicant.email === newUser.email) {
-                return { success: false, msg: "Utilisateur existant dans Onfido" };
-            }
-        }
-
-
-        const newApplicant =({
-            firstName: newUser.name,
-            lastName: newUser.lastName,
-            email: newUser.email,
-            gender: newUser.gender,
-            href: `${CONNECTION_PATH + PORT + DOCBASICPATH}/${newUser.docImage}`,
-            phone_number: newUser.phone,
-            addresses: [{
-                country: newUser.country,
-                town: newUser.city,
-                state: newUser.province,
-                postcode: newUser.postalCode,
-                street: newUser.address
-            }]
-        });
-
-        // const newApplicant = await onfido.applicant.create({
-        //     firstName: newUser.name,
-        //     lastName: newUser.lastName,
-        //     email: newUser.email,
-        //     gender: newUser.gender,
-        //     telephone: newUser.phone, 
-        //     addresses: [{
-        //         country: newUser.country,
-        //         city: newUser.city,
-        //         province: newUser.province,
-        //         postcode: newUser.postalCode,
-        //         street: newUser.address
-        //     }]
-        // });
-
-        // Assigner l'ID de l'applicant à newUser.applicantId
-        // newUser.applicantId = newApplicant.id;
-
-        console.log(newApplicant);
-
-        // Mise à jour du champ 'applicantId' dans la collection 'userCollection'
-        // await userCollection.updateOne(
-        //     { email: newUser.email },
-        //     { $set: { applicantId: newApplicant.id } }
-        // );
 
         return { success: true, msg: "Client ONFIDO créé avec succès"};
     } catch (error) {
@@ -256,8 +194,8 @@ async function verifyDocuments(user) {
 
         const applicantId = user.applicantId;
 
-       // const photosDirectory = '../../uploads/users/images/';
-        const photosDirectory = DOCPATH;
+        const photosDirectory = '../../uploads/users/images/';
+       // const photosDirectory = DOCPATH;
 
         // Construire le chemin absolu du dossier des photos
         const absolutePhotosDirectory = path.resolve(__dirname, photosDirectory);
@@ -306,16 +244,6 @@ async function verifyDrivingLicense(drivingLicensePhoto, userId, userData) {
         const checkData = {
             applicantId: userId,
             reportNames: ["identity_enhanced"],
-            applicantProvidesData: true, // Indique que l'applicant fournit les données
-            userData: {
-                drivingLicenseNumber: userData.drivingLicenseNumber, // Numéro de permis de conduire
-                name: userData.fullName.split(' ')[0], // Prénom du titulaire du permis
-                lastname: userData.fullName.split(' ').slice(1).join(' '), // Nom de famille du titulaire du permis
-                dateOfIssue: userData.dateOfIssue, // Date de délivrance
-                expirationDate: userData.expirationDate, // Date d'expiration
-                categories: userData.categories, // Catégories de permis
-            },
-            file: drivingLicensePhoto // La photo du permis de conduire
         };
 
         const check = await onfido.check.create(checkData);
