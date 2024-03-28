@@ -205,32 +205,31 @@ async function validateRegisterUserFields(req) {
 
 /*async function RegisterUser(req, res) {
     try {
+        // Extraction des données de la requête
         const { email, name, lastName, password, phone, address, postalCode,
             province, city, country, gender, birthDay, companyName
         } = req.body;
-
         const emailLowerCase = email.toLowerCase();
 
         // Validation des champs de la requête
         await validateRegisterUserFields(req);
-        // Vérification des erreurs de validation
         const validationErrors = validationResult(req);
         if (!validationErrors.isEmpty()) {
             return res.status(400).json({ errors: validationErrors.array() });
         }
 
-        // Vérifier si l'utilisateur existe déjà
+        // Vérification si l'utilisateur existe déjà dans Onfido
         let userExisting = await userCollection.findOne({ email: emailLowerCase });
-
         if (userExisting) {
-            return res.status(400).json({ msg: "Ce courriel est déjà utilisé" });
+            return res.status(400).json({ msg: "Cet utilisateur existe déjà" });
         }
 
         // Hachage du mot de passe
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUSer = new User({
+        // Création de l'objet User
+        const newUser = new User({
             email: emailLowerCase,
             name: name,
             lastName: lastName,
@@ -247,26 +246,30 @@ async function validateRegisterUserFields(req) {
             typeAccount: "free",
         });
 
-        newUSer.set('documents', undefined);
-        newUSer.set('verificationCodeExpiration', undefined);
-        newUSer.set('verificationAttempts', undefined);
-        newUSer.set('verificationCode', undefined);
-        newUSer.set('accidentReports', undefined);
-        //newUSer.set('vehicles', undefined);
+         // Création de l'applicant dans Onfido
+         const applicantResult = await createApplicant(newUser);
 
-        /// Sauvegarde du nouveau propriétaire dans la collection 'users'
-        const insertResult = await userCollection.insertOne(newUSer);
+         // Vérification du résultat de la création de l'applicant dans Onfido
+         if (!applicantResult.success) {
+             return res.status(400).json({ msg: applicantResult.msg });
+         }
+
+        // Sauvegarde du nouvel utilisateur dans la collection 'users'
+        const insertResult = await userCollection.insertOne(newUser);
 
         if (!insertResult.acknowledged) {
             return res.status(500).json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
         }
 
-        res.status(201).json({ msg: "Utilisateur créé avec succès", newuser: newUSer._id });
+        const cacheKey = `${newUser._id}`;
+        const encryptedCarData = encryptData(newUser, AES_KEY);
+        myCache.set(cacheKey, encryptedCarData, 600);
+
+        res.status(201).json({ msg: "Utilisateur créé avec succès", newUser: newUser._id });
 
     } catch (error) {
         console.error(error);
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
-
     }
 }
 */
@@ -298,7 +301,7 @@ async function RegisterUser(req, res) {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Création de l'objet User
-        const newUser01 = new User({
+        const newUser = new User({
             email: emailLowerCase,
             name: name,
             lastName: lastName,
@@ -315,37 +318,13 @@ async function RegisterUser(req, res) {
             typeAccount: "free",
         });
 
-        const newUser = new User({
-            email: emailLowerCase,
-            name: "pending",
-            lastName: "pending",
-            password: hashedPassword,
-            phone: "pending",
-            address: "pending",
-            postalCode: "pending",
-            province: "pending",
-            city: "penging",
-            country: "pending",
-            gender: "pending",
-            birthDay: "pending",
-            typeAccount: "free",
-        });
-        
-        newUser.set('documents', undefined);
-        newUser.set('verificationCodeExpiration', undefined);
-        newUser.set('verificationAttempts', undefined);
-        newUser.set('verificationCode', undefined);
-        newUser.set('accidentReports', undefined);
-        //newUser.set('vehicles', undefined);
-        
+         // Création de l'applicant dans Onfido
+         const applicantResult = await createApplicant(newUser);
 
-        // // Création de l'applicant dans Onfido
-        // const applicantResult = await createApplicant(newUser);
-
-        // // Vérification du résultat de la création de l'applicant dans Onfido
-        // if (!applicantResult.success) {
-        //     return res.status(400).json({ msg: applicantResult.msg });
-        // }
+         // Vérification du résultat de la création de l'applicant dans Onfido
+         if (!applicantResult.success) {
+             return res.status(400).json({ msg: applicantResult.msg });
+         }
 
         // Sauvegarde du nouvel utilisateur dans la collection 'users'
         const insertResult = await userCollection.insertOne(newUser);

@@ -106,7 +106,7 @@ async function addCar(req, res) {
         // Insère la nouvelle voiture dans la collection et met à jour les informations du propriétaire
         await Promise.all([
             vehicleCollection.insertOne(newCar),
-            userCollection.updateOne({ _id: ownerId }, { $addToSet: { vehicles: plate } })
+            userCollection.updateOne({ _id: ownerId }, { $addToSet: { vehicles: newCar._id} })
         ]);
 
         // Met à jour le cache avec les informations de la nouvelle voiture
@@ -121,7 +121,7 @@ async function addCar(req, res) {
             // Si les données sont en cache, les renvoyer directement
             console.log("Données trouvées dans le cache. Mise à jour du cache...");
             const decryptedData = decryptData(cachedData, AES_KEY);
-            decryptedData.vehicles.push(newCar.plate); // Ajout de la nouvelle plaque
+            decryptedData.vehicles.push(newCar._id); // Ajout de la nouvelle plaque
             const reencryptedData = encryptData(decryptedData, AES_KEY); // Rechiffrement des données mises à jour
             myCache.set(cacheKey, reencryptedData, 600); // Mise à jour du cache
             return res.status(200).json({ vehicle: decryptedData });
@@ -169,8 +169,8 @@ async function getCarById(req, res) {
       }
 
       // Vérification si les données du locataire sont en cache
-      const cacheKey = `${ownerId}_${carId}`;
-      const cachedData = myCache.get(cacheKey);
+      const cacheKeyCar = `${ownerId}_${carId}`;
+      const cachedData = myCache.get(cacheKeyCar);
       if (cachedData) {
       // Si les données sont en cache, les renvoyer directement
       console.log(`Données trouvées dans le cache. Retour du cache...`);
@@ -185,7 +185,7 @@ async function getCarById(req, res) {
       } 
 
       // Vérifier si l'utilisateur a la voiture dans son champ vehicles
-      const user = await userCollection.findOne({ _id: ownerId, vehicles: carFunded.plate });
+      const user = await userCollection.findOne({ _id: ownerId, vehicles: carFunded._id });
       if (!user) {
         return res.status(403).json({ error: "L'utilisateur n'a pas accès à cette voiture" });
       }
@@ -246,24 +246,9 @@ async function getCarById(req, res) {
         }
 
         // Vérifier si l'utilisateur a accès à cette voiture
-        const user = await userCollection.findOne({ _id: ownerId, vehicles: carFunded.plate });
+        const user = await userCollection.findOne({ _id: ownerId, vehicles: carId });
         if (!user) {
             return res.status(403).json({ error: "L'utilisateur n'a pas accès à cette voiture" });
-        }
-
-        // Si le champ "plate" est présent dans fieldsToUpdate, mettre à jour le champ "vehicles" de l'utilisateur
-        if (fieldsToUpdate.plate) {
-            // Retirer l'ancien "plate" de la liste des véhicules de l'utilisateur
-            await userCollection.updateOne(
-                { _id: ownerId },
-                { $pull: { vehicles: carFunded.plate } }
-            );
-
-            // Ajouter le nouveau "plate" à la liste des véhicules de l'utilisateur
-            await userCollection.updateOne(
-                { _id: ownerId },
-                { $addToSet: { vehicles: fieldsToUpdate.plate } }
-            );
         }
 
         // Mettre à jour les informations de la voiture dans la base de données
@@ -281,9 +266,9 @@ async function getCarById(req, res) {
         const carInDataBase = await vehicleCollection.findOne({ _id: carId });
         
         // Mise à jour du cache (si nécessaire)
-        const cacheKey = `${ownerId}_${carId}`;
+        const cacheKeyCar = `${ownerId}_${carId}`;
         const encryptedTenantData = encryptData(carInDataBase, AES_KEY);
-        myCache.set(cacheKey, encryptedTenantData, 600);
+        myCache.set(cacheKeyCar, encryptedTenantData, 600);
 
         // Renvoyer les informations de la voiture mises à jour directement depuis la mise à jour dans la base de données
         return res.status(200).json({ message: 'Voiture mise à jour avec succès', car: carInDataBase });
@@ -331,7 +316,7 @@ async function deleteCarById(req, res) {
       }
 
       // Vérifier si l'utilisateur a accès à cette voiture
-      const user = await userCollection.findOne({ _id: ownerId, vehicles: carFunded.plate });
+      const user = await userCollection.findOne({ _id: ownerId, vehicles: getCarById });
       if (!user) {
           return res.status(403).json({ error: "L'utilisateur n'a pas accès à cette voiture" });
       }
@@ -339,15 +324,28 @@ async function deleteCarById(req, res) {
       // Retirer carFunded.plate du champ vehicles de l'utilisateur
       await userCollection.updateOne(
           { _id: ownerId },
-          { $pull: { vehicles: carFunded.plate } }
+          { $pull: { vehicles: carId } }
       );
 
       // Supprimer la voiture de la base de données
       await vehicleCollection.deleteOne({ _id: carId });
 
       // Supprimer les données de cache associées à cette voiture (si présentes)
-      const cacheKey = `${ownerId}_${carId}`;
-      myCache.del(cacheKey);
+      const cacheKeyCar = `${ownerId}_${carId}`;
+      myCache.del(cacheKeyCar);
+
+      // Met à jour la clé associée au propriétaire dans le cache avec les informations de la nouvelle voiture
+      const cacheKey = `${ownerId}`;
+      const cachedData = myCache.get(cacheKey);
+      if (cachedData) {
+            // Si les données sont en cache, les renvoyer directement
+            console.log("Données trouvées dans le cache. Mise à jour du cache...");
+            const decryptedData = decryptData(cachedData, AES_KEY);
+            decryptedData.vehicles.pull(carId); 
+            const reencryptedData = encryptData(decryptedData, AES_KEY); 
+            myCache.set(cacheKey, reencryptedData, 600); 
+            return res.status(200).json({ vehicle: decryptedData });
+      }
 
       // Renvoyer une réponse indiquant que la voiture a été supprimée avec succès
       return res.status(200).json({ message: 'Voiture supprimée avec succès' });
@@ -432,7 +430,7 @@ async function toggleCarActivation(req, res) {
         }
 
         // Vérifier si l'utilisateur a accès à cette voiture
-        const user = await userCollection.findOne({ _id: ownerId, vehicles: car.plate });
+        const user = await userCollection.findOne({ _id: ownerId, vehicles: carId });
         if (!user) {
             return res.status(403).json({ error: "L'utilisateur n'a pas accès à cette voiture" });
         }
@@ -448,9 +446,22 @@ async function toggleCarActivation(req, res) {
         const carInDataBase = await vehicleCollection.findOne({ _id: carId });
         
         // Mise à jour du cache (si nécessaire)
-        const cacheKey = `${ownerId}_${carId}`;
+        const cacheKeyCar = `${ownerId}_${carId}`;
         const encryptedTenantData = encryptData(carInDataBase, AES_KEY);
-        myCache.set(cacheKey, encryptedTenantData, 600);
+        myCache.set(cacheKeyCar, encryptedTenantData, 600);
+
+        // Met à jour la clé associée au propriétaire dans le cache avec les informations de la nouvelle voiture
+        const cacheKey = `${ownerId}`;
+        const cachedData = myCache.get(cacheKey);
+        if (cachedData) {
+            // Si les données sont en cache, les renvoyer directement
+            console.log("Données trouvées dans le cache. Mise à jour du cache...");
+            const decryptedData = decryptData(cachedData, AES_KEY);
+            decryptedData.isActive.set(!car.isActive); 
+            const reencryptedData = encryptData(decryptedData, AES_KEY); 
+            myCache.set(cacheKey, reencryptedData, 600); 
+            return res.status(200).json({ vehicle: decryptedData });
+        }
 
         // Renvoyer les informations de la voiture mise à jour
         return res.status(200).json({ message: 'Activation/désactivation de la voiture réussie', car: carInDataBase });
