@@ -299,8 +299,6 @@ async function verifyInsurance(insuranceDocument, userId, vehicleData) {
 }
 
 
-
-
 module.exports = {
     createApplicant,
     verifyDocuments,
@@ -309,4 +307,3 @@ module.exports = {
     getAllApplicants,
     verifyDocuments
 };
-
