@@ -100,7 +100,12 @@ const userSchema = new mongoose.Schema({
             required: true
         }
     }],
-
+    driverLicense: {
+        type: String,
+        ref: "DriverLicense",
+        default: "pending",
+        index: true,
+    },
     typeAccount: {
         type: String,
         enum: ['free', 'premium'],

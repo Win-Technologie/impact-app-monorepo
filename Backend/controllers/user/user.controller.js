@@ -165,42 +165,31 @@ async function validateRegisterUserFields(req) {
 
 async function validateRegisterUserFields(req) {
     await Promise.all([
-        // Validación del correo electrónico
+
         body('email')
             .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
             .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req),
 
-        // Validación del nombre
         body('firstName').optional().notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req),
 
-        // Validación del apellido
         body('lastName').optional().notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req),
 
-        // Validación de la contraseña
         body('password').notEmpty().isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req),
 
-        // Validación del número de teléfono
         body('phone').optional().isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req),
 
-        // Validación de la dirección
         body('address').optional().isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req),
 
-        // Validación del código postal
         body('postalCode').optional().isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req),
 
-        // Validación de la provincia
         body('province').optional().isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req),
 
-        // Validación de la ciudad
         body('city').optional().isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req),
 
-        // Validación del país
         body('country').optional().isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req),
 
-        // Validación del género
         body('gender').optional().isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req),
 
-        // Validación de la fecha de nacimiento
         body('birthDate').optional().notEmpty().withMessage('La date est requise et doit être du type date').run(req),
     ]);
 }
@@ -229,8 +218,6 @@ async function validateLicenseData(req) {
         body('country').optional().isString().isLength({ min: 4 }).withMessage('Le pays doit contenir au moins 4 caractères').run(req)
     ]);
 }
-
-
 
 /*async function RegisterUser(req, res) {
     try {
@@ -299,7 +286,6 @@ async function validateLicenseData(req) {
 }
 */
 
-
 async function RegisterUser(req, res) {
     try {
         // Extraction des données de la requête
@@ -345,6 +331,7 @@ async function RegisterUser(req, res) {
         });
 
         const newUser = new User({
+            driverLicense: "pending",
             email: emailLowerCase,
             name: name || "pending",
             lastName: lastName || "pending",
@@ -366,15 +353,6 @@ async function RegisterUser(req, res) {
         newUser.set('verificationCode', undefined);
         newUser.set('accidentReports', undefined);
         //newUser.set('vehicles', undefined);
-
-
-        // // Création de l'applicant dans Onfido
-        // const applicantResult = await createApplicant(newUser);
-
-        // // Vérification du résultat de la création de l'applicant dans Onfido
-        // if (!applicantResult.success) {
-        //     return res.status(400).json({ msg: applicantResult.msg });
-        // }
 
         // Sauvegarde du nouvel utilisateur dans la collection 'users'
         const insertResult = await userCollection.insertOne(newUser);
@@ -595,8 +573,6 @@ async function GetUserById(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
-
-
 
 async function RestorePassword(req, res) {
     try {
@@ -1040,8 +1016,9 @@ async function UploadDriverLicense(req, res) {
         const formattedExpiresDate = expiresDate.toISOString().split('T')[0];
         const formattedBirthdateDate = birthdateDate.toISOString().split('T')[0];
 
-
+        //.toLowerCase(),
         const newDriverLicense = new DriverLicense({
+            user: myToken.user_id,
             number: number,
             name: name,
             lastName: lastName,
@@ -1063,19 +1040,25 @@ async function UploadDriverLicense(req, res) {
             photo: photoPath,
         });
 
-        console.log(newDriverLicense);
-
-        const insertDriverLicense = await drivingLicensesCollection.insertOne(newDriverLicense);
-
-
-        if (!insertDriverLicense.acknowledged) {
+        const [updateResult, insertResult] = await Promise.all([
+            userCollection.updateOne(
+                { _id: myToken.user_id },
+                { $set: { driverLicense: newDriverLicense._id } }
+            ),
+            drivingLicensesCollection.insertOne(newDriverLicense)
+        ]);
+    
+        if (!insertResult || !updateResult) {
             return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
         }
 
+        // // Création de l'applicant dans Onfido
+        // const applicantResult = await createApplicant(newUser);
 
-
-        //    // return res.status(200).json({ msg: 'Voici le document'});
-        //     return res.status(200).json({ msg: 'Voici le document', document: documentText, extractedInfoText: extractedInfo });
+        // // Vérification du résultat de la création de l'applicant dans Onfido
+        // if (!applicantResult.success) {
+        //     return res.status(400).json({ msg: applicantResult.msg });
+        // }
 
         return res.status(200).json({ msg: 'Nouvelle licence ajoutée avec succès' });
     } catch (error) {
