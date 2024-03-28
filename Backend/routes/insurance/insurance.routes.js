@@ -23,5 +23,11 @@ router.patch('/:id', [userAuth.ensureAuth], insuranceController.editInsurance);
 // Route pour supprimer une assurance par son ID
 router.delete('/delete/:id', [userAuth.ensureAuth], insuranceController.deleteInsurance);
 
+// Route pour obtenir toutes les assurances d'un véhicule par son ID
+router.get('/vehicle/:vehicleId', [userAuth.ensureAuth], insuranceController.getInsurancesByVehicleId);
+
+// Route pour obtenir toutes les assurances d'un utilisateur par son ID
+router.get('/user/:userId', [userAuth.ensureAuth], insuranceController.getInsurancesByUserId);
+
 
 module.exports = router;
