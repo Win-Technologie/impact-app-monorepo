@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const Insurance = require('../../modeles/insurance/insurance');
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
 
+const AES_KEY = process.env.AES_KEY
 const MAINDB = process.env.MAINDB;
 const INSURANCES_COLLECTION = process.env.INSURANCESCOLLECTION;
 const VEHICLES_COLLECTION = process.env.VEHICLESCOLLECTION;
@@ -16,11 +17,30 @@ async function validateInsuranceFields(req) {
     await Promise.all([
         body('insuranceNumber').notEmpty().withMessage('Le numéro d\'assurance est requis').run(req),
         body('insuranceCompany').notEmpty().withMessage('La compagnie d\'assurance est requise').run(req),
-        body('vehicle').notEmpty().withMessage('Le véhicule est requis').run(req)
+        // body('vehicle').notEmpty().withMessage('Le véhicule est requis').run(req),
+        // body('vehicleRegistrationNumber').notEmpty().withMessage('Le numéro d\'immatriculation du véhicule est requis').run(req),
+        // body('vehicleBrand').notEmpty().withMessage('La marque du véhicule est requise').run(req),
+        // body('vehicleModel').notEmpty().withMessage('Le modèle du véhicule est requis').run(req),
+        // body('vehicleYear').isInt().withMessage('L\'année du véhicule doit être un nombre entier').run(req),
+        body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
+        body('coverageType').notEmpty().withMessage('Le type de couverture est requis').run(req),
+        body('startDate').notEmpty().isISO8601().withMessage('La date de début est requise et doit être une date valide').run(req),
+        body('expirationDate').notEmpty().isISO8601().withMessage('La date d\'expiration est requise et doit être une date valide').run(req)
         // Vous pouvez ajouter plus de validations selon les champs de votre modèle d'assurance
     ]);
 }
 
+// Fonction de validation pour les champs à mettre à jour
+async function validateUpdateInsuranceFields(req) {
+    await Promise.all([
+        body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
+        body('coverageType').notEmpty().withMessage('Le type de couverture est requis').run(req),
+        body('startDate').notEmpty().isISO8601().withMessage('La date de début est requise et doit être une date valide').run(req),
+        body('expirationDate').notEmpty().isISO8601().withMessage('La date d\'expiration est requise et doit être une date valide').run(req),
+        // Assurez-vous de valider également les champs du véhicule si nécessaire
+        body('vehicleId').notEmpty().withMessage('L\'identifiant du véhicule est requis').run(req)  // Assurez-vous que ce champ est requis si vous permettez la mise à jour du véhicule associé
+    ]);
+}
 
 // FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache
 async function addInsurance(req, res) {
@@ -46,21 +66,48 @@ async function addInsurance(req, res) {
             return res.status(400).json({ error: errorMessage });
         }
 
-        const { insuranceNumber, insuranceCompany, vehicle } = req.body;
+        const {vehicleId} = req.params;
+        const { insuranceNumber, insuranceCompany, policyNumber, coverageType, startDate, expirationDate } = req.body;
+        
 
-        console.log("Insurance Number", insuranceNumber);
+        // Extraire les données du véhicule à partir de la base de données
+        // vehicle, vehicleRegistrationNumber, vehicleBrand, vehicleModel, vehicleYear
+
+        const vehicle = vehicleId;
+        console.log("Vehicle", vehicle);
+
+        const vehicleData = await vehicleCollection.findOne({ _id: vehicle });
+        if (!vehicleData) {
+            return res.status(404).json({ error: "Véhicule non trouvé" });
+        }
+
+        const { plate, brand, model, year } = vehicleData;
+        const vehicleRegistrationNumber = plate;
+        const vehicleBrand = brand;
+        const vehicleModel = model;
+        const vehicleYear = year;
 
         
+        // Vérification de l'existence préalable d'une assurance avec le même numéro
         const existingInsurance = await insuranceCollection.findOne({ insuranceNumber });
         if (existingInsurance) {
             return res.status(400).json({ message: "Une assurance avec ce numéro existe déjà." });
         }
 
+        // Création de la nouvelle assurance
         const newInsurance = new Insurance({
             insuranceNumber,
             insuranceCompany,
-            subscriber,
-            vehicle
+            subscriber: subscriber, // récupéré depuis le token
+            vehicle,
+            vehicleRegistrationNumber,
+            vehicleBrand,
+            vehicleModel,
+            vehicleYear,
+            policyNumber,
+            coverageType,
+            startDate: new Date(startDate),
+            expirationDate: new Date(expirationDate)
         });
 
         // Insérer le nouveau document d'assurance
@@ -135,7 +182,6 @@ async function editInsurance(req, res) {
             return res.status(400).json({ error: "Identifiant de l'assurance manquant dans la requête" });
         }
 
-        // Extraire le token et décoder pour obtenir l'userId
         const token = req.headers.authorization?.replace("Bearer ", "");
         if (!token) {
             return res.status(400).json({ error: "Le Token n'est pas fourni" });
@@ -146,10 +192,35 @@ async function editInsurance(req, res) {
         }
         const subscriber = myToken.user_id;
 
+        
+        // Exécution des validations
+        await validateUpdateInsuranceFields(req);
+
+        const { policyNumber, coverageType, startDate, expirationDate, vehicleId } = req.body;
+
+        // Supposons que vous souhaitez mettre à jour l'assurance avec les nouvelles informations du véhicule
+        const vehicleData = await vehicleCollection.findOne({ _id: vehicleId });
+        if (!vehicleData) {
+            return res.status(404).json({ error: "Véhicule non trouvé" });
+        }
+        const { plate, brand, model, year } = vehicleData;
+
+        const fieldsToUpdate = {
+            policyNumber,
+            coverageType,
+            startDate: new Date(startDate),
+            expirationDate: new Date(expirationDate),
+            vehicle: vehicleId, // Vous pouvez choisir de ne pas permettre la modification du véhicule associé
+            vehicleRegistrationNumber: plate,
+            vehicleBrand: brand,
+            vehicleModel: model,
+            vehicleYear: year
+        };
+
         const updatedInsurance = await insuranceCollection.findOneAndUpdate(
             { _id: insuranceId },
             { $set: fieldsToUpdate },
-            { returnDocument: 'after' } // Assurez-vous de renvoyer le document mis à jour
+            { returnDocument: 'after' }
         );
 
         // Mettre à jour le cache
@@ -167,35 +238,7 @@ async function editInsurance(req, res) {
         return res.status(500).json({ error: "Erreur interne du serveur" });
     }
 }
-
-// ANCIENNE VERSION FONCTIONNEL SANS CACHE | A MODIFIER
-// async function editInsurance(req, res) {
-//     try {
-//         // Similar JWT and validation handling as editCar
-//         const insuranceId = req.params.id;
-//         const fieldsToUpdate = req.body;
-
-//         // Check for the existence of the insurance
-//         const existingInsurance = await insuranceCollection.findOne({ _id: insuranceId });
-//         if (!existingInsurance) {
-//             return res.status(404).json({ error: "Cette assurance n'existe pas" });
-//         }
-
-//         // Update the insurance document
-//         await insuranceCollection.updateOne({ _id: insuranceId }, { $set: fieldsToUpdate });
-
-//         // Fetch the updated document to return
-//         const updatedInsurance = await insuranceCollection.findOne({ _id: insuranceId });
-
-//         return res.status(200).json({ message: "Assurance mise à jour avec succès", insurance: updatedInsurance });
-//     } catch (error) {
-//         console.error("Erreur lors de la mise à jour de l'assurance :", error);
-//         return res.status(500).json({ error: "Erreur interne du serveur" });
-//     }
-// }
         
-// FONCTIONNEL | Manque le cache
-
 
 
 // FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache

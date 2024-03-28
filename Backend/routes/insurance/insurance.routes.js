@@ -11,8 +11,8 @@ const multiparty = require('connect-multiparty');
 // IMAGES PATH
 const md_uploadInsuranceImg = multiparty({ uploadDir: `${INSURANCE_ROUTER_IMG_PATH}` });
 
-// Route pour ajouter une assurance
-router.post('/add', [userAuth.ensureAuth], insuranceController.addInsurance);
+// Route pour ajouter une assurance à un véhicule par son ID
+router.post('/add/:vehicleId', [userAuth.ensureAuth], insuranceController.addInsurance);
 
 // Route pour obtenir une assurance par son ID
 router.get('/:id', [userAuth.ensureAuth], insuranceController.getInsuranceById);

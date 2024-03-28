@@ -30,6 +30,7 @@ function getFileName(file) {
     const fileParts = filePath.split(/[\\/]/);
     // Récupère le dernier élément du tableau, qui est le nom du fichier
     const fileName = fileParts[fileParts.length - 1];
+    // console.log(fileName)
     return fileName;
 }
 
