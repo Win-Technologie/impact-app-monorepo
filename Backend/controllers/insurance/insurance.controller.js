@@ -325,7 +325,7 @@ async function getInsuranceByUserId(req, res) {
     }
 }
 
-async function getInsuranceByVehicle(req, res) {
+async function getInsuranceByVehicleId(req, res) {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");
         if (!token) {
@@ -381,5 +381,5 @@ getInsuranceById,
 editInsurance,
 deleteInsurance,
 getInsuranceByUserId,
-getInsuranceByVehicle
+getInsuranceByVehicleId
 };
