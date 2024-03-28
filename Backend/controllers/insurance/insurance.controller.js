@@ -281,6 +281,100 @@ async function deleteInsurance(req, res) {
     }
 }
 
+
+async function getInsuranceByUserId(req, res) {
+    try {
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            return res.status(400).json({ message: "Le Token n'est pas fourni" });
+        }
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ message: "Token invalide" });
+        }
+        const userIdFromToken = myToken.user_id;
+
+        const userId = req.params.userId;
+        if (userId !== userIdFromToken) {
+            return res.status(403).json({ message: "Accès refusé" });
+        }
+
+        // Clé de cache unique pour l'utilisateur
+        const cacheKey = `insurancesUID_${userId}`;
+        const cachedInsurances = myCache.get(cacheKey);
+
+        if (cachedInsurances) {
+            console.log("Retour des données d'assurance depuis le cache");
+            const decryptedData = decryptData(cachedInsurances, AES_KEY);
+            return res.status(200).json({ insurances: decryptedData });
+        } else {
+            const insurances = await insuranceCollection.find({ subscriber: userId }).toArray();
+            if (insurances.length === 0) {
+                return res.status(404).json({ message: "Aucune assurance trouvée pour cet utilisateur" });
+            }
+
+            // Mise en cache des données d'assurance après le chiffrement
+            const encryptedData = encryptData(insurances, AES_KEY);
+            myCache.set(cacheKey, encryptedData, 600); // Expiration après 600 secondes
+
+            return res.status(200).json({ insurances });
+        }
+    } catch (error) {
+        console.error("Erreur lors de la récupération des assurances par utilisateur :", error);
+        return res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+}
+
+async function getInsuranceByVehicle(req, res) {
+    try {
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            return res.status(400).json({ error: "Le Token n'est pas fourni" });
+        }
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ error: "Token invalide" });
+        }
+        const userIdFromToken = myToken.user_id;
+
+        const vehicleId = req.params.vehicleId;
+
+        // Clé de cache unique pour le véhicule
+        const cacheKey = `insurances_vehicle_${vehicleId}`;
+        const cachedInsurances = myCache.get(cacheKey);
+
+        if (cachedInsurances) {
+            console.log("Retour des données d'assurance depuis le cache");
+            const decryptedData = decryptData(cachedInsurances, AES_KEY);
+            return res.status(200).json({ insurances: decryptedData });
+        } else {
+            // Vérifier la propriété du véhicule
+            const vehicle = await vehicleCollection.findOne({ _id: vehicleId, owner: userIdFromToken });
+            if (!vehicle) {
+                return res.status(403).json({ message: "Accès refusé ou véhicule non trouvé" });
+            }
+
+            const insurances = await insuranceCollection.find({ vehicle: vehicleId }).toArray();
+            if (insurances.length === 0) {
+                return res.status(404).json({ message: "Aucune assurance trouvée pour ce véhicule" });
+            }
+
+            // Mise en cache des données d'assurance après le chiffrement
+            const encryptedData = encryptData(insurances, AES_KEY);
+            myCache.set(cacheKey, encryptedData, 600); // Expiration après 600 secondes
+
+            return res.status(200).json({ insurances });
+        }
+    } catch (error) {
+        console.error("Erreur lors de la récupération des assurances par véhicule :", error);
+        return res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+}
+
+
+
+
+
 module.exports = {
 addInsurance,
 getInsuranceById,
