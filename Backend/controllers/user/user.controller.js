@@ -306,6 +306,7 @@ async function RegisterUser(req, res) {
         const { email, name, lastName, password, phone, address, postalCode,
             province, city, country, gender, birthDay, companyName
         } = req.body;
+
         const emailLowerCase = email.toLowerCase();
 
         // Validation des champs de la requête
@@ -345,35 +346,35 @@ async function RegisterUser(req, res) {
 
         const newUser = new User({
             email: emailLowerCase,
-            name: "pending",
-            lastName: "pending",
+            name: name || "pending",
+            lastName: lastName || "pending",
             password: hashedPassword,
-            phone: "pending",
-            address: "pending",
-            postalCode: "pending",
-            province: "pending",
-            city: "penging",
-            country: "pending",
-            gender: "pending",
-            birthDay: "pending",
+            phone: phone || "pending",
+            address: address || "pending",
+            postalCode: postalCode || "pending",
+            province: province || "pending",
+            city: city || "pending",
+            country: country || "pending",
+            gender: gender || "pending",
+            birthDay: birthDay || "pending",
             typeAccount: "free",
         });
-        
+
         newUser.set('documents', undefined);
         newUser.set('verificationCodeExpiration', undefined);
         newUser.set('verificationAttempts', undefined);
         newUser.set('verificationCode', undefined);
         newUser.set('accidentReports', undefined);
         //newUser.set('vehicles', undefined);
-        
 
-        // Création de l'applicant dans Onfido
-        const applicantResult = await createApplicant(newUser);
 
-        // Vérification du résultat de la création de l'applicant dans Onfido
-        if (!applicantResult.success) {
-             return res.status(400).json({ msg: applicantResult.msg });
-         }
+        // // Création de l'applicant dans Onfido
+        // const applicantResult = await createApplicant(newUser);
+
+        // // Vérification du résultat de la création de l'applicant dans Onfido
+        // if (!applicantResult.success) {
+        //     return res.status(400).json({ msg: applicantResult.msg });
+        // }
 
         // Sauvegarde du nouvel utilisateur dans la collection 'users'
         const insertResult = await userCollection.insertOne(newUser);
@@ -382,7 +383,9 @@ async function RegisterUser(req, res) {
             return res.status(500).json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
         }
 
-        res.status(201).json({ msg: "Utilisateur créé avec succès", newUser: newUser._id });
+        const temporalToken = jwt.createTemporalToken(newUser);
+
+        res.status(201).json({ msg: "Utilisateur créé avec succès", newUser: newUser._id, TA7: temporalToken });
 
     } catch (error) {
         console.error(error);
@@ -960,7 +963,7 @@ async function UploadDocument(req, res) {
 
 async function UploadDriverLicense(req, res) {
     try {
-        const licenseInfo = req.body;
+  
         const documentFile = req.files.document;
 
         // Récupérer le jeton du header de la requête
@@ -977,7 +980,7 @@ async function UploadDriverLicense(req, res) {
         }
 
         // if (!documentFile) {
-        //     return res.status(400).json({ msg: "You must introduce a valid driver licence photo" });
+        //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
         // }
 
         // Validation des champs de la requête
@@ -996,9 +999,8 @@ async function UploadDriverLicense(req, res) {
         let licenseExisting = await drivingLicensesCollection.findOne({ number: number });
 
         if (licenseExisting) {
-            return res.status(400).json({ msg: "License already exist" });
+            return res.status(400).json({ msg: "La licence existe déjà" });
         }
-
 
         let photoPath;
 
@@ -1024,9 +1026,9 @@ async function UploadDriverLicense(req, res) {
                 deleteUploadedFiles(req.files);
                 return res.status(400).json({ msg: `Le nombre de fichiers ne peut pas dépasser ${maxFileQuantity}` });
             }
-            console.log("antes de obtener el path");
+
             photoPath = getFileName(req.files[`photo`]);
-            console.log("despues de obtener el path");
+
         }
 
         const issuedDate = new Date(issued);
@@ -1067,7 +1069,7 @@ async function UploadDriverLicense(req, res) {
 
 
         if (!insertDriverLicense.acknowledged) {
-            return res.status(500).json({ msg: "Error al insertar la nueva licencia" });
+            return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
         }
 
 
@@ -1075,7 +1077,7 @@ async function UploadDriverLicense(req, res) {
         //    // return res.status(200).json({ msg: 'Voici le document'});
         //     return res.status(200).json({ msg: 'Voici le document', document: documentText, extractedInfoText: extractedInfo });
 
-        return res.status(200).json({ msg: 'Nueva lisencia adjuntada con exito' });
+        return res.status(200).json({ msg: 'Nouvelle licence ajoutée avec succès' });
     } catch (error) {
         console.error(`UploadDriverLicense: Erreur interne du serveur : ${error.message}, ${error}`);
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });

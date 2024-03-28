@@ -18,6 +18,26 @@ function createAccessToken(user) {
     // Créer un objet de charge utile pour le jeton (contenant toutes les données)
     const payload = {
         token_type: "access", // Type de jeton, dans ce cas, "access"
+        access_type: "access_type",
+        user_id: user._id, // Identifiant unique de l'utilisateur associé au jeton
+        iat: Date.now(), // Heure d'émission du jeton (en millisecondes depuis le 1er janvier 1970)
+        exp: expToken.getTime(), // Heure d'expiration du jeton (en millisecondes depuis le 1er janvier 1970)
+    };
+
+    // Signer la charge utile et obtenir le jeton en utilisant la clé secrète
+    return jwt.sign(payload, JWTSTKEY);
+}
+
+function createTemporalToken(user) {
+
+    const currentDate = new Date(); 
+    // // Définir l'heure d'expiration du jeton, dans ce cas, 15 jours après sa création
+    const expToken = new Date(currentDate);
+    expToken.setDate(expToken.getDate() + 15);
+    // Créer un objet de charge utile pour le jeton (contenant toutes les données)
+    const payload = {
+        token_type: "access", // Type de jeton, dans ce cas, "access"
+        access_type: "temporary",
         user_id: user._id, // Identifiant unique de l'utilisateur associé au jeton
         iat: Date.now(), // Heure d'émission du jeton (en millisecondes depuis le 1er janvier 1970)
         exp: expToken.getTime(), // Heure d'expiration du jeton (en millisecondes depuis le 1er janvier 1970)
@@ -124,5 +144,6 @@ module.exports = {
     decoded,
     removeRevokedTokens,
     createRefreshToken,
-    isTokenRevoked
+    isTokenRevoked,
+    createTemporalToken
 };
