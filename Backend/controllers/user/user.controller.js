@@ -275,11 +275,11 @@ async function validateLicenseData(req) {
             typeAccount: "free",
         });
 
-         // Création de l'applicant dans Onfido
-         const applicantResult = await createApplicant(newUser);
+        // Création de l'applicant dans Onfido
+        const applicantResult = await createApplicant(newUser);
 
-         // Vérification du résultat de la création de l'applicant dans Onfido
-         if (!applicantResult.success) {
+        // Vérification du résultat de la création de l'applicant dans Onfido
+        if (!applicantResult.success) {
              return res.status(400).json({ msg: applicantResult.msg });
          }
 
@@ -289,10 +289,6 @@ async function validateLicenseData(req) {
         if (!insertResult.acknowledged) {
             return res.status(500).json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
         }
-
-        const cacheKey = `${newUser._id}`;
-        const encryptedCarData = encryptData(newUser, AES_KEY);
-        myCache.set(cacheKey, encryptedCarData, 600);
 
         res.status(201).json({ msg: "Utilisateur créé avec succès", newUser: newUser._id });
 
@@ -330,7 +326,7 @@ async function RegisterUser(req, res) {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Création de l'objet User
-        const newUser = new User({
+        const newUser01 = new User({
             email: emailLowerCase,
             name: name,
             lastName: lastName,
@@ -347,6 +343,29 @@ async function RegisterUser(req, res) {
             typeAccount: "free",
         });
 
+        const newUser = new User({
+            email: emailLowerCase,
+            name: "pending",
+            lastName: "pending",
+            password: hashedPassword,
+            phone: "pending",
+            address: "pending",
+            postalCode: "pending",
+            province: "pending",
+            city: "penging",
+            country: "pending",
+            gender: "pending",
+            birthDay: "pending",
+            typeAccount: "free",
+        });
+        
+        newUser.set('documents', undefined);
+        newUser.set('verificationCodeExpiration', undefined);
+        newUser.set('verificationAttempts', undefined);
+        newUser.set('verificationCode', undefined);
+        newUser.set('accidentReports', undefined);
+        //newUser.set('vehicles', undefined);
+        
 
         // Création de l'applicant dans Onfido
         const applicantResult = await createApplicant(newUser);
