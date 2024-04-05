@@ -1068,8 +1068,6 @@ async function UploadDriverLicense(req, res) {
 }
 
 
-
-
 module.exports = {
     RegisterUser,
     Login,
