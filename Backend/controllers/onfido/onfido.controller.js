@@ -48,7 +48,7 @@ async function createApplicant(newUser) {
             lastName: newUser.lastName,
             email: newUser.email,
             gender: newUser.gender,
-            telephone: newUser.phone, 
+            telephone: newUser.phone,
             addresses: [{
                 country: newUser.country,
                 city: newUser.city,
@@ -56,7 +56,7 @@ async function createApplicant(newUser) {
                 postcode: newUser.postalCode,
                 street: newUser.address
             }]
-         });
+        });
 
         // Assigner l'ID de l'applicant à newUser.applicantId
         newUser.applicantId = newApplicant.id;
@@ -64,12 +64,12 @@ async function createApplicant(newUser) {
         console.log(newApplicant);
 
         // Mise à jour du champ 'applicantId' dans la collection 'userCollection'
-        await userCollection.updateOne(
-            { email: newUser.email },
-            { $set: { applicantId: newApplicant.id } }
-        );
+        // await userCollection.updateOne(
+        //     { email: newUser.email },
+        //     { $set: { applicantId: newApplicant.id } }
+        // );
 
-        return { success: true, msg: "Client ONFIDO créé avec succès"};
+        return { success: true, msg: "Client ONFIDO créé avec succès" };
     } catch (error) {
         throw error;
     }
@@ -134,8 +134,6 @@ async function deleteApplicantByEmail(req, res) {
 
 
 
- 
-
 /**
  * Récupère un demandeur par son email
  * @param {*} req La requête HTTP
@@ -173,7 +171,7 @@ async function getApplicantByEmail(req, res) {
 
         // Si le demandeur n'existe pas, retourne un msg d'erreur
         return res.status(404).json({ msg: "Demandeur non trouvé dans Onfido" });
-      
+
     } catch (error) {
         console.error("Erreur lors de la récupération du demandeur par email :", error);
         return res.status(500).json({ msg: "Erreur interne du serveur lors de la récupération du demandeur par email" });
@@ -189,13 +187,14 @@ async function getApplicantByEmail(req, res) {
  * @returns {Promise<void>} Retourne une promesse vide
  */
 
+// TO COMPLETE
 async function verifyDocuments(user) {
     try {
 
         const applicantId = user.applicantId;
 
         const photosDirectory = '../../uploads/users/images/';
-       // const photosDirectory = DOCPATH;
+        // const photosDirectory = DOCPATH;
 
         // Construire le chemin absolu du dossier des photos
         const absolutePhotosDirectory = path.resolve(__dirname, photosDirectory);
@@ -238,6 +237,7 @@ async function verifyDocuments(user) {
  * @param {Object} userData Données de l'utilisateur nécessaires à la vérification
  * @returns {Object} Résultat de la vérification du permis de conduire
  */
+// TO COMPLETE
 async function verifyDrivingLicense(drivingLicensePhoto, userId, userData) {
     try {
         // Soumettre la photo du permis de conduire à Onfido pour vérification
@@ -261,7 +261,7 @@ async function verifyDrivingLicense(drivingLicensePhoto, userId, userData) {
     }
 }
 
-
+// TO COMPLETE
 async function verifyInsurance(insuranceDocument, userId, vehicleData) {
     try {
         // Soumettre le document d'assurance à Onfido pour vérification
