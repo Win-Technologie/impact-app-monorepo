@@ -164,6 +164,64 @@ async function NewVeriffSession(req, res) {
     }
 }
 
+async function uploadDocument(req, res) {
+    const { sessionId } = req.params;
+    const { photoFront, photoBack, photoFace } = req.body;
+
+    // Validation basique pour s'assurer que toutes les photos sont fournies
+    if (!photoFront || !photoBack || !photoFace) {
+        return res.status(400).json({ error: 'Missing required photos' });
+    }
+
+    try {
+        // Téléchargement de chaque document/photo
+         const responses = await Promise.all([
+            uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront),
+            uploadDocumentToVeriffSessionSplit(sessionId, 'document-back', photoBack),
+            uploadDocumentToVeriffSessionSplit(sessionId, 'face', photoFace),
+        ]);
+
+        // Vous pouvez choisir de loguer les réponses ou de les envoyer de retour au client
+        console.log('Upload responses:', responses);
+        res.status(200).json({ message: 'Documents uploaded successfully' });
+    } catch (error) {
+        // En cas d'erreur avec l'une des uploads, renvoyer une erreur
+        console.error('Error during document upload:', error);
+        res.status(500).json({ error: 'Failed to upload documents' });
+    }
+}
+
+async function uploadDocumentToVeriffSessionSplit(sessionId, documentContext, base64Content) {
+    try {
+      const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/media`;
+      const apiKey = 'API-PUBLIC-KEY'; // Remplacez par votre clé API publique
+      const hmacSignature = 'YOUR_HMAC_SIGNATURE'; // Remplacez par votre signature HMAC
+  
+      const requestBody = {
+        image: {
+          context: documentContext, // 'document-front', 'document-back', 'face'
+          content: base64Content // Votre image/document en base64
+        }
+      };
+  
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-AUTH-CLIENT': apiKey,
+          'X-HMAC-SIGNATURE': hmacSignature
+        }
+      };
+  
+      const response = await axios.post(url, requestBody, config);
+      console.log('Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading document to Veriff:', error.message);
+      throw error; // Ou gérer l'erreur d'une autre manière
+    }
+  }
+  
+
 async function uploadDocumentToVeriffSession(req, res) {
     try {
 
