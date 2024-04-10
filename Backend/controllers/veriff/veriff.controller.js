@@ -164,7 +164,7 @@ async function NewVeriffSession(req, res) {
     }
 }
 
-async function uploadDocument(req, res) {
+async function uploadDocuments(req, res) {
     const { sessionId } = req.params;
     const { photoFront, photoBack, photoFace } = req.body;
 
@@ -266,5 +266,6 @@ async function uploadDocumentToVeriffSession(req, res) {
 module.exports = {
 
     NewVeriffSession,
-    uploadDocumentToVeriffSession
+    uploadDocumentToVeriffSession,
+    uploadDocuments
 };
