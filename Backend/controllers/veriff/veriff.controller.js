@@ -166,7 +166,12 @@ async function NewVeriffSession(req, res) {
 
 async function uploadDocuments(req, res) {
     const { sessionId } = req.params;
-    const { photoFront, photoBack, photoFace } = req.body;
+    const reqFiles = req.files;
+
+    console.log(sessionId);
+    const photoFront = reqFiles.photoFront
+    const photoBack = reqFiles.photoBack;
+    const photoFace = reqFiles.photoFace;
 
     // Validation basique pour s'assurer que toutes les photos sont fournies
     if (!photoFront || !photoBack || !photoFace) {
@@ -175,11 +180,13 @@ async function uploadDocuments(req, res) {
 
     try {
         // Téléchargement de chaque document/photo
-         const responses = await Promise.all([
-            uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront),
-            uploadDocumentToVeriffSessionSplit(sessionId, 'document-back', photoBack),
-            uploadDocumentToVeriffSessionSplit(sessionId, 'face', photoFace),
-        ]);
+        //  const responses = await Promise.all([
+        //     uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront),
+        //     uploadDocumentToVeriffSessionSplit(sessionId, 'document-back', photoBack),
+        //     uploadDocumentToVeriffSessionSplit(sessionId, 'face', photoFace),
+        // ]);
+
+        const responses = await uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront);
 
         // Vous pouvez choisir de loguer les réponses ou de les envoyer de retour au client
         console.log('Upload responses:', responses);
@@ -194,16 +201,27 @@ async function uploadDocuments(req, res) {
 async function uploadDocumentToVeriffSessionSplit(sessionId, documentContext, base64Content) {
     try {
       const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/media`;
-      const apiKey = 'API-PUBLIC-KEY'; // Remplacez par votre clé API publique
-      const hmacSignature = 'YOUR_HMAC_SIGNATURE'; // Remplacez par votre signature HMAC
+      const apiKey = VERIF_API_PUBLIC_KEY; // Remplacez par votre clé API publique
+      const hmacSignature = 'b2a0bd97-e5f7-4360-b17c-07479b92472e'; // Remplacez par votre signature HMAC
   
+     console.log(url);
+    const photoPath = base64Content.path;
+    //photoPath to base64
+    const base64 = await fs.readFile
+    (photoPath, { encoding: 'base64' });
+
+
+     console.log("DOCUMENT CONTEXT: ", documentContext, "FIN CONTEXT") ;
+        console.log("BASE64 CONTENT: ", base64, "FIN CONTENT") ;
       const requestBody = {
         image: {
           context: documentContext, // 'document-front', 'document-back', 'face'
           content: base64Content // Votre image/document en base64
         }
       };
-  
+      
+
+
       const config = {
         headers: {
           'Content-Type': 'application/json',
@@ -211,8 +229,13 @@ async function uploadDocumentToVeriffSessionSplit(sessionId, documentContext, ba
           'X-HMAC-SIGNATURE': hmacSignature
         }
       };
-  
-      const response = await axios.post(url, requestBody, config);
+      
+      // Envoi de la requête POST à l'API Veriff utilisant got au lieu de axios
+        const response = await got.post(url, {
+            ...config,
+            json: requestBody
+        });
+
       console.log('Response:', response.data);
       return response.data;
     } catch (error) {
