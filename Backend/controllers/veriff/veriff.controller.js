@@ -112,7 +112,45 @@ async function NewVeriffSession(req, res) {
     }
 }
 
+async function uploadDocumentToVeriffSession(req, res) {
+    try {
+
+        //sessionId, documentContext, base64Content
+       //Recuperer sessionId du parametre
+        const sessionId = req.params; 
+        //Recuperer documentContext et base64Content du body
+        const { documentContext, base64Content } = req.body;
+    
+      const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/media`;
+      const apiKey = VERIF_API_PUBLIC_KEY; 
+      const hmacSignature = 'YOUR_HMAC_SIGNATURE'; // A implementer avec aide Nelson/Angelo 
+  
+      const requestBody = {
+        image: {
+          context: documentContext, // 'document-front', 'document-back', 'face'
+          content: base64Content // image/document en base64
+        }
+      };
+  
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-AUTH-CLIENT': apiKey,
+          'X-HMAC-SIGNATURE': hmacSignature
+        }
+      };
+  
+      const response = await axios.post(url, requestBody, config);
+      console.log('Response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading document to Veriff:', error.message);
+      throw error; // Ou gérer l'erreur d'une autre manière
+    }
+  }
+
 module.exports = {
 
     NewVeriffSession,
+    uploadDocumentToVeriffSession
 };
