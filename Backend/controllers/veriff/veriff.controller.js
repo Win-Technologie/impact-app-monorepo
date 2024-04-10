@@ -219,7 +219,7 @@ async function uploadDocumentToVeriffSessionSplit(sessionId, documentContext, ba
       console.error('Error uploading document to Veriff:', error.message);
       throw error; // Ou gérer l'erreur d'une autre manière
     }
-  }
+}
   
 
 async function uploadDocumentToVeriffSession(req, res) {

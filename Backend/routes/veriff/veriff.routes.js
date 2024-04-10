@@ -16,7 +16,7 @@ const md_uploadPdf = multiparty({ uploadDir: `${VERIFF_ROUTER_PATH}` });
 // Create a new user verification session on Veriff
 router.post('/sessions', [userAuth.ensureAuth, md_uploadPdf], veriffController.NewVeriffSession);
 // uploadDocumentToVeriffSession
-router.post('/sessions/media/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.uploadDocumentToVeriffSession);
+//router.post('/sessions/media/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.uploadDocumentToVeriffSession);
 // uploadDocument 
 router.post('/sessions/media/uploadDocuments/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.uploadDocuments);
 
