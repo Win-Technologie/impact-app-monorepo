@@ -7,6 +7,11 @@ const driverLicenseSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    user: {
+        type: String,
+        ref: "User",
+        index: true,
+    },
     number: {
         type: String,
         required: true,

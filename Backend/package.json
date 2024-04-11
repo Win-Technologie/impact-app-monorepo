@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@onfido/api": "^2.9.0",
+    "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "connect-flash": "^0.1.1",
@@ -21,6 +22,7 @@
     "express": "^4.18.3",
     "express-session": "^1.18.0",
     "express-validator": "^7.0.1",
+    "got": "^11.8.2",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.3.0",
     "mongoose": "^8.2.0",

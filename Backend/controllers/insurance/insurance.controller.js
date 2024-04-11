@@ -294,7 +294,8 @@ async function getInsuranceByUserId(req, res) {
         }
         const userIdFromToken = myToken.user_id;
 
-        const userId = req.params.userId;
+        const {userId} = req.params;
+        
         if (userId !== userIdFromToken) {
             return res.status(403).json({ message: "Accès refusé" });
         }
