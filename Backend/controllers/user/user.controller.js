@@ -231,8 +231,8 @@ async function validateLicenseData(req) {
 }
 
 
-
-/*async function RegisterUser(req, res) {
+/*
+async function RegisterUser(req, res) {
     try {
         // Extraction des données de la requête
         const { email, name, lastName, password, phone, address, postalCode,
@@ -389,6 +389,8 @@ async function RegisterUser(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
+
+
 
 async function Login(req, res) {
     try {
