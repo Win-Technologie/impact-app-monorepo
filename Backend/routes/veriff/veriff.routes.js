@@ -19,5 +19,10 @@ router.post('/sessions', [userAuth.ensureAuth, md_uploadPdf], veriffController.N
 //router.post('/sessions/media/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.uploadDocumentToVeriffSession);
 // uploadDocument 
 router.post('/sessions/media/uploadDocuments/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.uploadDocuments);
+//Check a session decision
+// router.get('/decision/:sessionId?"', [userAuth.ensureAuth], veriffController.veriffCheckDecision);
+
+router.get('/decision/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.checkDecision);
+
 
 module.exports = router;
