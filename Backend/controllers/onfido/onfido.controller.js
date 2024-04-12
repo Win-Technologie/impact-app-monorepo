@@ -181,129 +181,42 @@ async function getApplicantByEmail(req, res) {
 
 
 /**
- * Vérifie le permis de conduire et l'assurance du véhicule.
- * @param {Object} req Requête HTTP
- * @param {Object} res Réponse HTTP
- * @returns {Promise<void>} Retourne une promesse vide
+ * Vérifie le permis de conduire d'un demandeur Onfido
+ * @param {Object} req L'objet de requête HTTP
+ * @param {Object} res L'objet de réponse HTTP
+ * @returns {Promise<Object>} Retourne un objet contenant le résultat de la vérification
  */
-
-// TO COMPLETE
-async function verifyDocuments(user) {
+async function verifyDrivingLicense(req, res) {
     try {
+        const { applicant_id } = req.body;
 
-        const applicantId = user.applicantId;
+        // Construire le chemin complet de l'image
+        const imagePath = path.join(__dirname, '../../../uploads/users/images/', "d0UuJ3ZrFPU0S3Pfs-ptBYr0.jpg");
 
-        const photosDirectory = '../../uploads/users/images/';
-        // const photosDirectory = DOCPATH;
-
-        // Construire le chemin absolu du dossier des photos
-        const absolutePhotosDirectory = path.resolve(__dirname, photosDirectory);
-
-        // Initialiser un tableau pour stocker les résultats de la vérification de chaque photo
-        const verificationResults = [];
-
-        // Parcourir chaque nom de photo dans le tableau user.photos
-        for (const photoName of user.photos) {
-            // Récupérer le chemin absolu de chaque photo
-            const photoPath = path.join(absolutePhotosDirectory, photoName);
-
-            // Lire le fichier de chaque photo
-            const photoContent = await fs.readFile(photoPath);
-
-            // Effectuez les vérifications nécessaires sur les fichiers téléchargés
-            const verificationResult = await verifyDrivingLicense(photoContent, applicantId);
-            //const verificationResult = await verifyVehicleInsurance(insuranceDocument);
-
-            // Ajouter le résultat de vérification au tableau de résultats
-            verificationResults.push(verificationResult);
-        }
-
-        // Renvoyer les résultats de vérification
-        return {
-            drivingLicense: verificationResults,
-            //vehicleInsurance: vehicleInsuranceVerificationResult
-        };
-    } catch (error) {
-        console.error("Erreur lors de la vérification des documents :", error);
-        throw new Error("Erreur interne du serveur lors de la vérification des documents");
-    }
-}
-
-
-/**
- * Vérifie le permis de conduire à partir de la photo.
- * @param {Object} drivingLicensePhoto Photo du permis de conduire
- * @param {string} userId ID de l'utilisateur
- * @param {Object} userData Données de l'utilisateur nécessaires à la vérification
- * @returns {Object} Résultat de la vérification du permis de conduire
- */
-// TO COMPLETE
-async function verifyDrivingLicense(drivingLicensePhoto, userId, userData) {
-    try {
-        // Soumettre la photo du permis de conduire à Onfido pour vérification
-        const checkData = {
-            applicantId: userId,
-            reportNames: ["identity_enhanced"],
-        };
-
-        const check = await onfido.check.create(checkData);
-
-        // Vérifier le statut de la vérification
-        if (check.status === 'complete' && check.result === 'clear') {
-            return { success: true, msg: "Le permis de conduire est valide" };
-        } else {
-            console.log("Détails de l'erreur de vérification :", check); // Afficher les détails de l'erreur dans la console
-            return { success: false, msg: "Le permis de conduire n'est pas valide" };
-        }
-    } catch (error) {
-        console.error("Erreur lors de la vérification du permis de conduire :", error);
-        throw error;
-    }
-}
-
-// TO COMPLETE
-async function verifyInsurance(insuranceDocument, userId, vehicleData) {
-    try {
-        // Soumettre le document d'assurance à Onfido pour vérification
-        const checkData = {
-            applicantId: userId,
-            reportNames: ["insurance_enhanced"],
+        // Utilisez l'API Onfido pour vérifier le document du permis de conduire de l'applicant
+        const drivingLicenseCheck = await onfido.check.create({
+            applicantId: applicant_id, // Remplacez 'APPLICANT_ID' par l'ID de l'applicant si nécessaire
             applicantProvidesData: true, // Indique que l'applicant fournit les données
-            userData: {
-                vehicleRegistrationNumber: vehicleData.registrationNumber, // Numéro d'immatriculation du véhicule
-                vehicleMake: vehicleData.make, // Marque du véhicule
-                vehicleModel: vehicleData.model, // Modèle du véhicule
-                vehicleYear: vehicleData.year, // Année du véhicule
-                insuranceProvider: vehicleData.insuranceProvider, // Fournisseur d'assurance
-                policyNumber: vehicleData.policyNumber, // Numéro de police d'assurance
-                coverageType: vehicleData.coverageType, // Type de couverture
-                startDate: vehicleData.startDate, // Date de début de la couverture
-                expirationDate: vehicleData.expirationDate, // Date d'expiration de la couverture
-            },
-            file: insuranceDocument // Le document d'assurance
-        };
+            side: 'front',
+            documentType: 'driving_licence',
+            file: imagePath, // Utilisez le chemin complet de l'image du permis de conduire
+            fileName: "d0UuJ3ZrFPU0S3Pfs-ptBYr0.jpg", // Utilisez le nom de l'image du permis de conduire
+            reportNames: ["identity_enhanced"]
+        });
 
-        const check = await onfido.check.create(checkData);
-
-        // Vérifier le statut de la vérification
-        if (check.status === 'complete' && check.result === 'clear') {
-            return { success: true, msg: "Le document d'assurance est valide" };
-        } else {
-            console.log("Détails de l'erreur de vérification :", check); // Afficher les détails de l'erreur dans la console
-            return { success: false, msg: "Le document d'assurance n'est pas valide" };
-        }
+        // Envoyez la réponse avec le résultat de la vérification
+        res.status(200).json(drivingLicenseCheck);
     } catch (error) {
-        console.error("Erreur lors de la vérification du document d'assurance :", error);
-        throw error;
+        console.error("Erreur lors de la vérification du permis de conduire de l'applicant :", error);
+        res.status(500).json({ error: "Erreur lors de la vérification du permis de conduire de l'applicant" });
     }
 }
 
 
 module.exports = {
     createApplicant,
-    verifyDocuments,
     getApplicantByEmail,
     deleteApplicantByEmail,
     getAllApplicants,
-    verifyDocuments
+    verifyDrivingLicense
 };
