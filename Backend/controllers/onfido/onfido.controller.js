@@ -196,12 +196,20 @@ async function verifyDrivingLicense(req, res) {
         // Utilisez l'API Onfido pour vérifier le document du permis de conduire de l'applicant
         const drivingLicenseCheck = await onfido.check.create({
             applicantId: applicant_id, // Remplacez 'APPLICANT_ID' par l'ID de l'applicant si nécessaire
-            applicantProvidesData: true, // Indique que l'applicant fournit les données
+            applicantProvidesData: false, // Indique que l'applicant fournit les données
             side: 'front',
             documentType: 'driving_licence',
             file: imagePath, // Utilisez le chemin complet de l'image du permis de conduire
             fileName: "d0UuJ3ZrFPU0S3Pfs-ptBYr0.jpg", // Utilisez le nom de l'image du permis de conduire
-            reportNames: ["identity_enhanced"]
+            reportNames: ["identity_enhanced"],
+            
+            // Données supplémentaires
+            drivingLicenseExpirationDate: "2024-12-31", 
+            applicantEmail: "miller@example.com", 
+            applicantPhoneNumber: "+1234567890", 
+            drivingLicenseCountry: "FR", 
+            drivingLicenseNumber: "1234567890" 
+            
         });
 
         // Envoyez la réponse avec le résultat de la vérification
