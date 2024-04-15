@@ -32,7 +32,7 @@ const onfido = new Onfido({
  * @param {*} newUser 
  * @returns 
  */
-async function createApplicant(newUser) {
+async function createApplicant01(newUser, driverLicense) {
     try {
 
         const applicants = await onfido.applicant.list();
@@ -43,11 +43,20 @@ async function createApplicant(newUser) {
             }
         }
 
+        if(driverLicense.sex == "M"){
+            driverLicense.sex = "Male"
+        }
+                if(driverLicense.sex == "F"){
+            driverLicense.sex = "Female"
+        }
+
+        console.log("DEBUG CREATE APLICANT BEFOR ");
         const newApplicant = await onfido.applicant.create({
             firstName: newUser.name,
             lastName: newUser.lastName,
             email: newUser.email,
-            gender: newUser.gender,
+            // gender: newUser.gender,
+            gender: driverLicense.sex,
             telephone: newUser.phone,
             addresses: [{
                 country: newUser.country,
@@ -63,17 +72,81 @@ async function createApplicant(newUser) {
 
         console.log(newApplicant);
 
-        // Mise à jour du champ 'applicantId' dans la collection 'userCollection'
-        // await userCollection.updateOne(
-        //     { email: newUser.email },
-        //     { $set: { applicantId: newApplicant.id } }
-        // );
+        console.log("DEBUG CREATE APLICANT AFTER ");
+
+       // Mise à jour du champ 'applicantId' dans la collection 'userCollection'
+        await userCollection.updateOne(
+            { email: newUser.email },
+            { $set: { applicantId: newApplicant.id } }
+        );
 
         return { success: true, msg: "Client ONFIDO créé avec succès" };
     } catch (error) {
         throw error;
     }
 }
+
+/**
+ * 
+ * @param {*} newUser 
+ * @returns 
+ */
+async function createApplicant(newUser, driverLicense) {
+    try {
+
+        const applicants = await onfido.applicant.list();
+
+        for (const applicant of applicants) {
+            if (applicant.email === newUser.email) {
+                return { success: false, msg: "Utilisateur existant dans Onfido" };
+            }
+        }
+
+        if(driverLicense.sex == "M"){
+            driverLicense.sex = "Male"
+        }
+                if(driverLicense.sex == "F"){
+            driverLicense.sex = "Female"
+        }
+
+        console.log(driverLicense.sex );
+        // const newApplicant = await onfido.applicant.create({
+        //     firstName: newUser.name,
+        //     lastName: newUser.lastName,
+        //     email: newUser.email,
+        //     // gender: newUser.gender,
+        //     gender: driverLicense.sex,
+        //     telephone: newUser.phone,
+        //     addresses: [{
+        //         country: newUser.country,
+        //         city: newUser.city,
+        //         province: newUser.province,
+        //         postcode: newUser.postalCode,
+        //         street: newUser.address
+        //     }]
+        // });
+
+    //     // Assigner l'ID de l'applicant à newUser.applicantId
+    //     newUser.applicantId = newApplicant.id;
+
+    //     console.log(newApplicant);
+
+    //     console.log("DEBUG CREATE APLICANT AFTER ");
+
+    //    // Mise à jour du champ 'applicantId' dans la collection 'userCollection'
+    //     await userCollection.updateOne(
+    //         { email: newUser.email },
+    //         { $set: { applicantId: newApplicant.id } }
+    //     );
+
+      //  return { success: true, msg: "Client ONFIDO créé avec succès" };
+        return true;
+
+    } catch (error) {
+        throw error;
+    }
+}
+
 
 
 /**
@@ -179,7 +252,6 @@ async function getApplicantByEmail(req, res) {
 }
 
 
-
 /**
  * Vérifie le permis de conduire d'un demandeur Onfido
  * @param {Object} req L'objet de requête HTTP
@@ -218,6 +290,50 @@ async function verifyDrivingLicense(req, res) {
         console.error("Erreur lors de la vérification du permis de conduire de l'applicant :", error);
         res.status(500).json({ error: "Erreur lors de la vérification du permis de conduire de l'applicant" });
     }
+}
+
+async function verifyDrivingLicense(newUser) {
+    try {
+        const { applicant_id } = req.body;
+
+        // Construire le chemin complet de l'image
+        const imagePath = path.join(__dirname, '../../../uploads/users/images/', "d0UuJ3ZrFPU0S3Pfs-ptBYr0.jpg");
+
+        // Utilisez l'API Onfido pour vérifier le document du permis de conduire de l'applicant
+        const drivingLicenseCheck = await onfido.check.create({
+            applicantId: applicant_id, // Remplacez 'APPLICANT_ID' par l'ID de l'applicant si nécessaire
+            applicantProvidesData: false, // Indique que l'applicant fournit les données
+            side: 'front',
+            documentType: 'driving_licence',
+            file: imagePath, // Utilisez le chemin complet de l'image du permis de conduire
+            fileName: "d0UuJ3ZrFPU0S3Pfs-ptBYr0.jpg", // Utilisez le nom de l'image du permis de conduire
+            reportNames: ["identity_enhanced"],
+            
+            // Données supplémentaires
+            drivingLicenseExpirationDate: "2024-12-31", 
+            applicantEmail: "miller@example.com", 
+            applicantPhoneNumber: "+1234567890", 
+            drivingLicenseCountry: "FR", 
+            drivingLicenseNumber: "1234567890" 
+            
+        });
+
+        // Envoyez la réponse avec le résultat de la vérification
+        res.status(200).json(drivingLicenseCheck);
+    } catch (error) {
+        console.error("Erreur lors de la vérification du permis de conduire de l'applicant :", error);
+        res.status(500).json({ error: "Erreur lors de la vérification du permis de conduire de l'applicant" });
+    }
+}
+
+/**
+ * cette route reçoit des notifications directes des nouveaux événements de la part d'Onfido
+ * @param {Object} req L'objet de requête HTTP
+ * @param {Object} res L'objet de réponse HTTP
+ * @returns {Promise<Object>} Retourne un objet contenant le résultat de la vérification
+ */
+async function webHooks(req,res){
+
 }
 
 

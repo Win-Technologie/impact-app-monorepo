@@ -26,4 +26,6 @@ router.get('/applicants', [userAuth.ensureAuth], onfidoController.getAllApplican
 // Route pour vérifier le permis de conduire d'un demandeur Onfido
 router.post('/applicants/driving_license', onfidoController.verifyDrivingLicense);
 
+// router.post('/webhooks', onfidoController.webHooks)
+
 module.exports = router;

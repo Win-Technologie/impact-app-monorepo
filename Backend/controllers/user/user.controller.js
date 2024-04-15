@@ -13,7 +13,8 @@ const { generateVerificationCode } = require('../../utils/generatorcodes');
 // NODE MAILER
 const { sendVerificationEmail } = require('../../utils/nodemailer');
 // ONFIDO
-const { createApplicant, verifyDocuments } = require('../onfido/onfido.controller');
+// const { createApplicant, verifyDocuments } = require('../onfido/onfido.controller');
+const { createApplicant } = require('../onfido/onfido.controller');
 
 // CACHE
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
@@ -81,7 +82,7 @@ async function validateUpdateRegisterUserFields(req) {
         // Validation de genre
         await body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req);
     }
-    if (req.body.birthDay) {
+    if (req.body.birthdate) {
         // Validation de date
         // await body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req);
         // Validación de fecha
@@ -98,7 +99,7 @@ async function validateUpdateRegisterUserFields(req) {
         //         return true;
         //     })
         //     .run(req);
-        await body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req);
+        await body('birthdate').notEmpty().withMessage('La date est requise et doit être du type date').run(req);
     }
     if (req.body.newPassword) {
         // console.log(req.body.newPassword);
@@ -190,7 +191,7 @@ async function validateRegisterUserFields(req) {
 
         body('gender').optional().isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req),
 
-        body('birthDate').optional().notEmpty().withMessage('La date est requise et doit être du type date').run(req),
+        body('birthdate').optional().notEmpty().withMessage('La date est requise et doit être du type date').run(req),
     ]);
 }
 
@@ -198,8 +199,8 @@ async function validateRegisterUserFields(req) {
 async function validateLicenseData(req) {
     await Promise.all([
         body('number').isLength({ min: 8 }).withMessage('Le numéro de licence doit contenir au moins 8 caractères').run(req),
-        body('name').isLength({ min: 3 }).withMessage('Le prénom doit contenir au moins 3 caractères').run(req),
-        body('lastName').isLength({ min: 3 }).withMessage('Le nom de famille doit contenir au moins 3 caractères').run(req),
+        body('name').optional().isLength({ min: 3 }).withMessage('Le prénom doit contenir au moins 3 caractères').run(req),
+        body('lastName').optional().isLength({ min: 3 }).withMessage('Le nom de famille doit contenir au moins 3 caractères').run(req),
         body('birthdate').optional().isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date de naissance doit être au format yyyy/mm/dd').run(req),
         body('address').isLength({ min: 4 }).withMessage('L\'adresse doit contenir au moins 4 caractères').run(req),
         body('appartment').optional().isLength({ min: 2 }).withMessage('L\'appartement doit contenir au moins deux caractères').run(req),
@@ -290,7 +291,7 @@ async function RegisterUser(req, res) {
     try {
         // Extraction des données de la requête
         const { email, name, lastName, password, phone, address, postalCode,
-            province, city, country, gender, birthDay, companyName
+            province, city, country, gender, birthdate, companyName
         } = req.body;
 
         const emailLowerCase = email.toLowerCase();
@@ -326,11 +327,12 @@ async function RegisterUser(req, res) {
             city: city,
             country: country,
             gender: gender,
-            birthDay: birthDay,
+            birthdate: birthdate,
             typeAccount: "free",
         });
 
         const newUser = new User({
+            active: true,
             driverLicense: "pending",
             email: emailLowerCase,
             name: name || "pending",
@@ -343,7 +345,7 @@ async function RegisterUser(req, res) {
             city: city || "pending",
             country: country || "pending",
             gender: gender || "pending",
-            birthDay: birthDay || "pending",
+            birthdate: birthdate || "pending",
             typeAccount: "free",
         });
 
@@ -530,28 +532,28 @@ async function RefresLogin(req, res) {
 async function GetUserById(req, res) {
     try {
         const userId = req.params.id;
-        
+
         // Récupérer le jeton du header de la requête
         const token = req.headers.authorization?.replace("Bearer ", "");
-        
+
         // Vérifier si le jeton est présent
         if (!token) {
             console.error("Le Token n'est pas fourni");
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
         }
-        
+
         // Décoder le token pour obtenir les informations de l'utilisateur
         const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
         if (!myToken) {
             return res.status(400).json({ msg: "Token invalide" });
         }
-        
+
         const ownerId = myToken.user_id;
 
         if (ownerId !== userId) {
             return res.status(400).json({ msg: "Impossible d'afficher cette utilisateur" });
         }
-        
+
         // Vérification si les données du locataire sont en cache
         const cacheKey = `${ownerId}`;
         const cachedData = myCache.get(cacheKey);
@@ -561,13 +563,13 @@ async function GetUserById(req, res) {
             const decryptedData = decryptData(cachedData, AES_KEY);
             return res.status(200).json({ vehicle: decryptedData });
         }
-        
+
         const userProfile = await userCollection.findOne({ _id: userId });
-        
+
         if (!userProfile) {
             return res.status(404).json({ msg: "Profil introuvable" });
         }
-        
+
         res.status(200).json({ user: userProfile });
     } catch (error) {
         // Gérer les erreurs et renvoyer une réponse d'erreur du serveur
@@ -664,9 +666,9 @@ async function EditUser(req, res) {
         }
 
         //Vérifier si l'utilisateur existe et si son compte est actif dans le système.
-        if (!isActiveUser || isActiveUser.active === false) {
-            return res.status(403).json({ msg: "Utilisateur présentant des problèmes avec le compte, contactez l'administrateur" });
-        }
+        // if (!isActiveUser || isActiveUser.active === false) {
+        //     return res.status(403).json({ msg: "Utilisateur présentant des problèmes avec le compte, contactez l'administrateur" });
+        // }
 
         // Mettre à jour les données de la propriété avec les nouvelles données
         Object.assign(foundUser, userData);
@@ -712,16 +714,16 @@ async function EditUser(req, res) {
             foundUser.photos = photos_;
         }
 
-            // Appel de verifyDocuments pour vérifier les documents de l'utilisateur
-            const verificationResult = await verifyDocuments(foundUser);
+        // Appel de verifyDocuments pour vérifier les documents de l'utilisateur
+        // const verificationResult = await verifyDocuments(foundUser);
 
-            // Récupération des résultats de la vérification des documents
-            const drivingLicenseVerificationResult = verificationResult.drivingLicense;
-    
-            if (!drivingLicenseVerificationResult.success) {
-                // Si la vérification du permis de conduire a échoué
-                return res.status(400).json({ msg: "La vérification du permis de conduire a échoué", error: drivingLicenseVerificationResult.msg });
-            }
+        // // Récupération des résultats de la vérification des documents
+        // const drivingLicenseVerificationResult = verificationResult.drivingLicense;
+
+        // if (!drivingLicenseVerificationResult.success) {
+        //     // Si la vérification du permis de conduire a échoué
+        //     return res.status(400).json({ msg: "La vérification du permis de conduire a échoué", error: drivingLicenseVerificationResult.msg });
+        // }
 
         const result = await userCollection.updateOne(
             { _id: id }, // Filtre pour trouver la propriété par son ID
@@ -906,7 +908,7 @@ async function UploadDocument(req, res) {
             return res.status(400).json({ msg: "Doc type not valid" });
         }
 
-        if(!documentFile){
+        if (!documentFile) {
             return res.status(400).json({ msg: "You must introduce a valid photo" });
         }
 
@@ -916,20 +918,20 @@ async function UploadDocument(req, res) {
             return res.status(400).json({ msg: 'Impossible de lire le document, vérifiez le format et la qualité de l\'image.' });
         }
 
-        let  extractedInfo 
+        let extractedInfo
 
-        
-        if(docType === 'driverLicence'){
+
+        if (docType === 'driverLicence') {
             console.log("Hello from driver licence");
             extractedInfo = processLicenseText(documentText);
         }
 
-        if(docType === 'carInsurance'){
+        if (docType === 'carInsurance') {
             extractedInfo = processInsuranceText(documentText);
             console.log("Hello from auto Assurance");
         }
 
-       // return res.status(200).json({ msg: 'Voici le document'});
+        // return res.status(200).json({ msg: 'Voici le document'});
         return res.status(200).json({ msg: 'Voici le document', document: documentText, extractedInfoText: extractedInfo });
 
         // return res.status(200).json({ msg: 'Hello from yupload document ' });
@@ -941,7 +943,7 @@ async function UploadDocument(req, res) {
 
 async function UploadDriverLicense(req, res) {
     try {
-  
+
         const documentFile = req.files.document;
 
         // Récupérer le jeton du header de la requête
@@ -957,6 +959,16 @@ async function UploadDriverLicense(req, res) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
+        let myUser = await userCollection.findOne({ _id: myToken.user_id });
+
+        console.log(myUser);
+
+        if (!myUser) {
+            return res.status(402).json({ msg: "Cet utilisateur n'existe pas" });
+        }
+
+        
+
         // if (!documentFile) {
         //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
         // }
@@ -964,6 +976,7 @@ async function UploadDriverLicense(req, res) {
         // Validation des champs de la requête
         await validateLicenseData(req);
         const validationErrors = validationResult(req);
+
         if (!validationErrors.isEmpty()) {
             return res.status(400).json({ errors: validationErrors.array() });
         }
@@ -1019,18 +1032,41 @@ async function UploadDriverLicense(req, res) {
         const formattedBirthdateDate = birthdateDate.toISOString().split('T')[0];
 
         //.toLowerCase(),
+        // const newDriverLicense = new DriverLicense({
+        //     user: myToken.user_id,
+        //     number: number,
+        //     name: name,
+        //     lastName: lastName,
+        //     birthdate: formattedBirthdateDate,
+        //     address: address,
+        //     appartment: appartment,
+        //     province: province,
+        //     postalCode: postalCode,
+        //     licenseClass: licenseClass,
+        //     sex: sex,
+        //     rest: rest,
+        //     mention: mention,
+        //     height: height,
+        //     weight: weight,
+        //     issued: formattedIssuedDate,
+        //     expires: formattedExpiresDate,
+        //     city: city,
+        //     country: country,
+        //     photo: photoPath,
+        // });
+
         const newDriverLicense = new DriverLicense({
             user: myToken.user_id,
             number: number,
-            name: name,
-            lastName: lastName,
-            birthdate: formattedBirthdateDate,
+            name: myUser.name,
+            lastName: myUser.lastName,
+            birthdate: myUser.birthdate,
             address: address,
             appartment: appartment,
             province: province,
             postalCode: postalCode,
             licenseClass: licenseClass,
-            sex: sex,
+            sex: sex.toUpperCase(),
             rest: rest,
             mention: mention,
             height: height,
@@ -1042,20 +1078,25 @@ async function UploadDriverLicense(req, res) {
             photo: photoPath,
         });
 
-        const [updateResult, insertResult] = await Promise.all([
-            userCollection.updateOne(
-                { _id: myToken.user_id },
-                { $set: { driverLicense: newDriverLicense._id } }
-            ),
-            drivingLicensesCollection.insertOne(newDriverLicense)
-        ]);
-    
-        if (!insertResult || !updateResult) {
-            return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
-        }
+        console.log(newDriverLicense);
+        
 
-        // // Création de l'applicant dans Onfido
-        // const applicantResult = await createApplicant(newUser);
+        // const [updateUser, insertResult] = await Promise.all([
+        //     userCollection.updateOne(
+        //         { _id: myToken.user_id },
+        //         { $set: { driverLicense: newDriverLicense._id } }
+        //     ),
+        //     drivingLicensesCollection.insertOne(newDriverLicense)
+        // ]);
+
+        // if (!insertResult || !updateUser) {
+        //     return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
+        // }
+
+        // Création de l'applicant dans Onfido
+        const applicantResult = await createApplicant(myUser, newDriverLicense);
+
+        console.log(applicantResult);
 
         // // Vérification du résultat de la création de l'applicant dans Onfido
         // if (!applicantResult.success) {
@@ -1085,6 +1126,32 @@ module.exports = {
     UploadDriverLicense
 };
 
+
+/*
+
+                const newDriverLicense = new DriverLicense({
+            user: myToken.user_id,
+            number: number,
+            name: myUser.name,
+            lastName: myUser.lastName,
+            birthdate: myUser.birthDay,
+            address: address,
+            appartment: appartment,
+            province: province,
+            postalCode: postalCode,
+            licenseClass: licenseClass,
+            sex: sex,
+            rest: rest,
+            mention: mention,
+            height: height,
+            weight: weight,
+            issued: formattedIssuedDate,
+            expires: formattedExpiresDate,
+            city: city,
+            country: country,
+            photo: photoPath,
+        });
+*/
 
 
 
