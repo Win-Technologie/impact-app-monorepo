@@ -6,7 +6,7 @@ const assuranceSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  insuranceNumber: {
+  policyNumber: {
     type: String,
     required: true,
     unique: true,
