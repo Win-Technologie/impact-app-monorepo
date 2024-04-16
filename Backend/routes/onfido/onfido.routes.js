@@ -23,4 +23,9 @@ router.delete('/applicants/:email', [userAuth.ensureAuth], onfidoController.dele
 // Route pour récupérer tous les demandeurs Onfido
 router.get('/applicants', [userAuth.ensureAuth], onfidoController.getAllApplicants);
 
+// Route pour vérifier le permis de conduire d'un demandeur Onfido
+router.post('/applicants/driving_license', onfidoController.verifyDrivingLicense);
+
+// router.post('/webhooks', onfidoController.webHooks)
+
 module.exports = router;

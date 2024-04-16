@@ -70,7 +70,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         index: true
     },
-    birthDay: {
+    birthdate: {
         type: Date
     },
     photo: {
