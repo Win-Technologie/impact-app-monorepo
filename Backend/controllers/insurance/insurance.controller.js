@@ -89,7 +89,7 @@ async function addInsurance(req, res) {
 
         
         // Vérification de l'existence préalable d'une assurance avec le même numéro
-        const existingInsurance = await insuranceCollection.findOne({ insuranceNumber });
+        const existingInsurance = await insuranceCollection.findOne({ policyNumber });
         if (existingInsurance) {
             return res.status(400).json({ message: "Une assurance avec ce numéro existe déjà." });
         }
