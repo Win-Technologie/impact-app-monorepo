@@ -22,9 +22,9 @@ async function validateInsuranceFields(req) {
         // body('vehicleBrand').notEmpty().withMessage('La marque du véhicule est requise').run(req),
         // body('vehicleModel').notEmpty().withMessage('Le modèle du véhicule est requis').run(req),
         // body('vehicleYear').isInt().withMessage('L\'année du véhicule doit être un nombre entier').run(req),
-        body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
-        body('coverageType').notEmpty().withMessage('Le type de couverture est requis').run(req),
-        body('startDate').notEmpty().isISO8601().withMessage('La date de début est requise et doit être une date valide').run(req),
+        // body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
+        // body('coverageType').notEmpty().withMessage('Le type de couverture est requis').run(req),
+        // body('startDate').notEmpty().isISO8601().withMessage('La date de début est requise et doit être une date valide').run(req),
         body('expirationDate').notEmpty().isISO8601().withMessage('La date d\'expiration est requise et doit être une date valide').run(req)
         // Vous pouvez ajouter plus de validations selon les champs de votre modèle d'assurance
     ]);
@@ -33,9 +33,9 @@ async function validateInsuranceFields(req) {
 // Fonction de validation pour les champs à mettre à jour
 async function validateUpdateInsuranceFields(req) {
     await Promise.all([
-        body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
-        body('coverageType').notEmpty().withMessage('Le type de couverture est requis').run(req),
-        body('startDate').notEmpty().isISO8601().withMessage('La date de début est requise et doit être une date valide').run(req),
+        // body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
+        // body('coverageType').notEmpty().withMessage('Le type de couverture est requis').run(req),
+        // body('startDate').notEmpty().isISO8601().withMessage('La date de début est requise et doit être une date valide').run(req),
         body('expirationDate').notEmpty().isISO8601().withMessage('La date d\'expiration est requise et doit être une date valide').run(req),
         // Assurez-vous de valider également les champs du véhicule si nécessaire
         body('vehicleId').notEmpty().withMessage('L\'identifiant du véhicule est requis').run(req)  // Assurez-vous que ce champ est requis si vous permettez la mise à jour du véhicule associé
@@ -67,7 +67,7 @@ async function addInsurance(req, res) {
         }
 
         const {vehicleId} = req.params;
-        const { insuranceNumber, insuranceCompany, policyNumber, coverageType, startDate, expirationDate } = req.body;
+        const { insuranceNumber, insuranceCompany, expirationDate } = req.body;
         
 
         // Extraire les données du véhicule à partir de la base de données
@@ -104,9 +104,9 @@ async function addInsurance(req, res) {
             vehicleBrand,
             vehicleModel,
             vehicleYear,
-            policyNumber,
-            coverageType,
-            startDate: new Date(startDate),
+            // policyNumber,
+            // coverageType,
+            // startDate: new Date(startDate),
             expirationDate: new Date(expirationDate)
         });
 
@@ -196,7 +196,7 @@ async function editInsurance(req, res) {
         // Exécution des validations
         await validateUpdateInsuranceFields(req);
 
-        const { policyNumber, coverageType, startDate, expirationDate, vehicleId } = req.body;
+        const {expirationDate, vehicleId } = req.body;
 
         // Supposons que vous souhaitez mettre à jour l'assurance avec les nouvelles informations du véhicule
         const vehicleData = await vehicleCollection.findOne({ _id: vehicleId });
@@ -206,9 +206,9 @@ async function editInsurance(req, res) {
         const { plate, brand, model, year } = vehicleData;
 
         const fieldsToUpdate = {
-            policyNumber,
-            coverageType,
-            startDate: new Date(startDate),
+            // policyNumber,
+            // coverageType,
+            // startDate: new Date(startDate),
             expirationDate: new Date(expirationDate),
             vehicle: vehicleId, // Vous pouvez choisir de ne pas permettre la modification du véhicule associé
             vehicleRegistrationNumber: plate,

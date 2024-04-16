@@ -53,18 +53,21 @@ const assuranceSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  policyNumber: {
-    type: String,
-    required: true
-  },
-  coverageType: {
-    type: String,
-    required: true
-  },
-  startDate: {
-    type: Date,
-    required: true
-  },
+  // Apres discussion avec le front, on a décidé de ne pas utiliser le numéro de police 
+  // policyNumber: {
+  //   type: String,
+  //   required: true
+  // },
+  // Apres discussion avec le front, on a décidé de ne pas utiliser le type de couverture
+  //   coverageType: {
+  //   type: String,
+  //   required: true
+  // },
+  // Pas de startDate car l'assurance est effective dès sa création 
+  // startDate: {
+  //   type: Date,
+  //   required: true
+  // },
   expirationDate: {
     type: Date,
     required: true
@@ -74,7 +77,7 @@ const assuranceSchema = new mongoose.Schema({
   }],
   isActive: {
     type: Boolean,
-    required: true,
+    // required: true,
     default: true
   },
   dateAdded: {

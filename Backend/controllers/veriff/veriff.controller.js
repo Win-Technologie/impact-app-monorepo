@@ -180,13 +180,13 @@ async function uploadDocuments(req, res) {
 
     try {
         // Téléchargement de chaque document/photo
-        //  const responses = await Promise.all([
-        //     uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront),
-        //     uploadDocumentToVeriffSessionSplit(sessionId, 'document-back', photoBack),
-        //     uploadDocumentToVeriffSessionSplit(sessionId, 'face', photoFace),
-        // ]);
+         const responses = await Promise.all([
+            uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront),
+            uploadDocumentToVeriffSessionSplit(sessionId, 'document-back', photoBack),
+            uploadDocumentToVeriffSessionSplit(sessionId, 'face', photoFace),
+        ]);
 
-        const responses = await uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront);
+        // const responses = await uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront);
 
         // Vous pouvez choisir de loguer les réponses ou de les envoyer de retour au client
         console.log('Upload responses:', responses);
@@ -203,12 +203,12 @@ async function uploadDocumentToVeriffSessionSplit(sessionId, documentContext, ba
       const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/media`;
       const apiKey = VERIF_API_PUBLIC_KEY; // Remplacez par votre clé API publique
       const hmacSignature = 'b2a0bd97-e5f7-4360-b17c-07479b92472e'; // Remplacez par votre signature HMAC
-  
-     console.log(url);
+    
+    
+    console.log(url);
     const photoPath = base64Content.path;
     //photoPath to base64
-    const base64 = await fs.readFile
-    (photoPath, { encoding: 'base64' });
+    const base64 = await fs.readFile(photoPath, { encoding: 'base64' });
 
 
      console.log("DOCUMENT CONTEXT: ", documentContext, "FIN CONTEXT") ;
@@ -216,7 +216,7 @@ async function uploadDocumentToVeriffSessionSplit(sessionId, documentContext, ba
       const requestBody = {
         image: {
           context: documentContext, // 'document-front', 'document-back', 'face'
-          content: base64Content // Votre image/document en base64
+          content: base64 // Votre image/document en base64
         }
       };
       
@@ -244,7 +244,6 @@ async function uploadDocumentToVeriffSessionSplit(sessionId, documentContext, ba
     }
 }
   
-
 async function uploadDocumentToVeriffSession(req, res) {
     try {
 
