@@ -15,14 +15,14 @@ const vehicleCollection = mainDb.collection(VEHICLES_COLLECTION);
 
 async function validateInsuranceFields(req) {
     await Promise.all([
-        body('insuranceNumber').notEmpty().withMessage('Le numéro d\'assurance est requis').run(req),
+        // body('insuranceNumber').notEmpty().withMessage('Le numéro d\'assurance est requis').run(req),
         body('insuranceCompany').notEmpty().withMessage('La compagnie d\'assurance est requise').run(req),
         // body('vehicle').notEmpty().withMessage('Le véhicule est requis').run(req),
         // body('vehicleRegistrationNumber').notEmpty().withMessage('Le numéro d\'immatriculation du véhicule est requis').run(req),
         // body('vehicleBrand').notEmpty().withMessage('La marque du véhicule est requise').run(req),
         // body('vehicleModel').notEmpty().withMessage('Le modèle du véhicule est requis').run(req),
         // body('vehicleYear').isInt().withMessage('L\'année du véhicule doit être un nombre entier').run(req),
-        // body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
+        body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
         // body('coverageType').notEmpty().withMessage('Le type de couverture est requis').run(req),
         // body('startDate').notEmpty().isISO8601().withMessage('La date de début est requise et doit être une date valide').run(req),
         body('expirationDate').notEmpty().isISO8601().withMessage('La date d\'expiration est requise et doit être une date valide').run(req)
@@ -33,7 +33,7 @@ async function validateInsuranceFields(req) {
 // Fonction de validation pour les champs à mettre à jour
 async function validateUpdateInsuranceFields(req) {
     await Promise.all([
-        // body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
+        body('policyNumber').notEmpty().withMessage('Le numéro de police est requis').run(req),
         // body('coverageType').notEmpty().withMessage('Le type de couverture est requis').run(req),
         // body('startDate').notEmpty().isISO8601().withMessage('La date de début est requise et doit être une date valide').run(req),
         body('expirationDate').notEmpty().isISO8601().withMessage('La date d\'expiration est requise et doit être une date valide').run(req),
@@ -67,7 +67,7 @@ async function addInsurance(req, res) {
         }
 
         const {vehicleId} = req.params;
-        const { insuranceNumber, insuranceCompany, expirationDate } = req.body;
+        const { policyNumber, insuranceCompany, expirationDate } = req.body;
         
 
         // Extraire les données du véhicule à partir de la base de données
@@ -96,7 +96,7 @@ async function addInsurance(req, res) {
 
         // Création de la nouvelle assurance
         const newInsurance = new Insurance({
-            insuranceNumber,
+            // insuranceNumber,
             insuranceCompany,
             subscriber: subscriber, // récupéré depuis le token
             vehicle,
@@ -104,7 +104,7 @@ async function addInsurance(req, res) {
             vehicleBrand,
             vehicleModel,
             vehicleYear,
-            // policyNumber,
+            policyNumber,
             // coverageType,
             // startDate: new Date(startDate),
             expirationDate: new Date(expirationDate)
@@ -196,7 +196,7 @@ async function editInsurance(req, res) {
         // Exécution des validations
         await validateUpdateInsuranceFields(req);
 
-        const {expirationDate, vehicleId } = req.body;
+        const {policyNumber, expirationDate, vehicleId } = req.body;
 
         // Supposons que vous souhaitez mettre à jour l'assurance avec les nouvelles informations du véhicule
         const vehicleData = await vehicleCollection.findOne({ _id: vehicleId });
@@ -206,7 +206,7 @@ async function editInsurance(req, res) {
         const { plate, brand, model, year } = vehicleData;
 
         const fieldsToUpdate = {
-            // policyNumber,
+            policyNumber,
             // coverageType,
             // startDate: new Date(startDate),
             expirationDate: new Date(expirationDate),
