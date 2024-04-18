@@ -10,6 +10,7 @@ const axios = require('axios');
 const got = require('got');
 const crypto = require('crypto');
 
+const { ActivateUser } = require('../../utils/veriff');
 
 // VARIABLES
 const ONFIDO_API_TOKEN = process.env.ONFIDO_API_TOKEN;
@@ -44,6 +45,7 @@ async function webhookDecisions(req, res) {
 
         const { verification } = req.body;
         const { status } = verification;
+        const headers = req.headers;
 
         let myResponse = '';
 
@@ -51,8 +53,7 @@ async function webhookDecisions(req, res) {
             case 'approved':
                 // Acciones cuando la verificación es aprobada
                 console.log('Verification approved :', verification.id);
-
-                myResponse = ActivateUser(verification.id);
+                myResponse = await ActivateUser(verification.id);
 
                 break;
             case 'declined':
@@ -68,76 +69,52 @@ async function webhookDecisions(req, res) {
                 console.log('Estado de verificación no reconocido:', status);
         }
 
-        // Enviar respuesta de confirmación
         if (!myResponse.success) {
-
-            res.status(400).json({ error: myResponse.msg })
+            return res.status(400).json({ error: myResponse.msg });
         }
 
         res.sendStatus(200);
 
     } catch (error) {
-        //console.log(error);
+
         console.error(error);
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
 
 
-async function ActivateUser(verificationId) {
 
-    try {
+/*
+// async function ActivateUser(verificationId) {
+//     try {
+//         let myUser = await userCollection.findOne({ sessionId: verificationId });
 
-        let myUser = await userCollection.findOne({ sessionId: verificationId });
+//         if (!myUser) {
+//             return { success: false, msg: "User session id does not exist" };
+//         }
 
-        if (!myUser) {
-            return ({ success: false, msg: "User verification ID doesn't exist" });
-        }
+//         const updateResult = await userCollection.updateOne(
+//             { sessionId: verificationId },
+//             {
+//                 $set: {
+//                     verifStatus: "verified",
+//                     verifAproved: true,
+//                     verifCheckDecision: "approved"
+//                 }
+//             }
+//         );
 
-        // userCollection.updateOne(
-        //     { sessionId: verificationId },
-        //     { $set: { driverLicense: newDriverLicense._id } }
-        // ),
+//         if (updateResult.modifiedCount > 0) {
+//             return { success: true, msg: "Success" };
+//         } else {
+//             return { success: false, msg: "Failed to update user" };
+//         }
+//     } catch (error) {
+//         throw new Error(error);
+//     }
+// }
+*/
 
-        // userCollection.updateOne(
-        //     { sessionId: verificationId },
-        //     { $set: {
-        //          driverLicense: newDriverLicense._id,
-        //         //  verifStatus: "approved",
-        //          verifAproved: true,
-        //          verifCheckDecision: "approved"
-        //         } }
-        // );
-
-        return ({ success: true, msg: "Success" });
-
-    } catch (error) {
-        throw new error(error);
-    }
-}
-
-
-function isSignatureValid({ signature, shared_secret_key, payload }) {
-    try {
-        if (!signature || !shared_secret_key || !payload) {
-            throw new Error('Missing required parameters');
-        }
-
-        if (typeof payload === 'object') {
-            payload = JSON.stringify(payload);
-        }
-
-        const digest = crypto
-            .createHmac('sha256', shared_secret_key)
-            .update(payload)
-            .digest('hex');
-
-        return digest === signature;
-    } catch (error) {
-        console.error('Error validating signature:', error);
-        return false;
-    }
-}
 
 module.exports = {
 

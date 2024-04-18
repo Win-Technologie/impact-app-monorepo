@@ -94,36 +94,34 @@ function isSignatureValid({ signature, shared_secret_key, payload }) {
 }
 
 async function ActivateUser(verificationId) {
-
     try {
-
         let myUser = await userCollection.findOne({ sessionId: verificationId });
 
         if (!myUser) {
-            return ({ success: false, msg: "User verification ID doesn't exist" });
+            return { success: false, msg: "User session id does not exist" };
         }
 
-        // userCollection.updateOne(
-        //     { sessionId: verificationId },
-        //     { $set: { driverLicense: newDriverLicense._id } }
-        // ),
+        const updateResult = await userCollection.updateOne(
+            { sessionId: verificationId },
+            {
+                $set: {
+                    verifStatus: "verified",
+                    verifAproved: true,
+                    verifCheckDecision: "approved"
+                }
+            }
+        );
 
-        // userCollection.updateOne(
-        //     { sessionId: verificationId },
-        //     { $set: {
-        //          driverLicense: newDriverLicense._id,
-        //         //  verifStatus: "approved",
-        //          verifAproved: true,
-        //          verifCheckDecision: "approved"
-        //         } }
-        // );
-
-        return ({ success: true, msg: "Success" });
-
+        if (updateResult.modifiedCount > 0) {
+            return { success: true, msg: "Success" };
+        } else {
+            return { success: false, msg: "Failed to update user" };
+        }
     } catch (error) {
-        throw new error(error);
+        throw new Error(error);
     }
 }
+
 
 
 module.exports={

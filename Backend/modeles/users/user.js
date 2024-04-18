@@ -102,6 +102,7 @@ const userSchema = new mongoose.Schema({
     },
     verifAproved: { // if user was aproved by veriff
         type: Boolean,
+        default: false,
         index: true
     },
     verifCheckDecision: { // decition made by veriff
