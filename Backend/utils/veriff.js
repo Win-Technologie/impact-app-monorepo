@@ -51,8 +51,8 @@ async function getSessionDecision(sessionId) {
         try {
             // Effectuer la demande auprès de l'API Veriff
             const response = await got(url, options);
-           // Renvoie le corps de la réponse
-            return response.body;
+            // Renvoie les headers et corps de la réponse
+            return ({ headers: response.headers, body: response.body });
 
         } catch (error) {
             console.error('Error:', error.response.body);

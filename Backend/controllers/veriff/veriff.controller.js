@@ -9,7 +9,7 @@ const axios = require('axios');
 const got = require('got');
 const crypto = require('crypto');
 
-const { getSessionDecision } = require('../../utils/veriff');
+const { getSessionDecision, isSignatureValid } = require('../../utils/veriff');
 
 
 // VARIABLES
@@ -355,12 +355,34 @@ async function uploadDocumentToVeriffSession(req, res) {
 async function checkDecision(req, res) {
 
     try {
-        const { sessionId } = req.params;  // Obtenir le sessionID à partir des paramètres de la requête
-        const decision = await getSessionDecision(sessionId); // Obtenir la décision de la session
-       
-        console.log(decision);
+        const { sessionId } = req.params;  
+        const { headers, body } = await getSessionDecision(sessionId); // Obtener la decisión de sesión
 
-        res.status(200).json(decision); 
+        if ('x-hmac-signature' in headers) {
+            const signature = headers['x-hmac-signature'];
+            // console.log('Valor de X-HMAC-SIGNATURE:', signature);
+
+            // Vérifier la validité de la signature sur la réponse
+            const isVeriffSignatureValid = isSignatureValid({
+                signature: signature, // Obtenir la signature des en-têtes de réponse de Veriff
+                shared_secret_key: X_HMAC_SIGNATURE, // Clé secrète partagée
+                payload: body // Utiliser le corps de la réponse comme payload pour la vérification
+            });
+
+             // Vérifier si la signature est valide
+            if (isVeriffSignatureValid) {
+                console.log('La signature sur la réponse de Veriff est valide.');
+               return res.status(200).json(body); 
+
+            } else {
+                console.log("La signature dans la réponse de Veriff n'est pas valide.");
+                return res.status(403).json({msg:"Signature non autorisée"}); 
+            }
+
+        } else {
+            console.log("X-HMAC-SIGNATURE introuvable dans les en-têtes.");
+            return res.status(403).json({msg:"Signature non trouvée"}); 
+        }
 
     } catch (error) {
         console.error('Error:', error);
