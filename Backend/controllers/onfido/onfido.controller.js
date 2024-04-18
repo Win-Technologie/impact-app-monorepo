@@ -16,6 +16,7 @@ const PORT = process.env.PORT;
 const DOCBASICPATH = process.env.USER_DOC_PATH;
 
 
+
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
@@ -88,59 +89,57 @@ async function createApplicant01(newUser, driverLicense) {
 
 /**
  * 
- * @param {*} newUser 
+ * @param {*} myUser 
  * @returns 
  */
-async function createApplicant(newUser, driverLicense) {
+async function createApplicant(myUser, driverLicense) {
     try {
 
         const applicants = await onfido.applicant.list();
 
-        for (const applicant of applicants) {
-            if (applicant.email === newUser.email) {
-                return { success: false, msg: "Utilisateur existant dans Onfido" };
-            }
-        }
+        // for (const applicant of applicants) {
+        //     if (applicant.email === myUser.email) {
+        //         return { success: false, msg: "Utilisateur existant dans Onfido" };
+        //     }
+        // }
 
-        if(driverLicense.sex == "M"){
+        if (driverLicense.sex == "M") {
             driverLicense.sex = "Male"
         }
-                if(driverLicense.sex == "F"){
+        if (driverLicense.sex == "F") {
             driverLicense.sex = "Female"
         }
 
-        console.log(driverLicense.sex );
-        // const newApplicant = await onfido.applicant.create({
-        //     firstName: newUser.name,
-        //     lastName: newUser.lastName,
-        //     email: newUser.email,
-        //     // gender: newUser.gender,
-        //     gender: driverLicense.sex,
-        //     telephone: newUser.phone,
-        //     addresses: [{
-        //         country: newUser.country,
-        //         city: newUser.city,
-        //         province: newUser.province,
-        //         postcode: newUser.postalCode,
-        //         street: newUser.address
-        //     }]
-        // });
+        // console.log(driverLicense.sex );
+        const newApplicant = await onfido.applicant.create({
+            firstName: myUser.name,
+            lastName: myUser.lastName,
+            email: myUser.email,
+            // gender: myUser.gender,
+            gender: driverLicense.sex,
+            telephone: myUser.phone,
+            addresses: [{
+                country: driverLicense.country,
+                city: driverLicense.city,
+                province: driverLicense.province,
+                postcode: driverLicense.postalCode,
+                street: driverLicense.address
+            }]
+        });
 
-    //     // Assigner l'ID de l'applicant à newUser.applicantId
-    //     newUser.applicantId = newApplicant.id;
+        // Assigner l'ID de l'applicant à myUser.applicantId
+        myUser.applicantId = newApplicant.id;
 
-    //     console.log(newApplicant);
+        // console.log(newApplicant);
 
-    //     console.log("DEBUG CREATE APLICANT AFTER ");
+       // Mise à jour du champ 'applicantId' dans la collection 'userCollection'
+        await userCollection.updateOne(
+            { email: myUser.email },
+            { $set: { applicantId: newApplicant.id } }
+        );
 
-    //    // Mise à jour du champ 'applicantId' dans la collection 'userCollection'
-    //     await userCollection.updateOne(
-    //         { email: newUser.email },
-    //         { $set: { applicantId: newApplicant.id } }
-    //     );
-
-      //  return { success: true, msg: "Client ONFIDO créé avec succès" };
-        return true;
+       return { success: true, msg: "Client ONFIDO créé avec succès", applicantId: newApplicant.id };
+        // return true;
 
     } catch (error) {
         throw error;
@@ -292,7 +291,7 @@ async function verifyDrivingLicense(req, res) {
     }
 }
 
-async function verifyDrivingLicense(newUser) {
+async function verifyDrivingLicense01(newUser) {
     try {
         const { applicant_id } = req.body;
 
@@ -325,6 +324,136 @@ async function verifyDrivingLicense(newUser) {
         res.status(500).json({ error: "Erreur lors de la vérification du permis de conduire de l'applicant" });
     }
 }
+
+async function verifyDrivingLicense02(user, drivingLicense, applicant_id, side) {
+    try {
+        // const { applicant_id } = req.body;
+
+    //     const myPath = `${CONNECTION_PATH}/Backend/uploads/docs/images/${drivingLicense.photo}`;
+          const imagePath = `http://localhost:8000/backend/uploads/docs/images/${drivingLicense.photo}`
+
+    //    console.log(MyPath01);
+
+        // Construire le chemin complet de l'image
+       // const imagePath = path.join(__dirname, '../../../uploads/docs/images/', drivingLicense.photo);
+       // const imagePath = path.join(__dirname, '../../../uploads/docs/images/', drivingLicense.photo);
+
+
+        console.log(imagePath);
+        let isoCountry;
+
+        if (drivingLicense.country === "Canada" || drivingLicense.country === "canada") {
+            isoCountry = 'CA';
+        }
+
+        if (drivingLicense.country === "United States" || drivingLicense.country === "united states") {
+            isoCountry = 'US';
+        }
+
+        if (drivingLicense.country === "France" || drivingLicense.country === "france") {
+            isoCountry = 'FR';
+        }
+
+        // Utilisez l'API Onfido pour vérifier le document du permis de conduire de l'applicant
+        const drivingLicenseCheck = await onfido.check.create({
+            applicantId: applicant_id, // Remplacez 'APPLICANT_ID' par l'ID de l'applicant si nécessaire
+            applicantProvidesData: false, // Indique que l'applicant fournit les données
+            side: side,
+            documentType: 'driving_licence',
+            file: imagePath, // Utilisez le chemin complet de l'image du permis de conduire
+            fileName: drivingLicense.photo, // Utilisez le nom de l'image du permis de conduire
+            reportNames: ["identity_enhanced"],
+            
+            // Données supplémentaires
+            drivingLicenseExpirationDate: drivingLicense.expires, 
+            applicantEmail: user.email, 
+            applicantPhoneNumber: user.phone, 
+            drivingLicenseCountry: isoCountry, 
+            drivingLicenseNumber: drivingLicense.number
+            
+        });
+
+        // Envoyez la réponse avec le résultat de la vérification
+        // res.status(200).json(drivingLicenseCheck);
+
+        if(!drivingLicenseCheck){
+            console.log("NON CREATED");
+            return { success: false, msg: "Error while crating driving license check"};
+        }
+        console.log("CREATED");
+        return { success: true, msg: "Driver licence is on check", drivingLicenseCheck: drivingLicenseCheck };
+
+    } catch (error) {
+        console.error("Erreur lors de la vérification du permis de conduire de l'applicant :", error);
+       // res.status(500).json({ error: "Erreur lors de la vérification du permis de conduire de l'applicant" });
+    }
+}
+
+async function verifyDrivingLicense(user, drivingLicense, applicant_id, side) {
+    try {
+        let imagePath;
+        let userFileName;
+        // Construir el camino de la imagen según el lado especificado
+        // if (side === "front") {
+        //     imagePath = `http://localhost:8000/backend/uploads/docs/images/${drivingLicense.photo.front}`;
+        if (side === "front") {
+            console.log('sending front DL side...');
+            imagePath = `http://localhost:8000/backend/uploads/docs/images/${drivingLicense.photo}`;
+            userFileName = drivingLicense.photo;
+        } else if (side === "back") {
+            console.log('sending back DL side...');
+            imagePath = `http://localhost:8000/backend/uploads/docs/images/${drivingLicense.photo.back}`;
+        } else if (side === "selfie") {
+            console.log('sending back selfie...');
+            imagePath = `http://localhost:8000/backend/uploads/docs/images/${user.selfie}`;
+            userFileName = drivingLicense.selfie;
+        } else {
+      
+            return { success: false, msg: "Côté invalide du permis de conduire", sideFailded: side};
+        }
+
+        let isoCountry;
+
+        if (drivingLicense.country === "Canada" || drivingLicense.country === "canada") {
+            isoCountry = 'CA';
+        }
+        if (drivingLicense.country === "United States" || drivingLicense.country === "united states") {
+            isoCountry = 'US';
+        }
+        if (drivingLicense.country === "France" || drivingLicense.country === "france") {
+            isoCountry = 'FR';
+        }
+
+        // Utilisez l'API Onfido pour vérifier le document du permis de conduire de l'applicant
+        const drivingLicenseCheck = await onfido.check.create({
+            applicantId: applicant_id,
+            applicantProvidesData: false,
+            side: side,
+            documentType: 'driving_licence',
+            file: imagePath,
+            // fileName: drivingLicense[side],
+            fileName: userFileName,
+            reportNames: ["identity_enhanced"],
+            // Données supplémentaires
+            drivingLicenseExpirationDate: drivingLicense.expires,
+            applicantEmail: user.email,
+            applicantPhoneNumber: user.phone,
+            drivingLicenseCountry: isoCountry,
+            drivingLicenseNumber: drivingLicense.number
+        });
+
+        if(!drivingLicenseCheck){
+            return { success: false, msg: "Error while crating driving license check", sideFailded: side};
+        }
+
+        return { success: true, msg: "Driver licence is on check", drivingLicenseCheck: drivingLicenseCheck };
+
+    } catch (error) {
+        console.error("Error durante la verificación del permiso de conducir:", error);
+        throw error;
+    }
+}
+
 
 /**
  * cette route reçoit des notifications directes des nouveaux événements de la part d'Onfido

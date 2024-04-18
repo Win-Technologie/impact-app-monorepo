@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    phone:{
+    phone: {
         type: String,
         required: true
     },
@@ -73,10 +73,38 @@ const userSchema = new mongoose.Schema({
     birthdate: {
         type: Date
     },
-    photo: {
+    selfie: {
         type: String
     },
     applicantId: {
+        type: String
+    },
+    // verifInfo: {
+    //     sessionId:{
+    //         type: String
+    //     },
+    //     verifStatus: {
+    //         trype: String
+    //     },
+    //     verifAproved: {
+    //         type: Boolean
+    //     },
+    //     verifCheckStatus:{
+    //         type: String
+    //     }
+    // },
+    sessionId: { // user id into veriff
+        type: String,
+        index: true
+    },
+    verifStatus: { // user veriff profile status
+        trype: String
+    },
+    verifAproved: { // if user was aproved by veriff
+        type: Boolean,
+        index: true
+    },
+    verifCheckDecision: { // decition made by veriff
         type: String
     },
     vehicles: [{

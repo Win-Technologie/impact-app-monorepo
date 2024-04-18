@@ -14,7 +14,7 @@ const { generateVerificationCode } = require('../../utils/generatorcodes');
 const { sendVerificationEmail } = require('../../utils/nodemailer');
 // ONFIDO
 // const { createApplicant, verifyDocuments } = require('../onfido/onfido.controller');
-const { createApplicant } = require('../onfido/onfido.controller');
+const { createApplicant,verifyDrivingLicense } = require('../onfido/onfido.controller');
 
 // CACHE
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
@@ -197,6 +197,7 @@ async function validateRegisterUserFields(req) {
 
 // verify driver license info from request
 async function validateLicenseData(req) {
+
     await Promise.all([
         body('number').isLength({ min: 8 }).withMessage('Le numéro de licence doit contenir au moins 8 caractères').run(req),
         body('name').optional().isLength({ min: 3 }).withMessage('Le prénom doit contenir au moins 3 caractères').run(req),
@@ -207,7 +208,16 @@ async function validateLicenseData(req) {
         body('province').isLength({ min: 2 }).withMessage('La province doit contenir au moins deux caractères').run(req),
         body('postalCode').isLength({ min: 4 }).withMessage('Le code postal doit contenir au moins 4 caractères').run(req),
         body('licenseClass').isLength({ min: 1 }).withMessage('La classe de licence doit contenir au moins 1 caractère').run(req),
-        body('sex').isLength({ min: 1 }).withMessage('Le sexe doit contenir au moins 1 caractère').run(req),
+        // body('sex').isLength({ min: 1 }).withMessage('Le sexe doit contenir au moins 1 caractère').run(req),
+        body('sex')
+            .isLength({ min: 1 }).withMessage('Le sexe doit contenir au moins 1 caractère')
+            .custom((value) => {
+                if (!['m', 'f'].includes(value)) {
+                    throw new Error('Le sexe doit être "m" ou "f"');
+                }
+                return true;
+            })
+            .run(req),
         body('rest').isLength({ min: 2 }).withMessage('Le champ "rest" doit contenir au moins 2 caractères').run(req),
         body('mention').isLength({ min: 2 }).withMessage('Le champ "mention" doit contenir au moins 2 caractères').run(req),
         body('referenceNumber').optional().isLength({ min: 4 }).withMessage('Le numéro de référence doit contenir au moins 4 caractères').run(req),
@@ -704,13 +714,20 @@ async function EditUser(req, res) {
 
             // Initialiser un tableau pour les photos si des fichiers sont présents dans la requête
             let photos_ = [];
+            let selfie = '';
             // Parcourir les photos envoyées dans la requête et les ajouter au tableau de photos
+           
             for (let i = 1; i <= maxFileQuantity; i++) {
+
                 if (req.files && req.files[`image${i}`]) {
                     const myImagePathName = getFileName(req.files[`image${i}`]);
                     photos_.push(myImagePathName);
                 }
             }
+
+            selfie = getFileName(req.files['selfie']);
+
+            foundUser.selfie = selfie;
             foundUser.photos = photos_;
         }
 
@@ -944,7 +961,7 @@ async function UploadDocument(req, res) {
 async function UploadDriverLicense(req, res) {
     try {
 
-        const documentFile = req.files.document;
+        // const documentFile = req.files.document;
 
         // Récupérer le jeton du header de la requête
         const token = req.headers.authorization?.replace("Bearer ", "");
@@ -961,17 +978,20 @@ async function UploadDriverLicense(req, res) {
 
         let myUser = await userCollection.findOne({ _id: myToken.user_id });
 
-        console.log(myUser);
+        // console.log(myUser);
 
         if (!myUser) {
             return res.status(402).json({ msg: "Cet utilisateur n'existe pas" });
         }
 
         
-
         // if (!documentFile) {
         //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
         // }
+
+        if (!req.files) {
+            return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
+        }
 
         // Validation des champs de la requête
         await validateLicenseData(req);
@@ -989,14 +1009,15 @@ async function UploadDriverLicense(req, res) {
 
         let licenseExisting = await drivingLicensesCollection.findOne({ number: number });
 
-        if (licenseExisting) {
-            return res.status(400).json({ msg: "La licence existe déjà" });
-        }
+        // if (licenseExisting) {
+        //     return res.status(400).json({ msg: "La licence existe déjà" });
+        // }
 
         let photoPath;
+    
+        if (req.files && Object.keys(req.files).length > 0) {
 
-        if (documentFile) {
-
+          
             // Vérifier que les fichiers respectent la taille maximale autorisée.
             const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
 
@@ -1020,16 +1041,30 @@ async function UploadDriverLicense(req, res) {
 
             photoPath = getFileName(req.files[`photo`]);
 
+           
+
         }
 
-        const issuedDate = new Date(issued);
-        const expiresDate = new Date(expires);
-        const birthdateDate = new Date(birthdate);
+        let formattedBirthdateDate;
 
-        // Formatea las fechas en el formato YYYY-MM-DD
-        const formattedIssuedDate = issuedDate.toISOString().split('T')[0];
-        const formattedExpiresDate = expiresDate.toISOString().split('T')[0];
-        const formattedBirthdateDate = birthdateDate.toISOString().split('T')[0];
+        if (birthdate) {
+            // const birthdateDate = new Date(birthdate);
+            // formattedBirthdateDate = birthdateDate.toISOString().split('T')[0];
+            const issuedArray = birthdate.split('-');
+             formattedBirthdateDate = `${issuedArray[0]}`;
+        }
+
+        // const issuedDate = new Date(issued);
+        // const formattedIssuedDate = issuedDate.toISOString().split('T')[0];
+
+        // const expiresDate = new Date(expires);
+        // const formattedExpiresDate = expiresDate.toISOString().split('T')[0];
+
+        const issuedArray = issued.split('-');
+        const formattedIssuedDate = `${issuedArray[0]}`;
+
+        const expiresArray = expires.split('-');
+        const formattedExpiresDate = `${expiresArray[0]}`;
 
         //.toLowerCase(),
         // const newDriverLicense = new DriverLicense({
@@ -1060,7 +1095,7 @@ async function UploadDriverLicense(req, res) {
             number: number,
             name: myUser.name,
             lastName: myUser.lastName,
-            birthdate: myUser.birthdate,
+            birthdate: birthdate ? formattedBirthdateDate : myUser.birthdate,
             address: address,
             appartment: appartment,
             province: province,
@@ -1078,32 +1113,72 @@ async function UploadDriverLicense(req, res) {
             photo: photoPath,
         });
 
-        console.log(newDriverLicense);
-        
+      
 
-        // const [updateUser, insertResult] = await Promise.all([
-        //     userCollection.updateOne(
-        //         { _id: myToken.user_id },
-        //         { $set: { driverLicense: newDriverLicense._id } }
-        //     ),
-        //     drivingLicensesCollection.insertOne(newDriverLicense)
-        // ]);
+        const [updateUser, insertResult] = await Promise.all([
+            userCollection.updateOne(
+                { _id: myToken.user_id },
+                { $set: { driverLicense: newDriverLicense._id } }
+            ),
+            drivingLicensesCollection.insertOne(newDriverLicense)
+        ]);
 
-        // if (!insertResult || !updateUser) {
-        //     return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
-        // }
+        if (!insertResult || !updateUser) {
+            return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
+        }
 
-        // Création de l'applicant dans Onfido
+        // // Création de l'applicant dans Onfido
         const applicantResult = await createApplicant(myUser, newDriverLicense);
-
         console.log(applicantResult);
 
-        // // Vérification du résultat de la création de l'applicant dans Onfido
-        // if (!applicantResult.success) {
-        //     return res.status(400).json({ msg: applicantResult.msg });
+        // Vérification du résultat de la création de l'applicant dans Onfido
+        if (!applicantResult.success) {
+            return res.status(400).json({ msg: applicantResult.msg });
+        }
+
+        // // veriication du permis de conduire 
+        // applicantResult.applicantId
+        const fronDriverLicensecheck = await verifyDrivingLicense(
+            myUser,
+            newDriverLicense,
+            applicantResult.applicantId,
+            "front"
+        );
+
+        // const backDriverLicense = await verifyDrivingLicense(
+        //     myUser,
+        //     newDriverLicense,
+        //     applicantResult.applicantId,
+        //     "back"
+        // );
+
+        const userSelfie = await verifyDrivingLicense(
+            myUser,
+            newDriverLicense,
+            applicantResult.applicantId,
+            "selfie"
+        );
+
+        // if (!fronDriverLicensecheck.success) {
+        //     return res.status(400).json({ msg: fronDriverLicensecheck.msg })
         // }
 
-        return res.status(200).json({ msg: 'Nouvelle licence ajoutée avec succès' });
+        if (!fronDriverLicensecheck.success) {
+            return res.status(400).json({
+                frontCheck: fronDriverLicensecheck.msg,
+                backCheck: backDriverLicense.msg,
+                selfieCheck: userSelfie.msg,
+            });
+        }
+
+        res.status(201).json({
+            msg: 'Nouvelle licence ajoutée avec succès',
+            applicandID: applicantResult.applicantId,
+            fronDriverLicensecheck: fronDriverLicensecheck,
+            userSelfieCheck: userSelfie
+        });
+
+
     } catch (error) {
         console.error(`UploadDriverLicense: Erreur interne du serveur : ${error.message}, ${error}`);
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });

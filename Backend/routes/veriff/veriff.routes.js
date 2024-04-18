@@ -4,6 +4,7 @@ const router = Router();
 const userAuth = require('../../auth/jwt.authenticated.js')
 //CONTROLLERS
 const veriffController = require('../../controllers/veriff/veriff.controller.js');
+const veriffWebHookController = require('../../controllers/veriff/veriff.webhooks.controller.js')
 // VARIABLES
 const VERIFF_ROUTER_PATH = process.env.VERIFF_ROUTER_PATH;
 // ADMIN FILES AND IMAGES
@@ -23,6 +24,9 @@ router.post('/sessions/media/uploadDocuments/:sessionId', [userAuth.ensureAuth, 
 // router.get('/decision/:sessionId?"', [userAuth.ensureAuth], veriffController.veriffCheckDecision);
 
 router.get('/decision/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.checkDecision);
+
+//WEBHOOKS
+ router.post('/webhook/decisions', veriffWebHookController.webhookDecisions);
 
 
 module.exports = router;

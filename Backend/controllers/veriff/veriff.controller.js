@@ -1,13 +1,15 @@
 const jwt = require('../../utils/jwt');
 
 const { getDb } = require('../../mongoConnection');
-const { Onfido, Region } = require("@onfido/api");
 
 const path = require('path');
 const fs = require('fs/promises');
 
 const axios = require('axios');
 const got = require('got');
+const crypto = require('crypto');
+
+const { getSessionDecision } = require('../../utils/veriff');
 
 
 // VARIABLES
@@ -157,9 +159,27 @@ async function NewVeriffSession(req, res) {
             ...config,
             json: requestBody
         });
-        console.log(response.body);
+        // console.log(response.body);
 
-        res.status(200).json({ msg: 'Hello from New Veriff Session' });
+        // const myResponse = response;
+        const headers = response.headers;
+        const body = response.body;
+
+        // console.log('*********HEADERS********')
+        // console.log(headers)
+        // console.log('*****************')
+        // console.log('*****************')
+        // console.log('*********BODY********')
+        // console.log(body)
+
+        res.status(200).json({
+            msg: 'Hello from New Veriff Session',
+            id: body.verification.id,
+            status: body.verification.status,
+            url: body.verification.url,
+            sessionToken: body.verification.sessionToken
+         
+        });
 
     } catch (error) {
         console.error(error);
@@ -335,83 +355,73 @@ async function uploadDocumentToVeriffSession(req, res) {
 async function checkDecision(req, res) {
 
     try {
-        const { sessionId } = req.params; // Obtener el sessionId de los parámetros de la solicitud
-        const decision = await getSessionDecision(sessionId); // Obtener la decisión de la sesión
-        res.status(200).json(decision); // Enviar la decisión como respuesta
+        const { sessionId } = req.params;  // Obtenir le sessionID à partir des paramètres de la requête
+        const decision = await getSessionDecision(sessionId); // Obtenir la décision de la session
+       
+        console.log(decision);
 
-        // return res.status(200).json({msg: 'Hello from VeriffDecision'});
+        res.status(200).json(decision); 
+
     } catch (error) {
         console.error('Error:', error);
         return res.status(500).json({ msg: 'Internal server error: ', error });
     }
 }
 
-/*
-async function getSessionDecision(sessionId) {
-    try {
 
-        // const url = `${VERIFF_BASE_URL}/v1/sessions/${sessionId}/decision`;
-        // const url = `${VERIFF_BASE_URL}/v1/sessions/${sessionId}/decision`;
-        const url = "https://stationapi.veriff.com/v1/sessions/" + sessionId + "/decision";
-       // const url = "https://veriff.com/v1/sessions/" + sessionId + "/decision";
+// async function getSessionDecision(sessionId) {
+//     try {
 
-        https://stationapi.veriff.com
+//         const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/decision`;
+//         // Construir el payload como el sessionId
+//         const payload = sessionId;
+//         // Construir el mensaje que se firmará
+//         const message = payload;
+
+//         //// Generar la firma HMAC usando la clave compartida
+//         // const hmac = crypto.createHmac('sha256', X_HMAC_SIGNATURE);
+//         // hmac.update(message);
+//         // const signature = hmac.digest('hex');
+//         const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
+
+//         // Configurar los encabezados de la solicitud
+//         const headers = {
+//             'Content-Type': 'application/json',
+//             'X-HMAC-SIGNATURE': signature,
+//             'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY
+//         };
+
+//         // Configurar las opciones de la solicitud
+//         const options = {
+//             headers: headers,
+//             responseType: 'json'
+//         };
+
+//         try {
+//             // Realizar la solicitud a la API de Veriff
+//             const response = await got(url, options);
+
+//             // Retornar el cuerpo de la respuesta
+//             return response.body;
+
+//         } catch (error) {
+//             console.error('Error:', error.response.body);
+//             throw new Error(error);
+//         }
+
+//     } catch (error) {
+//         console.error('Error:', error);
+//         throw error;
+//     }
+// }
 
 
-        console.log(url);
+// function generateHMACSignature(message, sharedSecretKey) {
+//     const hmac = crypto.createHmac('sha256', sharedSecretKey);
+//     hmac.update(message);
+//     return hmac.digest('hex');
+// }
 
-        // const options = {
-        //     method: 'GET',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         'X-HMAC-SIGNATURE': X_HMAC_SIGNATURE,
-        //         'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY
-        //     }
-        // };
-
-        const options = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-HMAC-SIGNATURE': 'b2a0bd97-e5f7-4360-b17c-07479b92472e',
-                'X-AUTH-CLIENT': '87668af6-3fcf-451b-aec7-840acba82802'
-            }
-        };
-
-
-
-        const response = await got(url, options);
-
-        return response.body;
-    } catch (error) {
-        throw error;
-    }
-}
-*/
-
-async function getSessionDecision(sessionId) {
-    try {
-        const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/decision`;
-
-        const options = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-HMAC-SIGNATURE': 'b2a0bd97-e5f7-4360-b17c-07479b92472e',
-                'X-AUTH-CLIENT': '87668af6-3fcf-451b-aec7-840acba82802'
-            }
-        };
-
-        const response = await got(url, options);
-
-        return response.body;
-
-    } catch (error) {
-    
-        console.error('Error:', error);
-        throw error;
-    }
-}
 
 module.exports = {
 

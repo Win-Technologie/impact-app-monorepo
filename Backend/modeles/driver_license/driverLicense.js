@@ -111,11 +111,11 @@ const driverLicenseSchema = new mongoose.Schema({
     }
     // ,
     // photo: {
-    //     head: {
+    //     front: {
     //         type: String,
     //         required: true
     //     },
-    //     reverse: {
+    //     back: {
     //         type: String,
     //         required: true
     //     }
