@@ -51,22 +51,22 @@ async function webhookDecisions(req, res) {
 
         switch (status) {
             case 'approved':
-                // Acciones cuando la verificación es aprobada
+                // Actions en cas d'approbation de la vérification
                 console.log('Verification approved :', verification.id);
                 myResponse = await ActivateUser(verification.id);
 
                 break;
             case 'declined':
-                // Acciones cuando la verificación es rechazada
-                console.log('Verificación rechazada:', verification.id);
+                // Actions en cas de rejet de la vérification
+                console.log('Verification rejected:', verification.id);
                 break;
             case 'resubmission_requested':
-                // Acciones cuando se solicita una nueva presentación
-                console.log('Se solicita una nueva presentación:', verification.id);
+                // Actions en cas de demande de resoumission
+                console.log('a new presentation is requested:', verification.id);
                 break;
-            // Agrega casos para otros estados de verificación según sea necesario
+            // Ajouter des cas pour d'autres statuts de vérification si nécessaire...
             default:
-                console.log('Estado de verificación no reconocido:', status);
+                console.log('Unrecognized verification status:', status);
         }
 
         if (!myResponse.success) {
