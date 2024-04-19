@@ -24,6 +24,42 @@ const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
 
 
+
+async function deleteSession(sessionId, apiKey, hmacSignature) {
+    try {
+        const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}`;
+
+        const payload = sessionId;
+        const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-HMAC-SIGNATURE': signature,
+            'X-AUTH-CLIENT': apiKey
+        };
+        
+        const options = {
+            headers: headers
+        };
+
+        try {
+            // En utilisant got pour effectuer une demande DELETE
+            const response = await got.delete(url, options);
+
+            return response.data;
+        }
+        catch (error) {
+            console.error('Error:', error);
+            throw new Error(error);
+        }
+    }
+    catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
+
+
 async function getSessionDecision(sessionId) {
     try {
 
@@ -195,6 +231,6 @@ module.exports={
     isSignatureValid,
     ActivateUser,
     DeactivateUser,
-    modifUserVeriffAttributes
+    modifUserVeriffAttributes,
 
 }
