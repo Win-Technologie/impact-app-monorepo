@@ -30,8 +30,8 @@ async function getSessionDecision(sessionId) {
         const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/decision`;
         // Construire le payload en tant que sessionId
         const payload = sessionId;
-        // Construire le message à signer
-        const message = payload;
+        // // Construire le message à signer
+        //  const message = payload;
         //// Générer une signature HMAC à l'aide de la clé partagée
         const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
 
@@ -40,6 +40,7 @@ async function getSessionDecision(sessionId) {
             'Content-Type': 'application/json',
             'X-HMAC-SIGNATURE': signature,
             'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY
+           
         };
 
         // Configurer les options de l'application
@@ -115,11 +116,44 @@ async function ActivateUser(verificationId) {
         if (updateResult.modifiedCount > 0) {
             return { success: true, msg: "Success" };
         } else {
-            return { success: false, msg: "Failed to update user" };
+            return { success: false, msg: "Activate User: Failed to update user" };
         }
     } catch (error) {
         throw new Error(error);
     }
+}
+
+async function DeactivateUser(verificationId, status) {
+
+    try {
+        console.log('DeactivateUser');
+
+        let myUser = await userCollection.findOne({ sessionId: verificationId });
+
+        if (!myUser) {
+            return { success: false, msg: "User session id does not exist" };
+        }
+
+        const updateResult = await userCollection.updateOne(
+            { sessionId: verificationId },
+            {
+                $set: {
+                    verifStatus: "verified",
+                    verifAproved: false,
+                    verifCheckDecision: status
+                }
+            }
+        );
+
+        if (updateResult.modifiedCount > 0) {
+            return { success: true, msg: "Success" };
+        } else {
+            return { success: false, msg: "Deactivate User: Failed to update user" };
+        }
+    } catch (error) {
+        throw new Error(error);
+    }
+
 }
 
 
@@ -128,6 +162,7 @@ module.exports={
     getSessionDecision,
     generateHMACSignature,
     isSignatureValid,
-    ActivateUser
+    ActivateUser,
+    DeactivateUser
 
 }

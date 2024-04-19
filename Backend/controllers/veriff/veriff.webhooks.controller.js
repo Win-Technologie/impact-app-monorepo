@@ -10,7 +10,7 @@ const axios = require('axios');
 const got = require('got');
 const crypto = require('crypto');
 
-const { ActivateUser } = require('../../utils/veriff');
+const { ActivateUser, DeactivateUser } = require('../../utils/veriff');
 
 // VARIABLES
 const ONFIDO_API_TOKEN = process.env.ONFIDO_API_TOKEN;
@@ -59,6 +59,7 @@ async function webhookDecisions(req, res) {
             case 'declined':
                 // Actions en cas de rejet de la vérification
                 console.log('Verification rejected:', verification.id);
+                myResponse = await DeactivateUser(verification.id,'declined')
                 break;
             case 'resubmission_requested':
                 // Actions en cas de demande de resoumission

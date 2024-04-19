@@ -165,9 +165,9 @@ async function NewVeriffSession(req, res) {
         const headers = response.headers;
         const body = response.body;
 
-        // console.log('*********HEADERS********')
-        // console.log(headers)
-        // console.log('*****************')
+        console.log('*********HEADERS********')
+        console.log(headers)
+        console.log('*****************')
         // console.log('*****************')
         // console.log('*********BODY********')
         // console.log(body)
