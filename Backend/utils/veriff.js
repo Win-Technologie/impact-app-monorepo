@@ -25,7 +25,7 @@ const userCollection = mainDb.collection(USERSCOLLECTION);
 
 
 
-async function deleteSession(sessionId, apiKey, hmacSignature) {
+async function deleteSession(sessionId, apiKey) {
     try {
         const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}`;
 
@@ -59,7 +59,7 @@ async function deleteSession(sessionId, apiKey, hmacSignature) {
     }
 }
 
-async function getPersonInfo(sessionId, apiKey, hmacSignature) {
+async function getPersonInfo(sessionId, apiKey) {
     try {
         const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}/person`;
 
@@ -92,7 +92,7 @@ async function getPersonInfo(sessionId, apiKey, hmacSignature) {
     }
 }
 
-async function uploadCollectedData(sessionId, apiKey, hmacSignature, requestData) {
+async function uploadCollectedData(sessionId, apiKey, requestData) {
     try {
         const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}/collected-data`;
 
