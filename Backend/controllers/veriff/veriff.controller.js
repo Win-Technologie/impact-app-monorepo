@@ -445,6 +445,116 @@ async function checkDecision(req, res) {
 // }
 
 
+
+
+
+//DELETE /sessions/{sessionId}
+async function deleteSession(sessionId, apiKey, hmacSignature) {
+    try {
+        const url = `/v1/sessions/${sessionId}`;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-HMAC-SIGNATURE': hmacSignature,
+                'X-AUTH-CLIENT': apiKey
+            }
+        };
+
+        const response = await axios.delete(url, config);
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting session:', error.message);
+        throw error;
+    }
+}
+
+//GET /sessions/{sessionId}/person
+async function getPersonInfo(sessionId, apiKey, hmacSignature) {
+    try {
+        const url = `/v1/sessions/${sessionId}/person`;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-HMAC-SIGNATURE': hmacSignature,
+                'X-AUTH-CLIENT': apiKey
+            }
+        };
+
+        const response = await axios.get(url, config);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching person information:', error.message);
+        throw error;
+    }
+}
+
+//POST /sessions/{sessionId}/collected data
+async function uploadCollectedData(sessionId, apiKey, hmacSignature, requestData) {
+    try {
+        const url = `/v1/sessions/${sessionId}/collected-data`;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-HMAC-SIGNATURE': hmacSignature,
+                'X-AUTH-CLIENT': apiKey
+            }
+        };
+
+        const response = await axios.post(url, requestData, config);
+        return response.data;
+    } catch (error) {
+        console.error('Error uploading collected data:', error.message);
+        throw error;
+    }
+}
+
+//GET /media/{mediaId}
+async function getMedia(mediaId, apiKey, hmacSignature) {
+    try {
+        const url = `/v1/media/${mediaId}`;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-HMAC-SIGNATURE': hmacSignature,
+                'X-AUTH-CLIENT': apiKey
+            }
+        };
+
+        const response = await axios.get(url, config);
+        return response.data;
+    } catch (error) {
+        console.error('Error retrieving media:', error.message);
+        throw error;
+    }
+}
+
+
+//GET /sessions/{sessionId}/watchlist-screening
+async function getWatchlistScreening(sessionId, apiKey, hmacSignature) {
+    try {
+        const url = `/v1/sessions/${sessionId}/watchlist-screening`;
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-HMAC-SIGNATURE': hmacSignature,
+                'X-AUTH-CLIENT': apiKey
+            }
+        };
+
+        const response = await axios.get(url, config);
+        return response.data;
+    } catch (error) {
+        console.error('Error retrieving watchlist screening data:', error.message);
+        throw error;
+    }
+}
+
+
 module.exports = {
 
     NewVeriffSession,
