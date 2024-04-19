@@ -358,9 +358,10 @@ async function checkDecision(req, res) {
         const { sessionId } = req.params;  
         const { headers, body } = await getSessionDecision(sessionId); // Obtener la decisión de sesión
 
+        // console.log(headers);
         if ('x-hmac-signature' in headers) {
             const signature = headers['x-hmac-signature'];
-            // console.log('Valor de X-HMAC-SIGNATURE:', signature);
+            console.log('Valor de X-HMAC-SIGNATURE:', signature);
 
             // Vérifier la validité de la signature sur la réponse
             const isVeriffSignatureValid = isSignatureValid({
