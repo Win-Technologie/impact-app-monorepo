@@ -49,7 +49,7 @@ async function deleteSession(sessionId, apiKey, hmacSignature) {
             return response.data;
         }
         catch (error) {
-            console.error('Error:', error);
+            console.error('Error deleting session:', error);
             throw new Error(error);
         }
     }
