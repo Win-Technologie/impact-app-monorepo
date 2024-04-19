@@ -10,7 +10,8 @@ const axios = require('axios');
 const got = require('got');
 const crypto = require('crypto');
 
-const { ActivateUser, DeactivateUser, modifUserVeriffAttributes } = require('../../utils/veriff');
+const { ActivateUser, DeactivateUser, modifAndGetUserVeriffAttributes } = require('../../utils/veriff');
+const { sendNotificationMail } = require('../../utils/nodemailer');
 
 // VARIABLES
 const ONFIDO_API_TOKEN = process.env.ONFIDO_API_TOKEN;
@@ -48,23 +49,41 @@ async function webhookDecisions(req, res) {
         const headers = req.headers;
 
         let myResponse = '';
+        let htmlMessage = '';
+        let subject = '';
 
         switch (status) {
             case 'approved':  // Actions en cas d'approbation de la vérification
 
                 console.log('Verification approved :', verification.id);
                 // myResponse = await ActivateUser(verification.id);
-                myResponse = await modifUserVeriffAttributes(verification.id, 'approved', 'verified', true)
+                myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'approved', 'verified', true);
+                if (myResponse.success) {
+                    htmlMessage = `<p>Hello ${myResponse.name}, welcome to the Impact family, your application has been approved, please go to the application to enjoy all the benefits</p>`;
+                    subject = 'Approved verification';
+                }
+
                 break;
 
             case 'declined': // Actions en cas de rejet de la vérification
                 console.log('Verification rejected:', verification.id);
                 // myResponse = await DeactivateUser(verification.id,'declined');
-                myResponse = await modifUserVeriffAttributes(verification.id, 'declined', 'verified', false)
+                myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'declined', 'verified', false);
+                htmlMessage = `<p>Hello ${myResponse.name}, We regret to inform you that your application has been denied, please contact technical support at xxx-xxx-xx-xx for more information</p>`;
+                subject = 'Declined verification';
+
                 break;
 
             case 'resubmission_required': // Actions en cas de demande de resoumission
-                console.log('a new presentation is requested:', verification.id);
+                console.log('A new submission is requested:', verification.id);
+                myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'resubmission_required', 'verified', false);
+                htmlMessage = `<p>Please click the button below to resubmit your information:</p>
+                                <a href=${myResponse.url} target="_blank">
+                                <button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px;">Verify me</button>
+                                </a>
+                               `;
+                subject = 'Resubmission required';
+
                 break;
 
             case 'expired':
@@ -95,6 +114,8 @@ async function webhookDecisions(req, res) {
         }
 
         res.sendStatus(200);
+
+        await sendNotificationMail(myResponse.email,subject,htmlMessage);
 
     } catch (error) {
 

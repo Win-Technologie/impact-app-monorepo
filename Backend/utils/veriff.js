@@ -23,8 +23,6 @@ const VERIFF_BASE_URL = process.env.VERIFF_BASE_URL;
 const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
 
-
-
 async function deleteSession(sessionId, apiKey) {
     try {
         const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}`;
@@ -290,38 +288,82 @@ async function DeactivateUser(verificationId, status) {
 }
 
 // modify user veriff attributes
-async function modifUserVeriffAttributes(verificationId, status, verifStatus, verifAproved) {
+// async function modifAndGetUserVeriffAttributes(verificationId, status, verifStatus, verifAproved) {
 
+//     try {
+//         let myUser = await userCollection.findOne({ sessionId: verificationId });
+
+//         if (!myUser) {
+//             return { success: false, msg: "User session id does not exist" };
+//         }
+
+//         const updateResult = await userCollection.updateOne(
+//             { sessionId: verificationId },
+//             {
+//                 $set: {
+//                     verifStatus: verifStatus,
+//                     verifAproved: verifAproved,
+//                     verifCheckDecision: status
+//                 }
+//             }
+//         );
+
+//         if (updateResult.modifiedCount > 0) {
+//             return { success: true, msg: "Success", email: myUser.email, name: myUser.name };
+//         } else {
+//             return { success: false, msg: "Modif User Veriff Attributes: Failed to update user" };
+//         }
+
+
+//     } catch (error) {
+//         throw new Error(error);
+//     }
+// }
+
+async function modifAndGetUserVeriffAttributes(verificationId, status, verifStatus, verifAproved) {
     try {
         let myUser = await userCollection.findOne({ sessionId: verificationId });
 
-       if (!myUser) {
-           return { success: false, msg: "User session id does not exist" };
-       }
+        if (!myUser) {
+            return { success: false, msg: "User session id does not exist" };
+        }
 
-       const updateResult = await userCollection.updateOne(
-           { sessionId: verificationId },
-           {
-               $set: {
-                   verifStatus: verifStatus,
-                   verifAproved: verifAproved,
-                   verifCheckDecision: status
-               }
-           }
-       );
+        let response = {
+            success: true,
+            msg: "Success",
+            email: myUser.email,
+            name: myUser.name
+        };
 
-       if (updateResult.modifiedCount > 0) {
-           return { success: true, msg: "Success" };
-       } else {
-           return { success: false, msg: "Deactivate User: Failed to update user" };
-       }
-   } catch (error) {
-       throw new Error(error);
-   }
+        // Vérifier si le statut est égal à "resubmission_required".
+        if (status === 'resubmission_required') {
+            // Si oui, ajouter le champ url
+            response.url = myUser.verifLink;
+        }
 
+        const updateResult = await userCollection.updateOne(
+            { sessionId: verificationId },
+            {
+                $set: {
+                    verifStatus: verifStatus,
+                    verifAproved: verifAproved,
+                    verifCheckDecision: status
+                }
+            }
+        );
+
+        if (updateResult.modifiedCount === 0) {
+            // Si aucun document n'a été mis à jour, ajuster la réponse
+            response.success = false;
+            response.msg = "Modif User Veriff Attributes: Failed to update user: Failed to update user";
+        }
+
+        return response;
+
+    } catch (error) {
+        throw new Error(error);
+    }
 }
-
-
 
 
 module.exports={
@@ -330,6 +372,8 @@ module.exports={
     isSignatureValid,
     ActivateUser,
     DeactivateUser,
-    modifUserVeriffAttributes,
+    // modifUserVeriffAttributes,
+    modifAndGetUserVeriffAttributes
+
 
 }
