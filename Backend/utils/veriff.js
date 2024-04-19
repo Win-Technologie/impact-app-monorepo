@@ -92,6 +92,38 @@ async function getPersonInfo(sessionId, apiKey, hmacSignature) {
     }
 }
 
+async function uploadCollectedData(sessionId, apiKey, hmacSignature, requestData) {
+    try {
+        const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}/collected-data`;
+
+        const payload = JSON.stringify(requestData);
+        const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-HMAC-SIGNATURE': signature,
+            'X-AUTH-CLIENT': apiKey
+        };
+
+        const options = {
+            headers: headers
+        };
+
+        try {
+            const response = await got.post(url, options);
+
+            return response.data;
+        }
+        catch (error) {
+            console.error('Error uploading collected data:', error);
+            throw new Error(error);
+        }
+    }
+    catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
 
 async function getSessionDecision(sessionId) {
     try {
