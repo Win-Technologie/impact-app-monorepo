@@ -59,6 +59,39 @@ async function deleteSession(sessionId, apiKey, hmacSignature) {
     }
 }
 
+async function getPersonInfo(sessionId, apiKey, hmacSignature) {
+    try {
+        const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}/person`;
+
+        const payload = sessionId;
+        const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-HMAC-SIGNATURE': signature,
+            'X-AUTH-CLIENT': apiKey
+        };
+
+        const options = {
+            headers: headers
+        };
+
+        try {
+            const response = await got(url, options);
+
+            return response.data;
+        }
+        catch (error) {
+            console.error('Error getting person info:', error);
+            throw new Error(error);
+        }
+    }
+    catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
+
 
 async function getSessionDecision(sessionId) {
     try {
