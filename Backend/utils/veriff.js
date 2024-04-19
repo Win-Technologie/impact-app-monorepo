@@ -125,6 +125,40 @@ async function uploadCollectedData(sessionId, apiKey, hmacSignature, requestData
     }
 }
 
+async function getMedia(mediaId, apiKey) {
+
+    try {
+        const url = `${BASE_VERIFF_HTTPS}/v1/media/${mediaId}`;
+
+        const payload = mediaId;
+        const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-HMAC-SIGNATURE': signature,
+            'X-AUTH-CLIENT': apiKey
+        };
+
+        const options = {
+            headers: headers
+        };
+
+        try {
+            const response = await got(url, options);
+
+            return response.data;
+        }
+        catch (error) {
+            console.error('Error getting media:', error);
+            throw new Error(error);
+        }
+    }
+    catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
+
 async function getSessionDecision(sessionId) {
     try {
 
