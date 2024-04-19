@@ -29,7 +29,21 @@ async function sendVerificationEmail(email, code) {
     await transporter.sendMail(mailOptions);
 }
 
+async function sendNotificationMail(email, subject, msg){
+
+    const mailOptions = {
+        from: COMPANY_MAIL,
+        to: email,
+        subject: subject,
+        html: `<p>${msg}</p>`
+    };
+
+    // Envoyer l'e-mail
+    await transporter.sendMail(mailOptions);
+}
+
 module.exports = {
     transporter,
-    sendVerificationEmail
+    sendVerificationEmail,
+    sendNotificationMail
 };

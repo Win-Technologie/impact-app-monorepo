@@ -91,7 +91,10 @@ const userSchema = new mongoose.Schema({
     //     },
     //     verifCheckStatus:{
     //         type: String
-    //     }
+    //     },
+     //    verifLink: {
+    //         type: String
+    //     },
     // },
     sessionId: { // user id into veriff
         type: String,
@@ -106,6 +109,9 @@ const userSchema = new mongoose.Schema({
         index: true
     },
     verifCheckDecision: { // decition made by veriff
+        type: String
+    },
+    verifLink: {
         type: String
     },
     vehicles: [{

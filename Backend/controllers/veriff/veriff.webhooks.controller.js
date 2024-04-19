@@ -10,7 +10,7 @@ const axios = require('axios');
 const got = require('got');
 const crypto = require('crypto');
 
-const { ActivateUser, DeactivateUser } = require('../../utils/veriff');
+const { ActivateUser, DeactivateUser, modifUserVeriffAttributes } = require('../../utils/veriff');
 
 // VARIABLES
 const ONFIDO_API_TOKEN = process.env.ONFIDO_API_TOKEN;
@@ -50,21 +50,41 @@ async function webhookDecisions(req, res) {
         let myResponse = '';
 
         switch (status) {
-            case 'approved':
-                // Actions en cas d'approbation de la vérification
-                console.log('Verification approved :', verification.id);
-                myResponse = await ActivateUser(verification.id);
+            case 'approved':  // Actions en cas d'approbation de la vérification
 
+                console.log('Verification approved :', verification.id);
+                // myResponse = await ActivateUser(verification.id);
+                myResponse = await modifUserVeriffAttributes(verification.id, 'approved', 'verified', true)
                 break;
-            case 'declined':
-                // Actions en cas de rejet de la vérification
+
+            case 'declined': // Actions en cas de rejet de la vérification
                 console.log('Verification rejected:', verification.id);
-                myResponse = await DeactivateUser(verification.id,'declined')
+                // myResponse = await DeactivateUser(verification.id,'declined');
+                myResponse = await modifUserVeriffAttributes(verification.id, 'declined', 'verified', false)
                 break;
-            case 'resubmission_requested':
-                // Actions en cas de demande de resoumission
+
+            case 'resubmission_required': // Actions en cas de demande de resoumission
                 console.log('a new presentation is requested:', verification.id);
                 break;
+
+            case 'expired':
+                // Actions en cas de soumission expired
+                console.log('Verification expired', verification.id);
+                myResponse = await DeactivateUser(verification.id, 'expired');
+                break;
+
+            case 'abandoned':
+                // Actions en cas de soumission abandoned
+                console.log('Verification abandoned', verification.id);
+                myResponse = await DeactivateUser(verification.id, 'abandoned');
+                break;
+
+            case 'review':
+                // Actions en cas de soumission review
+                console.log('Verification review', verification.id);
+                myResponse = await DeactivateUser(verification.id, 'review');
+                break;
+
             // Ajouter des cas pour d'autres statuts de vérification si nécessaire...
             default:
                 console.log('Unrecognized verification status:', status);

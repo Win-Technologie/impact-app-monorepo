@@ -126,9 +126,7 @@ async function ActivateUser(verificationId) {
 async function DeactivateUser(verificationId, status) {
 
     try {
-        console.log('DeactivateUser');
-
-        let myUser = await userCollection.findOne({ sessionId: verificationId });
+         let myUser = await userCollection.findOne({ sessionId: verificationId });
 
         if (!myUser) {
             return { success: false, msg: "User session id does not exist" };
@@ -156,6 +154,39 @@ async function DeactivateUser(verificationId, status) {
 
 }
 
+// modify user veriff attributes
+async function modifUserVeriffAttributes(verificationId, status, verifStatus, verifAproved) {
+
+    try {
+        let myUser = await userCollection.findOne({ sessionId: verificationId });
+
+       if (!myUser) {
+           return { success: false, msg: "User session id does not exist" };
+       }
+
+       const updateResult = await userCollection.updateOne(
+           { sessionId: verificationId },
+           {
+               $set: {
+                   verifStatus: verifStatus,
+                   verifAproved: verifAproved,
+                   verifCheckDecision: status
+               }
+           }
+       );
+
+       if (updateResult.modifiedCount > 0) {
+           return { success: true, msg: "Success" };
+       } else {
+           return { success: false, msg: "Deactivate User: Failed to update user" };
+       }
+   } catch (error) {
+       throw new Error(error);
+   }
+
+}
+
+
 
 
 module.exports={
@@ -163,6 +194,7 @@ module.exports={
     generateHMACSignature,
     isSignatureValid,
     ActivateUser,
-    DeactivateUser
+    DeactivateUser,
+    modifUserVeriffAttributes
 
 }
