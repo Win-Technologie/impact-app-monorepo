@@ -27,6 +27,7 @@ router.get('/decision/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffCo
 
 //WEBHOOKS
  router.post('/webhook/decisions', veriffWebHookController.webhookDecisions);
+ router.post('/webhook/events', veriffWebHookController.webHookEvents);
 
 
 module.exports = router;

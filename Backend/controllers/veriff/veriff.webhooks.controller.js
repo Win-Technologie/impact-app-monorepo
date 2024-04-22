@@ -27,6 +27,8 @@ const VERIFF_FULL_API_PATH = process.env.VERIFF_FULL_API_PATH;
 const X_HMAC_SIGNATURE = process.env.X_HMAC_SIGNATURE;
 const VERIFF_BASE_URL = process.env.VERIFF_BASE_URL;
 
+let contactNumber01 = 'xxx-xxx-xx-xx'
+
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
@@ -69,7 +71,7 @@ async function webhookDecisions(req, res) {
                 console.log('Verification rejected:', verification.id);
                 // myResponse = await DeactivateUser(verification.id,'declined');
                 myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'declined', 'verified', false);
-                htmlMessage = `<p>Hello ${myResponse.name}, We regret to inform you that your application has been denied, please contact technical support at xxx-xxx-xx-xx for more information</p>`;
+                htmlMessage = `<p>Hello ${myResponse.name}, We regret to inform you that your application has been denied, please contact technical support at ${contactNumber01} for more information</p>`;
                 subject = 'Declined verification';
 
                 break;
@@ -89,19 +91,25 @@ async function webhookDecisions(req, res) {
             case 'expired':
                 // Actions en cas de soumission expired
                 console.log('Verification expired', verification.id);
-                myResponse = await DeactivateUser(verification.id, 'expired');
+                myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'expired', 'verified', false);
+                htmlMessage = `<p>Hello ${myResponse.name}, We regret to inform you that your application has been expired, please contact technical support at ${contactNumber01} for more information</p>`;
+                subject = 'Verification expired';
                 break;
 
             case 'abandoned':
                 // Actions en cas de soumission abandoned
                 console.log('Verification abandoned', verification.id);
-                myResponse = await DeactivateUser(verification.id, 'abandoned');
+                myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'abandoned', 'verified', false);
+                htmlMessage = `<p>Hello ${myResponse.name}, We regret to inform you that your application has been abandoned, please contact technical support at ${contactNumber01} for more information</p>`;
+                subject = 'Verification abandoned';
                 break;
 
             case 'review':
                 // Actions en cas de soumission review
                 console.log('Verification review', verification.id);
-                myResponse = await DeactivateUser(verification.id, 'review');
+                myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'review', 'verified', false);
+                htmlMessage = `<p>Hello ${myResponse.name}, We inform you that your application is under review, we will keep you informed of any changes in the status of your account.</p>`;
+                subject = 'Verification review';
                 break;
 
             // Ajouter des cas pour d'autres statuts de vérification si nécessaire...
@@ -124,42 +132,75 @@ async function webhookDecisions(req, res) {
     }
 }
 
+async function webHookEvents(req,res){
 
+    try {
+        
+        // const hmacSignature = req.headers[X_HMAC_SIGNATURE];
+        // const secretKey = VERIF_API_PUBLIC_KEY; 
+        // const calculatedSignature = crypto.createHmac('sha256', secretKey)
+        //     .update(JSON.stringify(req.body))
+        //     .digest('hex');
 
-/*
-// async function ActivateUser(verificationId) {
-//     try {
-//         let myUser = await userCollection.findOne({ sessionId: verificationId });
+        // if (hmacSignature !== calculatedSignature) {
+        //     return res.status(401).json({ error: 'Unauthorized' });
+        // }
 
-//         if (!myUser) {
-//             return { success: false, msg: "User session id does not exist" };
-//         }
+        const { id, attemptId, feature, code, action, vendorData } = req.body;
+        // const { status } = verification;
+        const headers = req.headers;
 
-//         const updateResult = await userCollection.updateOne(
-//             { sessionId: verificationId },
-//             {
-//                 $set: {
-//                     verifStatus: "verified",
-//                     verifAproved: true,
-//                     verifCheckDecision: "approved"
-//                 }
-//             }
-//         );
+        // console.log(req.body);
 
-//         if (updateResult.modifiedCount > 0) {
-//             return { success: true, msg: "Success" };
-//         } else {
-//             return { success: false, msg: "Failed to update user" };
-//         }
-//     } catch (error) {
-//         throw new Error(error);
-//     }
-// }
-*/
+        let myResponse = '';
+        let htmlMessage = '';
+        let subject = '';
+
+        switch (code) {
+            case 7001 :  // Actions en cas d'approbation de la vérification
+
+                console.log('Action started :', id);
+                myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'no-action', 'started', true);
+                if (myResponse.success) {
+                    htmlMessage = `<p>Hello ${myResponse.name}, Your verification process has begun, we will be in touch as soon as there is a change in your account status.</p>`;
+                    subject = 'Verification started';
+                }
+
+                break;
+
+            case 7002: // Actions en cas de rejet de la vérification
+                console.log('Action submited ', id);
+                myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'no-action', 'submited', false);
+                htmlMessage = `<p>Hello ${myResponse.name}, Your documents have been sent for review, we will be in touch as soon as there is a change in the status of your account</p>`;
+                subject = 'Verification submited';
+
+                break;
+
+            // Ajouter des cas pour d'autres events de veriff si nécessaire...
+            default:
+                console.log('Unrecognized verification status:', code);
+        }
+
+        if (!myResponse.success) {
+            return res.status(400).json({ error: myResponse.msg });
+        }
+
+        res.sendStatus(200);
+
+        // await sendNotificationMail(myResponse.email,subject,htmlMessage);
+
+    } catch (error) {
+
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+    }
+
+}
 
 
 module.exports = {
 
     webhookDecisions,
+    webHookEvents
 };
 
