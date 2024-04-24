@@ -224,7 +224,20 @@ async function validateLicenseData(req) {
         body('height').optional().isLength({ min: 2 }).withMessage('La hauteur doit contenir au moins 2 caractères').run(req),
         body('weight').optional().isLength({ min: 2 }).withMessage('Le poids doit contenir au moins 2 caractères').run(req),
         body('issued').isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date d\'émission doit être au format yyyy/mm/dd').run(req),
-        body('expires').isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date d\'expiration doit être au format yyyy/mm/dd').run(req),
+        // body('expires').isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date d\'expiration doit être au format yyyy/mm/dd').run(req),
+
+        body('expires')
+        .isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date d\'expiration doit être au format yyyy/mm/dd')
+        .custom((value, { req }) => {
+            const expirationDate = new Date(value);
+            const currentDate = new Date();
+            if (expirationDate <= currentDate) {
+                throw new Error("La date d'expiration est déjà passée ou expire aujourd'hui");
+            }
+        
+            return true;
+        }).run(req),
+
         body('city').optional().isString().isLength({ min: 4 }).withMessage('La ville doit contenir au moins 4 caractères').run(req),
         body('country').optional().isString().isLength({ min: 4 }).withMessage('Le pays doit contenir au moins 4 caractères').run(req)
     ]);
@@ -970,25 +983,48 @@ async function UploadDriverLicense(req, res) {
         // Vérifier si le jeton est présent
         if (!token) {
             console.error('Le Token n\'est pas fourni');
+            deleteUploadedFiles(req.files);
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
         }
         // Décoder le token pour obtenir les informations de l'utilisateur
         const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
         if (!myToken) {
+            deleteUploadedFiles(req.files);
             return res.status(400).json({ msg: "Token invalide" });
         }
 
+        // Validation des champs de la requête
+        await validateLicenseData(req);
+        const validationErrors = validationResult(req);
+
+        if (!validationErrors.isEmpty()) {
+            deleteUploadedFiles(req.files);
+            return res.status(400).json({ errors: validationErrors.array() });
+        }
+
+
+
         let myUser = await userCollection.findOne({ _id: myToken.user_id });
 
-        // console.log(myUser);
 
         if (!myUser) {
+            deleteUploadedFiles(req.files);
             return res.status(402).json({ msg: "Cet utilisateur n'existe pas" });
         }
 
-        // restriction, do not allow double licenses ############################################
+        // restriction, do not allow double licenses
+        if (myUser.driverLicense != 'pending') {
+            deleteUploadedFiles(req.files);
+            return res.status(402).json({ msg: "l'utilisateur possède déjà un permis de conduire enregistré" });
+        }
 
         
+        if (myUser.name === 'pending' || myUser.lastName === 'pending') {
+            deleteUploadedFiles(req.files);
+            return res.status(402).json({ msg: "Veuillez saisir d'abord le nom et le prénom de l'utilisateur" });
+        }
+
+
         // if (!documentFile) {
         //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
         // }
@@ -997,13 +1033,7 @@ async function UploadDriverLicense(req, res) {
             return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
         }
 
-        // Validation des champs de la requête
-        await validateLicenseData(req);
-        const validationErrors = validationResult(req);
 
-        if (!validationErrors.isEmpty()) {
-            return res.status(400).json({ errors: validationErrors.array() });
-        }
 
         const { number, name, lastName, birthdate, address, appartment, province,
             postalCode, licenseClass, sex, rest, mention, referenceNumber, height,
@@ -1116,8 +1146,6 @@ async function UploadDriverLicense(req, res) {
             country: country,
             photo: photoPath,
         });
-
-      
 
         const [updateUser, insertResult] = await Promise.all([
             userCollection.updateOne(
