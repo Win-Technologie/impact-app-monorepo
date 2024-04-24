@@ -200,7 +200,7 @@ async function editInsurance(req, res) {
         if (existingInsurance.subscriber !== subscriber) {
             return res.status(403).json({ error: "Vous n'êtes pas autorisé à modifier cette assurance" });
         }
-        
+
         
         // Exécution des validations
         await validateUpdateInsuranceFields(req);
@@ -275,6 +275,11 @@ async function deleteInsurance(req, res) {
             return res.status(404).json({ error: "Cette assurance n'existe pas" });
         }
 
+        // Check if the insurance belongs to the user
+        if (existingInsurance.subscriber !== subscriber) {
+            return res.status(403).json({ error: "Vous n'êtes pas autorisé à supprimer cette assurance" });
+        }
+        
     
     // Supprimer les données de cache associées à cette assurance
     const cacheKey = `${subscriber}_${insuranceId}`;
