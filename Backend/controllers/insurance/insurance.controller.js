@@ -192,6 +192,15 @@ async function editInsurance(req, res) {
         }
         const subscriber = myToken.user_id;
 
+        //Verifier si l'assurance appartient à l'utilisateur
+        const existingInsurance = await insuranceCollection.findOne({ _id: insuranceId });
+        if (!existingInsurance) {
+            return res.status(404).json({ error: "Cette assurance n'existe pas" });
+        }
+        if (existingInsurance.subscriber !== subscriber) {
+            return res.status(403).json({ error: "Vous n'êtes pas autorisé à modifier cette assurance" });
+        }
+        
         
         // Exécution des validations
         await validateUpdateInsuranceFields(req);
