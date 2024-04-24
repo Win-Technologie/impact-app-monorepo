@@ -984,6 +984,8 @@ async function UploadDriverLicense(req, res) {
             return res.status(402).json({ msg: "Cet utilisateur n'existe pas" });
         }
 
+        // restriction, do not allow double licenses ############################################
+
         
         // if (!documentFile) {
         //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
@@ -1009,9 +1011,9 @@ async function UploadDriverLicense(req, res) {
 
         let licenseExisting = await drivingLicensesCollection.findOne({ number: number });
 
-        // if (licenseExisting) {
-        //     return res.status(400).json({ msg: "La licence existe déjà" });
-        // }
+        if (licenseExisting) {
+            return res.status(400).json({ msg: "La licence existe déjà" });
+        }
 
         let photoPath;
     
@@ -1128,22 +1130,22 @@ async function UploadDriverLicense(req, res) {
         }
 
         // // Création de l'applicant dans Onfido
-        const applicantResult = await createApplicant(myUser, newDriverLicense);
-        console.log(applicantResult);
+        // const applicantResult = await createApplicant(myUser, newDriverLicense);
+        // console.log(applicantResult);
 
-        // Vérification du résultat de la création de l'applicant dans Onfido
-        if (!applicantResult.success) {
-            return res.status(400).json({ msg: applicantResult.msg });
-        }
+        // // Vérification du résultat de la création de l'applicant dans Onfido
+        // if (!applicantResult.success) {
+        //     return res.status(400).json({ msg: applicantResult.msg });
+        // }
 
         // // veriication du permis de conduire 
         // applicantResult.applicantId
-        const fronDriverLicensecheck = await verifyDrivingLicense(
-            myUser,
-            newDriverLicense,
-            applicantResult.applicantId,
-            "front"
-        );
+        // const fronDriverLicensecheck = await verifyDrivingLicense(
+        //     myUser,
+        //     newDriverLicense,
+        //     applicantResult.applicantId,
+        //     "front"
+        // );
 
         // const backDriverLicense = await verifyDrivingLicense(
         //     myUser,
@@ -1152,30 +1154,30 @@ async function UploadDriverLicense(req, res) {
         //     "back"
         // );
 
-        const userSelfie = await verifyDrivingLicense(
-            myUser,
-            newDriverLicense,
-            applicantResult.applicantId,
-            "selfie"
-        );
+        // const userSelfie = await verifyDrivingLicense(
+        //     myUser,
+        //     newDriverLicense,
+        //     applicantResult.applicantId,
+        //     "selfie"
+        // );
 
         // if (!fronDriverLicensecheck.success) {
         //     return res.status(400).json({ msg: fronDriverLicensecheck.msg })
         // }
 
-        if (!fronDriverLicensecheck.success) {
-            return res.status(400).json({
-                frontCheck: fronDriverLicensecheck.msg,
-                backCheck: backDriverLicense.msg,
-                selfieCheck: userSelfie.msg,
-            });
-        }
+        // if (!fronDriverLicensecheck.success) {
+        //     return res.status(400).json({
+        //         frontCheck: fronDriverLicensecheck.msg,
+        //         backCheck: backDriverLicense.msg,
+        //         selfieCheck: userSelfie.msg,
+        //     });
+        // }
 
         res.status(201).json({
             msg: 'Nouvelle licence ajoutée avec succès',
-            applicandID: applicantResult.applicantId,
-            fronDriverLicensecheck: fronDriverLicensecheck,
-            userSelfieCheck: userSelfie
+            // applicandID: applicantResult.applicantId,
+            // fronDriverLicensecheck: fronDriverLicensecheck,
+            // userSelfieCheck: userSelfie
         });
 
 
