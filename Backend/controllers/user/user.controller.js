@@ -635,7 +635,7 @@ async function EditUser(req, res) {
     try {
 
         const userData = req.body;
-        const { id } = req.params;
+        // const { id } = req.params;
         // console.log(id);
         // Récupérer le jeton du header de la requête
         const token = req.headers.authorization?.replace("Bearer ", "");
@@ -649,6 +649,8 @@ async function EditUser(req, res) {
         if (!myToken) {
             return res.status(400).json({ msg: "Token invalide" });
         }
+
+        const  id  = myToken.user_id;
 
         if (req.body.password) {
             return res.status(403).json({ msg: 'La modification du mot de passe n\'est pas autorisée depuis cette route' });
