@@ -1223,62 +1223,6 @@ async function UploadDriverLicense(req, res) {
     }
 }
 
-
-async function generateQRCode01(req, res) {
-    try {
-
-        const token = req.headers.authorization?.replace("Bearer ", "");
-        // Vérifier si le jeton est présent
-        if (!token) {
-            console.error('Le Token n\'est pas fourni');
-            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-        }
-        // Décoder le token pour obtenir les informations de l'utilisateur
-        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
-        if (!myToken) {
-            return res.status(400).json({ msg: "Token invalide" });
-        }
-
-        const userId = myToken.user_id;
-
-        console.log(userId);
-
-        // const saltRounds = 24; 
-        //const hashedUserId = await bcrypt.hash(userId, saltRounds);
-
-        const myIdhashed = await bcrypt.hash(userId, 7);
-
-        // const myIdhashed = await encryptUserId(userId);
-        console.log(myIdhashed);
-        // console.log(hashedUserId);
-
-        const qrData = {
-            id: myIdhashed,
-            // id: userId,
-            // msg: 'Mani nos pueden hackear'
-        }; // Puedes ajustar los datos del código QR según tus necesidades
-
-        // Generar el código QR
-        const qrImage = await qr.toDataURL(JSON.stringify(qrData));
-
-        // // Devolver el código QR como respuesta
-        // res.status(200).send(qrImage);
-        // Devolver el código QR como respuesta con el tipo de contenido apropiado
-        res.setHeader('Content-Type', 'image/png');
-
-        // Convertir la imagen PNG a base64
-        // const qrImageData = Buffer.from(qrImage.split(',')[1], 'base64')
-        // const qrBase64 = qrImageData.toString('base64');
-
-        res.send(Buffer.from(qrImage.split(',')[1], 'base64'));
-        // res.status(200).json({ qqBase64: qrBase64 });
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ msg: "Error interno del servidor", error: error });
-    }
-}
-
 async function generateQRCode(req, res) {
     try {
 
@@ -1325,7 +1269,6 @@ async function generateQRCode(req, res) {
     }
 }
 
-
 async function readAndSendUserInfo(req, res) {
     try {
 
@@ -1357,7 +1300,6 @@ async function readAndSendUserInfo(req, res) {
         return res.status(500).json({ msg: "Erreur de serveur interne", error: error });
     }
 }
-
 
 
 module.exports = {
