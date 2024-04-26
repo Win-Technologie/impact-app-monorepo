@@ -10,7 +10,7 @@ const got = require('got');
 const crypto = require('crypto');
 
 const { getSessionDecision, isSignatureValid } = require('../../utils/veriff');
-
+const { deleteSession, getPersonInfo, uploadCollectedData, getMedia, getWatchlistScreening } = require('../../utils/veriff');
 
 // VARIABLES
 const ONFIDO_API_TOKEN = process.env.ONFIDO_API_TOKEN;
@@ -391,23 +391,6 @@ async function checkDecision(req, res) {
     }
 }
 
-
-// api call using deleteSession
-async function deleteVeriffSession(req, res) {
-    try {
-        const { sessionId } = req.params;
-        const apiKey = VERIF_API_PUBLIC_KEY;
-        const hmacSignature = 'Impact_Tecnhologie'; // A implementer avec aide Nelson/Angelo
-
-        const response = await deleteSession(sessionId, apiKey, hmacSignature);
-        console.log('Response:', response);
-        return response;
-    } catch (error) {
-        console.error('Error deleting session:', error.message);
-        throw error;
-    }
-}
-
 // async function getSessionDecision(sessionId) {
 //     try {
 
@@ -466,25 +449,25 @@ async function deleteVeriffSession(req, res) {
 
 
 //DELETE /sessions/{sessionId}
-async function deleteSession(sessionId, apiKey, hmacSignature) {
+async function deleteVeriffSession(req, res) {
+
+    // Utiliser la fonction deleteSession importée pour supprimer la session
     try {
-        const url = `/v1/sessions/${sessionId}`;
-
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-HMAC-SIGNATURE': hmacSignature,
-                'X-AUTH-CLIENT': apiKey
-            }
-        };
-
-        const response = await axios.delete(url, config);
-        return response.data;
-    } catch (error) {
+        const { sessionId } = req.params;
+        const apiKey = VERIF_API_PUBLIC_KEY;
+        
+        const response = await deleteSession(sessionId, apiKey);
+        console.log('Response:', response);
+        return response;
+    }
+    catch (error) {
         console.error('Error deleting session:', error.message);
         throw error;
     }
 }
+
+
+
 
 //GET /sessions/{sessionId}/person
 async function getPersonInfo(sessionId, apiKey, hmacSignature) {
@@ -577,6 +560,7 @@ module.exports = {
     NewVeriffSession,
     uploadDocumentToVeriffSession,
     uploadDocuments,
-    checkDecision
+    checkDecision,
+    deleteVeriffSession
 };
 
