@@ -1,6 +1,7 @@
 // // Importations nécessaires
 const { getDb } = require('../../mongoConnection');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('../../utils/jwt');
 // VALIDATE INFOS
 const { body, validationResult } = require('express-validator');
@@ -14,11 +15,17 @@ const { generateVerificationCode } = require('../../utils/generatorcodes');
 const { sendVerificationEmail } = require('../../utils/nodemailer');
 // ONFIDO
 // const { createApplicant, verifyDocuments } = require('../onfido/onfido.controller');
-const { createApplicant,verifyDrivingLicense } = require('../onfido/onfido.controller');
+const { createApplicant, verifyDrivingLicense } = require('../onfido/onfido.controller');
 
 // CACHE
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
 
+// CRYPTO
+const { encryptDataAES, decryptDataAES } = require('../../utils/encryptdata');
+
+// QR Code Generator
+const qr = require('qrcode');
+const jsQR = require('jsqr');
 
 // MODELS
 const User = require('../../modeles/users/user');
@@ -28,6 +35,7 @@ const AES_KEY = process.env.AES_KEY
 const MAINDB = process.env.MAINDB;
 const USERSCOLLECTION = process.env.USERSCOLLECTION;
 const DRIVERLICENSECOLLECTION = process.env.DRIVERSLICENSECOLLECTION;
+const SECRETKEY_IDQR = process.env.SECRETKEY_IDQR;
 
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
@@ -227,16 +235,16 @@ async function validateLicenseData(req) {
         // body('expires').isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date d\'expiration doit être au format yyyy/mm/dd').run(req),
 
         body('expires')
-        .isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date d\'expiration doit être au format yyyy/mm/dd')
-        .custom((value, { req }) => {
-            const expirationDate = new Date(value);
-            const currentDate = new Date();
-            if (expirationDate <= currentDate) {
-                throw new Error("La date d'expiration est déjà passée ou expire aujourd'hui");
-            }
-        
-            return true;
-        }).run(req),
+            .isString().matches(/^\d{4}\/\d{2}\/\d{2}$/).withMessage('La date d\'expiration doit être au format yyyy/mm/dd')
+            .custom((value, { req }) => {
+                const expirationDate = new Date(value);
+                const currentDate = new Date();
+                if (expirationDate <= currentDate) {
+                    throw new Error("La date d'expiration est déjà passée ou expire aujourd'hui");
+                }
+
+                return true;
+            }).run(req),
 
         body('city').optional().isString().isLength({ min: 4 }).withMessage('La ville doit contenir au moins 4 caractères').run(req),
         body('country').optional().isString().isLength({ min: 4 }).withMessage('Le pays doit contenir au moins 4 caractères').run(req)
@@ -395,8 +403,6 @@ async function RegisterUser(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
-
-
 
 async function Login(req, res) {
     try {
@@ -663,7 +669,7 @@ async function EditUser(req, res) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        const  id  = myToken.user_id;
+        const id = myToken.user_id;
 
         if (req.body.password) {
             return res.status(403).json({ msg: 'La modification du mot de passe n\'est pas autorisée depuis cette route' });
@@ -731,7 +737,7 @@ async function EditUser(req, res) {
             let photos_ = [];
             let selfie = '';
             // Parcourir les photos envoyées dans la requête et les ajouter au tableau de photos
-           
+
             for (let i = 1; i <= maxFileQuantity; i++) {
 
                 if (req.files && req.files[`image${i}`]) {
@@ -1018,7 +1024,7 @@ async function UploadDriverLicense(req, res) {
             return res.status(402).json({ msg: "l'utilisateur possède déjà un permis de conduire enregistré" });
         }
 
-        
+
         if (myUser.name === 'pending' || myUser.lastName === 'pending') {
             deleteUploadedFiles(req.files);
             return res.status(402).json({ msg: "Veuillez saisir d'abord le nom et le prénom de l'utilisateur" });
@@ -1048,10 +1054,10 @@ async function UploadDriverLicense(req, res) {
         }
 
         let photoPath;
-    
+
         if (req.files && Object.keys(req.files).length > 0) {
 
-          
+
             // Vérifier que les fichiers respectent la taille maximale autorisée.
             const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
 
@@ -1075,7 +1081,7 @@ async function UploadDriverLicense(req, res) {
 
             photoPath = getFileName(req.files[`photo`]);
 
-           
+
 
         }
 
@@ -1085,7 +1091,7 @@ async function UploadDriverLicense(req, res) {
             // const birthdateDate = new Date(birthdate);
             // formattedBirthdateDate = birthdateDate.toISOString().split('T')[0];
             const issuedArray = birthdate.split('-');
-             formattedBirthdateDate = `${issuedArray[0]}`;
+            formattedBirthdateDate = `${issuedArray[0]}`;
         }
 
         // const issuedDate = new Date(issued);
@@ -1218,6 +1224,142 @@ async function UploadDriverLicense(req, res) {
 }
 
 
+async function generateQRCode01(req, res) {
+    try {
+
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const userId = myToken.user_id;
+
+        console.log(userId);
+
+        // const saltRounds = 24; 
+        //const hashedUserId = await bcrypt.hash(userId, saltRounds);
+
+        const myIdhashed = await bcrypt.hash(userId, 7);
+
+        // const myIdhashed = await encryptUserId(userId);
+        console.log(myIdhashed);
+        // console.log(hashedUserId);
+
+        const qrData = {
+            id: myIdhashed,
+            // id: userId,
+            // msg: 'Mani nos pueden hackear'
+        }; // Puedes ajustar los datos del código QR según tus necesidades
+
+        // Generar el código QR
+        const qrImage = await qr.toDataURL(JSON.stringify(qrData));
+
+        // // Devolver el código QR como respuesta
+        // res.status(200).send(qrImage);
+        // Devolver el código QR como respuesta con el tipo de contenido apropiado
+        res.setHeader('Content-Type', 'image/png');
+
+        // Convertir la imagen PNG a base64
+        // const qrImageData = Buffer.from(qrImage.split(',')[1], 'base64')
+        // const qrBase64 = qrImageData.toString('base64');
+
+        res.send(Buffer.from(qrImage.split(',')[1], 'base64'));
+        // res.status(200).json({ qqBase64: qrBase64 });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Error interno del servidor", error: error });
+    }
+}
+
+async function generateQRCode(req, res) {
+    try {
+
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const userId = myToken.user_id;
+        //Check if user ID has Driver license
+        const user = await userCollection.findOne({ _id: userId });
+
+        if(!user || user.driverLicense === 'pending'){
+            return res.status(400).json({ msg: "Veuillez mettre à jour les détails de votre permis de conduire." });
+        }
+
+        const myIdhashed = encryptDataAES(userId);
+
+        const qrData = {
+            id: myIdhashed.ed,
+            iv: myIdhashed.iv,
+
+        }; 
+
+        // Générer un code QR
+        const qrImage = await qr.toDataURL(JSON.stringify(qrData));
+
+        // Renvoyer le code QR en tant que réponse avec le type de contenu approprié
+        res.setHeader('Content-Type', 'image/png');
+        // RESPONSE
+        res.send(Buffer.from(qrImage.split(',')[1], 'base64'));
+
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Error interno del servidor", error: error });
+    }
+}
+
+
+async function readAndSendUserInfo(req, res) {
+    try {
+
+        const { id, iv } = req.body;
+        const decryptedDataId = decryptDataAES(id, iv);
+
+        //Vérifier si l'id et l'iv sont présents dans le corps. 
+        if (!id || !iv) {
+            return res.status(400).json({ msg: "Veuillez compléter tous les champs pertinents" });
+        }
+
+        // Recherche de l'utilisateur dans la base de données à l'aide de l'ID de l'utilisateur
+        const user = await userCollection.findOne({ _id: decryptedDataId });
+        const driverLicense = await drivingLicensesCollection.findOne({ user: user._id });
+
+        // Vérifier si l'utilisateur a été trouvé
+        if (!user) {
+            return res.status(404).json({ msg: "Utilisateur non trouvé" });
+        }
+        if (!driverLicense) {
+            return res.status(404).json({ msg: "Licensia introuvable" });
+        }
+
+        // // Renvoi des informations sur l'utilisateur en tant que réponse
+        return res.status(200).json({ user: user, driverL: driverLicense });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur de serveur interne", error: error });
+    }
+}
+
+
+
 module.exports = {
     RegisterUser,
     Login,
@@ -1230,7 +1372,9 @@ module.exports = {
     verifyAndChangePassword,
     DeleteUser,
     UploadDocument,
-    UploadDriverLicense
+    UploadDriverLicense,
+    generateQRCode,
+    readAndSendUserInfo
 };
 
 
