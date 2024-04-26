@@ -392,6 +392,22 @@ async function checkDecision(req, res) {
 }
 
 
+// api call using deleteSession
+async function deleteVeriffSession(req, res) {
+    try {
+        const { sessionId } = req.params;
+        const apiKey = VERIF_API_PUBLIC_KEY;
+        const hmacSignature = 'Impact_Tecnhologie'; // A implementer avec aide Nelson/Angelo
+
+        const response = await deleteSession(sessionId, apiKey, hmacSignature);
+        console.log('Response:', response);
+        return response;
+    } catch (error) {
+        console.error('Error deleting session:', error.message);
+        throw error;
+    }
+}
+
 // async function getSessionDecision(sessionId) {
 //     try {
 

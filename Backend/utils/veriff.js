@@ -373,7 +373,9 @@ module.exports={
     ActivateUser,
     DeactivateUser,
     // modifUserVeriffAttributes,
-    modifAndGetUserVeriffAttributes
-
-
+    modifAndGetUserVeriffAttributes,
+    deleteSession,
+    getPersonInfo,
+    uploadCollectedData,
+    getMedia
 }
