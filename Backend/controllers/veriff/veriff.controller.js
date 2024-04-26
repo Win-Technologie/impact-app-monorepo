@@ -467,7 +467,7 @@ async function deleteVeriffSession(req, res) {
 }
 
 // api veriff getPersonInfo
-async function getPersonInfo(req, res) {
+async function getVeriffPersonInfo(req, res) {
     try {
         const { sessionId } = req.params;
         const apiKey = VERIF_API_PUBLIC_KEY;
@@ -491,6 +491,7 @@ module.exports = {
     uploadDocumentToVeriffSession,
     uploadDocuments,
     checkDecision,
-    deleteVeriffSession
+    deleteVeriffSession,
+    getVeriffPersonInfo
 };
 
