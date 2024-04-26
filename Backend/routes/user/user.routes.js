@@ -26,7 +26,7 @@ router.get('/user/profile/:id', [userAuth.ensureAuth, userAuth.isActiveSession],
 // To restore users's password
 router.post('/user/password/reset', [userAuth.ensureAuth, userAuth.isActiveSession], userController.RestorePassword);
 // To edit usrs's information
-router.patch('/user/:id', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserImg], userController.EditUser);
+router.patch('/user', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserImg], userController.EditUser);
 // TWO STEP PASSWORD RECOVERY
 // To send a verification code for recover password account
 // router.post('/user/password/code', [userAuth.isActiveSession], userController.SendVerificationCode);

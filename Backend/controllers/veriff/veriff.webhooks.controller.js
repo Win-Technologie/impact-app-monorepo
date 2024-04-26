@@ -86,7 +86,7 @@ async function webhookDecisions(req, res) {
                                `;
                 subject = 'Resubmission required';
 
-                break;
+                break; 
 
             case 'expired':
                 // Actions en cas de soumission expired

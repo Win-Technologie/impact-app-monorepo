@@ -227,65 +227,6 @@ function isSignatureValid({ signature, shared_secret_key, payload }) {
     }
 }
 
-async function ActivateUser(verificationId) {
-    try {
-        let myUser = await userCollection.findOne({ sessionId: verificationId });
-
-        if (!myUser) {
-            return { success: false, msg: "User session id does not exist" };
-        }
-
-        const updateResult = await userCollection.updateOne(
-            { sessionId: verificationId },
-            {
-                $set: {
-                    verifStatus: "verified",
-                    verifAproved: true,
-                    verifCheckDecision: "approved"
-                }
-            }
-        );
-
-        if (updateResult.modifiedCount > 0) {
-            return { success: true, msg: "Success" };
-        } else {
-            return { success: false, msg: "Activate User: Failed to update user" };
-        }
-    } catch (error) {
-        throw new Error(error);
-    }
-}
-
-async function DeactivateUser(verificationId, status) {
-
-    try {
-         let myUser = await userCollection.findOne({ sessionId: verificationId });
-
-        if (!myUser) {
-            return { success: false, msg: "User session id does not exist" };
-        }
-
-        const updateResult = await userCollection.updateOne(
-            { sessionId: verificationId },
-            {
-                $set: {
-                    verifStatus: "verified",
-                    verifAproved: false,
-                    verifCheckDecision: status
-                }
-            }
-        );
-
-        if (updateResult.modifiedCount > 0) {
-            return { success: true, msg: "Success" };
-        } else {
-            return { success: false, msg: "Deactivate User: Failed to update user" };
-        }
-    } catch (error) {
-        throw new Error(error);
-    }
-
-}
 
 // modify user veriff attributes
 // async function modifAndGetUserVeriffAttributes(verificationId, status, verifStatus, verifAproved) {
@@ -370,8 +311,8 @@ module.exports={
     getSessionDecision,
     generateHMACSignature,
     isSignatureValid,
-    ActivateUser,
-    DeactivateUser,
+  
+ 
     // modifUserVeriffAttributes,
     modifAndGetUserVeriffAttributes,
     deleteSession,
