@@ -466,6 +466,23 @@ async function deleteVeriffSession(req, res) {
     }
 }
 
+// api veriff getPersonInfo
+async function getPersonInfo(req, res) {
+    try {
+        const { sessionId } = req.params;
+        const apiKey = VERIF_API_PUBLIC_KEY;
+
+        const response = await getPersonInfo(sessionId, apiKey);
+        console.log('Response:', response);
+        return response;
+    }
+    catch (error) {
+        console.error('Error getting person info:', error.message);
+        throw error;
+    }
+}
+
+
 
 
 module.exports = {
