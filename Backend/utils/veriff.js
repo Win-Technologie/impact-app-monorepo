@@ -157,6 +157,40 @@ async function getMedia(mediaId, apiKey) {
     }
 }
 
+async function getWatchlistScreening(sessionId, apiKey) {
+    try {
+        const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}/watchlist-screening`;
+
+        const payload = sessionId;
+        const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-HMAC-SIGNATURE': signature,
+            'X-AUTH-CLIENT': apiKey
+        };
+
+        const options = {
+            headers: headers
+        };
+
+        try {
+            const response = await got(url, options);
+
+            return response.data;
+        }
+        catch (error) {
+            console.error('Error getting watchlist screening:', error);
+            throw new Error(error);
+        }
+    }
+    catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
+
+
 async function getSessionDecision(sessionId) {
     try {
 
