@@ -190,7 +190,6 @@ async function getWatchlistScreening(sessionId, apiKey) {
     }
 }
 
-
 async function getSessionDecision(sessionId) {
     try {
 
