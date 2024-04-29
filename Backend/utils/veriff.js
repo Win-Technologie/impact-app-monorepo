@@ -25,7 +25,7 @@ const userCollection = mainDb.collection(USERSCOLLECTION);
 
 async function deleteSession(sessionId, apiKey) {
     try {
-        const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}`;
+        const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}`;
 
         const payload = sessionId;
         const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
@@ -47,7 +47,10 @@ async function deleteSession(sessionId, apiKey) {
 
         try {
             // En utilisant got pour effectuer une demande DELETE
+            // console.log("Danse"); 
             const response = await got.delete(url, options);
+
+            console.log(" REPONSE : ",response);
 
             // return response; 
             return response.data;
@@ -65,7 +68,7 @@ async function deleteSession(sessionId, apiKey) {
 
 async function getPersonInfo(sessionId, apiKey) {
     try {
-        const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}/person`;
+        const url = `${VERIFF_BASE_URL}/v1/sessions/${sessionId}/person`;
 
         const payload = sessionId;
         const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
@@ -98,7 +101,7 @@ async function getPersonInfo(sessionId, apiKey) {
 
 async function uploadCollectedData(sessionId, apiKey, requestData) {
     try {
-        const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}/collected-data`;
+        const url = `${VERIFF_BASE_URL}/v1/sessions/${sessionId}/collected-data`;
 
         const payload = JSON.stringify(requestData);
         const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
@@ -132,7 +135,7 @@ async function uploadCollectedData(sessionId, apiKey, requestData) {
 async function getMedia(mediaId, apiKey) {
 
     try {
-        const url = `${BASE_VERIFF_HTTPS}/v1/media/${mediaId}`;
+        const url = `${VERIFF_BASE_URL}/v1/media/${mediaId}`;
 
         const payload = mediaId;
         const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
@@ -165,7 +168,7 @@ async function getMedia(mediaId, apiKey) {
 
 async function getWatchlistScreening(sessionId, apiKey) {
     try {
-        const url = `${BASE_VERIFF_HTTPS}/v1/sessions/${sessionId}/watchlist-screening`;
+        const url = `${VERIFF_BASE_URL}/v1/sessions/${sessionId}/watchlist-screening`;
 
         const payload = sessionId;
         const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
