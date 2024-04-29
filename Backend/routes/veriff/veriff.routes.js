@@ -18,6 +18,8 @@ const md_uploadPdf = multiparty({ uploadDir: `${VERIFF_ROUTER_PATH}` });
 router.post('/sessions', [userAuth.ensureAuth, md_uploadPdf], veriffController.NewVeriffSession);
 // Delete a user verification session on Veriff
 router.delete('/sessions/:sessionId', [userAuth.ensureAuth], veriffController.deleteVeriffSession);
+// Get person info 
+router.get('/sessions/:sessionId', [userAuth.ensureAuth], veriffController.getVeriffPersonInfo);
 // uploadDocumentToVeriffSession
 //router.post('/sessions/media/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.uploadDocumentToVeriffSession);
 // uploadDocument 
