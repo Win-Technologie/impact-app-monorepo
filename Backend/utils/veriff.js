@@ -30,6 +30,11 @@ async function deleteSession(sessionId, apiKey) {
         const payload = sessionId;
         const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
 
+        // Debug 
+        console.log("SESSION ID : ");
+        console.log(sessionId); 
+
+
         const headers = {
             'Content-Type': 'application/json',
             'X-HMAC-SIGNATURE': signature,
@@ -44,6 +49,7 @@ async function deleteSession(sessionId, apiKey) {
             // En utilisant got pour effectuer une demande DELETE
             const response = await got.delete(url, options);
 
+            // return response; 
             return response.data;
         }
         catch (error) {
