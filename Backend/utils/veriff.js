@@ -23,7 +23,7 @@ const VERIFF_BASE_URL = process.env.VERIFF_BASE_URL;
 const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
 
-async function deleteSession(sessionId, apiKey) {
+async function deleteSession(sessionId) {
     try {
         const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}`;
 
@@ -34,30 +34,29 @@ async function deleteSession(sessionId, apiKey) {
         console.log("SESSION ID : ");
         console.log(sessionId); 
 
-
         const headers = {
             'Content-Type': 'application/json',
             'X-HMAC-SIGNATURE': signature,
-            'X-AUTH-CLIENT': apiKey
+            'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY
         };
         
         const options = {
             headers: headers,
-            method: 'DELETE'
+            method: 'DELETE',
+            responseType: 'json'
         };
 
         try {
             // En utilisant got pour effectuer une demande DELETE
-            // console.log("Danse"); 
             const response = await got(url, options);
 
             console.log(" REPONSE : ",response);
 
-            // return response; 
-            return response.data;
+            return ({ headers: response.headers, body: response.body });
+            // return response.data;
         }
         catch (error) {
-            console.error('Error deleting session:', error);
+            console.error('ERREUR INTERNE A LA FONCTION DELETE SESSION :', error);
             throw new Error(error);
         }
     }

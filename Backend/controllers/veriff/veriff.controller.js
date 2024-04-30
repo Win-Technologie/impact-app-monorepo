@@ -454,24 +454,24 @@ async function checkDecision(req, res) {
 async function deleteVeriffSession(req, res) {
     try {
         const { sessionId } = req.params;
-        const apiKey = VERIF_API_PUBLIC_KEY;
+        // const apiKey = VERIF_API_PUBLIC_KEY;
         
-        const response = await deleteSession(sessionId, apiKey);
-        console.log('Response:', response);
+        const {headers,body} = await deleteSession(sessionId);
+        console.log('Response:', body);
 
-        if ('x-hmac-signature' in req.headers) {
-            const signature = req.headers['x-hmac-signature'];
+        if ('x-hmac-signature' in headers) {
+            const signature = headers['x-hmac-signature'];
             console.log('Value of X-HMAC-SIGNATURE:', signature);
 
             const isVeriffSignatureValid = isSignatureValid({
                 signature: signature,
                 shared_secret_key: X_HMAC_SIGNATURE,
-                payload: response
+                payload: body
             });
 
             if (isVeriffSignatureValid) {
                 console.log('Veriff response signature is valid.');
-                return res.status(200).json(response);
+                return res.status(200).json(body);
             } else {
                 console.log("Signature in Veriff response is not valid.");
                 return res.status(403).json({ msg: "Unauthorized signature" });
@@ -481,6 +481,8 @@ async function deleteVeriffSession(req, res) {
             return res.status(403).json({ msg: "Signature not found" });
         }
     } catch (error) {
+        console.log("Liste des erreures   : "); 
+        console.log(error); 
         console.error('Error deleting session:', error);
         return res.status(500).json({ msg: 'Internal server error: ', error });
     }
