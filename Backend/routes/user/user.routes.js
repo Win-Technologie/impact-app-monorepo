@@ -55,4 +55,14 @@ router.post('/code/read', [userAuth.ensureAuth, userAuth.isActiveSession],
     userController.readAndSendUserInfo
 );
 
+//test security encrypted data
+router.post('/test/data/encrypt', [userAuth.ensureAuth, userAuth.isActiveSession],
+    userController.encryptMyData
+);
+
+//get user's full data (auto, assurance)
+router.get('/user/vehicle/info', [userAuth.ensureAuth, userAuth.isActiveSession],
+    userController.getMyAutoFullInfo
+);
+
 module.exports = router;

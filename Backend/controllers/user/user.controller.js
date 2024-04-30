@@ -35,12 +35,18 @@ const AES_KEY = process.env.AES_KEY
 const MAINDB = process.env.MAINDB;
 const USERSCOLLECTION = process.env.USERSCOLLECTION;
 const DRIVERLICENSECOLLECTION = process.env.DRIVERSLICENSECOLLECTION;
+const VEHICLES_COLLECTION = process.env.VEHICLESCOLLECTION;
+const INSURANCES_COLLECTION = process.env.INSURANCESCOLLECTION;
+
 const SECRETKEY_IDQR = process.env.SECRETKEY_IDQR;
+
 
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
 const drivingLicensesCollection = mainDb.collection(DRIVERLICENSECOLLECTION);
+const insuranceCollection = mainDb.collection(INSURANCES_COLLECTION);
+const vehicleCollection = mainDb.collection(VEHICLES_COLLECTION);
 
 async function validateUpdateRegisterUserFields(req) {
     if (req.body.email) {
@@ -1254,6 +1260,8 @@ async function generateQRCode(req, res) {
 
         }; 
 
+        console.log(qrData);
+
         // Générer un code QR
         const qrImage = await qr.toDataURL(JSON.stringify(qrData));
 
@@ -1302,6 +1310,146 @@ async function readAndSendUserInfo(req, res) {
 }
 
 
+async function getMyAutoFullInfo(req, res) {
+    try {
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            deleteUploadedFiles(req.files);
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            deleteUploadedFiles(req.files);
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const { vehicleId } = req.body;
+
+        const userPromise = userCollection.findOne({ _id: myToken.user_id });
+        const vehiclePromise = vehicleCollection.findOne({ _id: vehicleId });
+        const insurancePromise = insuranceCollection.findOne({ vehicle: vehicleId });
+
+        const [user, vehicle, insurance] = await Promise.all([userPromise, vehiclePromise, insurancePromise]);
+
+        let vehicleOwner;
+        let response;
+
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        if (!user.vehicles.includes(vehicleId)) {
+            return res.status(404).json({ msg: "The user does not register the sent vehicle" });
+        }
+
+        if (!vehicle) {
+            return res.status(404).json({ msg: "Vehicle not found" });
+        }
+
+        if (vehicle.owner != user._id) {
+
+            const userPromise = userCollection.findOne({ _id: vehicle.owner });
+            const [userOwner] = await Promise.all([userPromise]);
+            vehicleOwner = userOwner;
+
+        } else {
+            vehicleOwner = user;
+        }
+
+        if (!insurance) {
+            return res.status(404).json({ msg: "Insurance not found" });
+        }
+
+        response ={
+            owner:{
+                name: vehicleOwner.name,
+                lastName: vehicleOwner.lastName,
+                email: vehicleOwner.email,
+                phone: vehicleOwner.phone,
+                address: vehicleOwner.address,
+                postalCode: vehicleOwner.postalCode,
+                city: vehicleOwner.city,
+                province: vehicleOwner.province,
+                country: vehicleOwner.country
+            },
+            vehicle,
+            insurance
+        }
+        
+        return res.status(200).json(response);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur de serveur interne", error: error });
+    }
+}
+
+
+
+async function encryptMyData (req,res){
+
+    const data = 'FrontImpactTechnologieByWinTech';
+
+    const encryptedData = encryptDataAES(data);
+
+    const authKey = 'ImpactFront'
+
+    const myFullData = `${encryptedData.iv}_${encryptedData.ed}_${authKey}`;
+
+    console.log(myFullData);
+    console.log(myFullData);
+    console.log(myFullData);
+    console.log(myFullData);
+
+    const encryptedDataFull = encryptDataAES(myFullData);
+    console.log('*********************');
+    console.log('*********************');
+    console.log('*********************');
+    console.log(encryptedDataFull);
+    console.log('*********************');
+    console.log('*********************');
+    console.log('*********************');
+   
+
+    const decryptedDataFull = decryptDataAES(encryptedDataFull.ed, encryptedDataFull.iv);
+
+
+    const parts = decryptedDataFull.split('_');
+
+    // El primer elemento es el valor 'ed'
+    const iv = parts[0];
+
+    // El segundo elemento es el valor 'iv'
+    const ed = parts[1];
+
+    // El tercer elemento es el valor 'Impact_front'
+    const impactFront = parts[2];
+
+    console.log('Valor ed:', ed);
+    console.log('Valor iv:', iv);
+    console.log('Valor Impact_front:', impactFront);
+
+
+    // const decryptedData = decryptDataAES(decryptedDataFull, encryptedDataFull.iv);
+    // console.log('*********************');
+    // console.log('decryptedData');
+    // console.log(decryptedData);
+    // console.log('*********************');
+
+
+    res.status(200).json({ encryptedData,  encryptedDataFull});
+
+
+
+
+}
+
+
 module.exports = {
     RegisterUser,
     Login,
@@ -1316,7 +1464,9 @@ module.exports = {
     UploadDocument,
     UploadDriverLicense,
     generateQRCode,
-    readAndSendUserInfo
+    readAndSendUserInfo,
+    encryptMyData,
+    getMyAutoFullInfo
 };
 
 
