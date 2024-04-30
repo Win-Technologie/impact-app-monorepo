@@ -42,13 +42,14 @@ async function deleteSession(sessionId, apiKey) {
         };
         
         const options = {
-            headers: headers
+            headers: headers,
+            method: 'DELETE'
         };
 
         try {
             // En utilisant got pour effectuer une demande DELETE
             // console.log("Danse"); 
-            const response = await got.delete(url, options);
+            const response = await got(url, options);
 
             console.log(" REPONSE : ",response);
 

@@ -449,22 +449,59 @@ async function checkDecision(req, res) {
 
 
 //DELETE /sessions/{sessionId}
-async function deleteVeriffSession(req, res) {
 
-    // Utiliser la fonction deleteSession importée pour supprimer la session
+
+async function deleteVeriffSession(req, res) {
     try {
         const { sessionId } = req.params;
         const apiKey = VERIF_API_PUBLIC_KEY;
         
         const response = await deleteSession(sessionId, apiKey);
         console.log('Response:', response);
-        return response;
-    }
-    catch (error) {
-        console.error('Error deleting session:', error.message);
-        throw error;
+
+        if ('x-hmac-signature' in req.headers) {
+            const signature = req.headers['x-hmac-signature'];
+            console.log('Value of X-HMAC-SIGNATURE:', signature);
+
+            const isVeriffSignatureValid = isSignatureValid({
+                signature: signature,
+                shared_secret_key: X_HMAC_SIGNATURE,
+                payload: response
+            });
+
+            if (isVeriffSignatureValid) {
+                console.log('Veriff response signature is valid.');
+                return res.status(200).json(response);
+            } else {
+                console.log("Signature in Veriff response is not valid.");
+                return res.status(403).json({ msg: "Unauthorized signature" });
+            }
+        } else {
+            console.log("X-HMAC-SIGNATURE not found in headers.");
+            return res.status(403).json({ msg: "Signature not found" });
+        }
+    } catch (error) {
+        console.error('Error deleting session:', error);
+        return res.status(500).json({ msg: 'Internal server error: ', error });
     }
 }
+
+// async function deleteVeriffSession(req, res) {
+
+//     // Utiliser la fonction deleteSession importée pour supprimer la session
+//     try {
+//         const { sessionId } = req.params;
+//         const apiKey = VERIF_API_PUBLIC_KEY;
+        
+//         const response = await deleteSession(sessionId, apiKey);
+//         console.log('Response:', response);
+//         return response;
+//     }
+//     catch (error) {
+//         console.error('Error deleting session:', error.message);
+//         throw error;
+//     }
+// }
 
 // api veriff getPersonInfo
 async function getVeriffPersonInfo(req, res) {
