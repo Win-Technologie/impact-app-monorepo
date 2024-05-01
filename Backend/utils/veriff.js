@@ -26,7 +26,6 @@ const userCollection = mainDb.collection(USERSCOLLECTION);
 async function deleteSession(sessionId) {
     try {
         const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}`;
-
         const payload = sessionId;
         const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
 
@@ -45,15 +44,10 @@ async function deleteSession(sessionId) {
             method: 'DELETE',
             responseType: 'json'
         };
-
         try {
-            // En utilisant got pour effectuer une demande DELETE
             const response = await got(url, options);
-
             console.log(" REPONSE : ",response);
-
             return ({ headers: response.headers, body: response.body });
-            // return response.data;
         }
         catch (error) {
             console.error('ERREUR INTERNE A LA FONCTION DELETE SESSION :', error);

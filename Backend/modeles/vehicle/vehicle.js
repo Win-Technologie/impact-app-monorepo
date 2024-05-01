@@ -1,5 +1,39 @@
 const mongoose = require('mongoose');
 
+// Schéma de l'immatriculation
+const immatriculationSchema = new mongoose.Schema({
+  certificateNumber: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  issuanceDate: {
+    type: Date,
+    required: true
+  },
+  expirationDate: {
+    type: Date,
+    required: true
+  },
+  ESSIEUXNumber: {
+    type: Number 
+  },
+  netWeight: {
+    type: Number
+  },
+  engineDisplacement: {
+    type: Number
+  },
+  dossierNumber: {
+    type: String
+  },
+  usageCategory: {
+    type: String
+  }
+});
+
+
+
 // Schéma du véhicule
 const vehicleSchema = new mongoose.Schema({
   _id: {
