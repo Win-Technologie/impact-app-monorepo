@@ -90,11 +90,11 @@ async function validateUpdateRegisterUserFields(req) {
     }
     if (req.body.country) {
         // Validation de ville
-        await body('country').isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req);
+        await body('country').isLength({ min: 2 }).withMessage('Le pays est requis et doit contenir au moins 2 caractères.').run(req);
     }
     if (req.body.gender) {
         // Validation de genre
-        await body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req);
+        await body('gender').isLength({ min: 1 }).withMessage('Le genre est requis et doit contenir au moins 1 caractères.').run(req);
     }
     if (req.body.birthdate) {
         // Validation de date
@@ -1257,7 +1257,6 @@ async function generateQRCode(req, res) {
         const qrData = {
             id: myIdhashed.ed,
             iv: myIdhashed.iv,
-
         }; 
 
         console.log(qrData);
@@ -1393,18 +1392,26 @@ async function getMyAutoFullInfo(req, res) {
 
 async function encryptMyData (req,res){
 
-    const data = 'FrontImpactTechnologieByWinTech';
+
+    /** BACKEND */
+    const data = 'FrontImpactTechByWinTech';
 
     const encryptedData = encryptDataAES(data);
 
     const authKey = 'ImpactFront'
 
-    const myFullData = `${encryptedData.iv}_${encryptedData.ed}_${authKey}`;
+    // const myFullData = `${encryptedData.iv}_${encryptedData.ed}`;
+
+    // const myFullData = `${encryptedData.iv}_${encryptedData.ed}_${authKey}`;
 
     console.log(myFullData);
     console.log(myFullData);
     console.log(myFullData);
     console.log(myFullData);
+
+    /* FRONTEND */
+
+    const myFullData = `${encryptedData.iv}_${encryptedData.ed}_${authKey}`;
 
     const encryptedDataFull = encryptDataAES(myFullData);
     console.log('*********************');

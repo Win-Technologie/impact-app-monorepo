@@ -51,7 +51,7 @@ router.post('/code/generate', [userAuth.ensureAuth, userAuth.isActiveSession],
 );
 
 // To get id user and send all user info
-router.post('/code/read', [userAuth.ensureAuth, userAuth.isActiveSession],
+router.get('/code/read', [userAuth.ensureAuth, userAuth.isActiveSession],
     userController.readAndSendUserInfo
 );
 
