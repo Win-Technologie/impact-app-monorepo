@@ -985,249 +985,249 @@ async function UploadDocument(req, res) {
     }
 }
 
-async function UploadDriverLicense(req, res) {
-    try {
+// async function UploadDriverLicense(req, res) {
+//     try {
 
-        // const documentFile = req.files.document;
+//         // const documentFile = req.files.document;
 
-        // Récupérer le jeton du header de la requête
-        const token = req.headers.authorization?.replace("Bearer ", "");
-        // Vérifier si le jeton est présent
-        if (!token) {
-            console.error('Le Token n\'est pas fourni');
-            deleteUploadedFiles(req.files);
-            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-        }
-        // Décoder le token pour obtenir les informations de l'utilisateur
-        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
-        if (!myToken) {
-            deleteUploadedFiles(req.files);
-            return res.status(400).json({ msg: "Token invalide" });
-        }
+//         // Récupérer le jeton du header de la requête
+//         const token = req.headers.authorization?.replace("Bearer ", "");
+//         // Vérifier si le jeton est présent
+//         if (!token) {
+//             console.error('Le Token n\'est pas fourni');
+//             deleteUploadedFiles(req.files);
+//             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+//         }
+//         // Décoder le token pour obtenir les informations de l'utilisateur
+//         const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+//         if (!myToken) {
+//             deleteUploadedFiles(req.files);
+//             return res.status(400).json({ msg: "Token invalide" });
+//         }
 
-        // Validation des champs de la requête
-        await validateLicenseData(req);
-        const validationErrors = validationResult(req);
+//         // Validation des champs de la requête
+//         await validateLicenseData(req);
+//         const validationErrors = validationResult(req);
 
-        if (!validationErrors.isEmpty()) {
-            deleteUploadedFiles(req.files);
-            return res.status(400).json({ errors: validationErrors.array() });
-        }
-
-
-
-        let myUser = await userCollection.findOne({ _id: myToken.user_id });
-
-
-        if (!myUser) {
-            deleteUploadedFiles(req.files);
-            return res.status(402).json({ msg: "Cet utilisateur n'existe pas" });
-        }
-
-        // restriction, do not allow double licenses
-        if (myUser.driverLicense != 'pending') {
-            deleteUploadedFiles(req.files);
-            return res.status(402).json({ msg: "l'utilisateur possède déjà un permis de conduire enregistré" });
-        }
-
-
-        if (myUser.name === 'pending' || myUser.lastName === 'pending') {
-            deleteUploadedFiles(req.files);
-            return res.status(402).json({ msg: "Veuillez saisir d'abord le nom et le prénom de l'utilisateur" });
-        }
-
-
-        // if (!documentFile) {
-        //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
-        // }
-
-        if (!req.files) {
-            return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
-        }
+//         if (!validationErrors.isEmpty()) {
+//             deleteUploadedFiles(req.files);
+//             return res.status(400).json({ errors: validationErrors.array() });
+//         }
 
 
 
-        const { number, name, lastName, birthdate, address, appartment, province,
-            postalCode, licenseClass, sex, rest, mention, referenceNumber, height,
-            weight, issued, expires, city, country
-        } = req.body;
+//         let myUser = await userCollection.findOne({ _id: myToken.user_id });
 
 
-        let licenseExisting = await drivingLicensesCollection.findOne({ number: number });
+//         if (!myUser) {
+//             deleteUploadedFiles(req.files);
+//             return res.status(402).json({ msg: "Cet utilisateur n'existe pas" });
+//         }
 
-        if (licenseExisting) {
-            return res.status(400).json({ msg: "La licence existe déjà" });
-        }
-
-        let photoPath;
-
-        if (req.files && Object.keys(req.files).length > 0) {
+//         // restriction, do not allow double licenses
+//         if (myUser.driverLicense != 'pending') {
+//             deleteUploadedFiles(req.files);
+//             return res.status(402).json({ msg: "l'utilisateur possède déjà un permis de conduire enregistré" });
+//         }
 
 
-            // Vérifier que les fichiers respectent la taille maximale autorisée.
-            const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
+//         if (myUser.name === 'pending' || myUser.lastName === 'pending') {
+//             deleteUploadedFiles(req.files);
+//             return res.status(402).json({ msg: "Veuillez saisir d'abord le nom et le prénom de l'utilisateur" });
+//         }
 
-            // Vérifier que le nombre de fichiers ne dépasse pas la limite autorisée.
-            const maxFileQuantity = 1; // Définit le nombre maximum de fichiers autorisés.
-            const { isValid: isQuantityValid } = checkFileQuantity(req.files, maxFileQuantity);
 
-            // Si la taille des fichiers n'est pas valide
-            if (!isSizeValid) {
-                // Supprimer tous les fichiers téléchargés dans le système de fichiers
-                deleteUploadedFiles(req.files);
-                return res.status(400).json({ msg: `La taille du fichier ${oversizedFileName} doit être inférieure à 500KB` });
-            }
+//         // if (!documentFile) {
+//         //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
+//         // }
 
-            // Si la quantité de fichiers n'est pas valide
-            if (!isQuantityValid) {
-                // Supprimer tous les fichiers téléchargés dans le système de fichiers
-                deleteUploadedFiles(req.files);
-                return res.status(400).json({ msg: `Le nombre de fichiers ne peut pas dépasser ${maxFileQuantity}` });
-            }
-
-            photoPath = getFileName(req.files[`photo`]);
+//         if (!req.files) {
+//             return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
+//         }
 
 
 
-        }
-
-        let formattedBirthdateDate;
-
-        if (birthdate) {
-            // const birthdateDate = new Date(birthdate);
-            // formattedBirthdateDate = birthdateDate.toISOString().split('T')[0];
-            const issuedArray = birthdate.split('-');
-            formattedBirthdateDate = `${issuedArray[0]}`;
-        }
-
-        // const issuedDate = new Date(issued);
-        // const formattedIssuedDate = issuedDate.toISOString().split('T')[0];
-
-        // const expiresDate = new Date(expires);
-        // const formattedExpiresDate = expiresDate.toISOString().split('T')[0];
-
-        const issuedArray = issued.split('-');
-        const formattedIssuedDate = `${issuedArray[0]}`;
-
-        const expiresArray = expires.split('-');
-        const formattedExpiresDate = `${expiresArray[0]}`;
-
-        //.toLowerCase(),
-        // const newDriverLicense = new DriverLicense({
-        //     user: myToken.user_id,
-        //     number: number,
-        //     name: name,
-        //     lastName: lastName,
-        //     birthdate: formattedBirthdateDate,
-        //     address: address,
-        //     appartment: appartment,
-        //     province: province,
-        //     postalCode: postalCode,
-        //     licenseClass: licenseClass,
-        //     sex: sex,
-        //     rest: rest,
-        //     mention: mention,
-        //     height: height,
-        //     weight: weight,
-        //     issued: formattedIssuedDate,
-        //     expires: formattedExpiresDate,
-        //     city: city,
-        //     country: country,
-        //     photo: photoPath,
-        // });
-
-        const newDriverLicense = new DriverLicense({
-            user: myToken.user_id,
-            number: number,
-            name: myUser.name,
-            lastName: myUser.lastName,
-            birthdate: birthdate ? formattedBirthdateDate : myUser.birthdate,
-            address: address,
-            appartment: appartment,
-            province: province,
-            postalCode: postalCode,
-            licenseClass: licenseClass,
-            sex: sex.toUpperCase(),
-            rest: rest,
-            mention: mention,
-            height: height,
-            weight: weight,
-            issued: formattedIssuedDate,
-            expires: formattedExpiresDate,
-            city: city,
-            country: country,
-            photo: photoPath,
-        });
-
-        const [updateUser, insertResult] = await Promise.all([
-            userCollection.updateOne(
-                { _id: myToken.user_id },
-                { $set: { driverLicense: newDriverLicense._id } }
-            ),
-            drivingLicensesCollection.insertOne(newDriverLicense)
-        ]);
-
-        if (!insertResult || !updateUser) {
-            return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
-        }
-
-        // // Création de l'applicant dans Onfido
-        // const applicantResult = await createApplicant(myUser, newDriverLicense);
-        // console.log(applicantResult);
-
-        // // Vérification du résultat de la création de l'applicant dans Onfido
-        // if (!applicantResult.success) {
-        //     return res.status(400).json({ msg: applicantResult.msg });
-        // }
-
-        // // veriication du permis de conduire 
-        // applicantResult.applicantId
-        // const fronDriverLicensecheck = await verifyDrivingLicense(
-        //     myUser,
-        //     newDriverLicense,
-        //     applicantResult.applicantId,
-        //     "front"
-        // );
-
-        // const backDriverLicense = await verifyDrivingLicense(
-        //     myUser,
-        //     newDriverLicense,
-        //     applicantResult.applicantId,
-        //     "back"
-        // );
-
-        // const userSelfie = await verifyDrivingLicense(
-        //     myUser,
-        //     newDriverLicense,
-        //     applicantResult.applicantId,
-        //     "selfie"
-        // );
-
-        // if (!fronDriverLicensecheck.success) {
-        //     return res.status(400).json({ msg: fronDriverLicensecheck.msg })
-        // }
-
-        // if (!fronDriverLicensecheck.success) {
-        //     return res.status(400).json({
-        //         frontCheck: fronDriverLicensecheck.msg,
-        //         backCheck: backDriverLicense.msg,
-        //         selfieCheck: userSelfie.msg,
-        //     });
-        // }
-
-        res.status(201).json({
-            msg: 'Nouvelle licence ajoutée avec succès',
-            // applicandID: applicantResult.applicantId,
-            // fronDriverLicensecheck: fronDriverLicensecheck,
-            // userSelfieCheck: userSelfie
-        });
+//         const { number, name, lastName, birthdate, address, appartment, province,
+//             postalCode, licenseClass, sex, rest, mention, referenceNumber, height,
+//             weight, issued, expires, city, country
+//         } = req.body;
 
 
-    } catch (error) {
-        console.error(`UploadDriverLicense: Erreur interne du serveur : ${error.message}, ${error}`);
-        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
-    }
-}
+//         let licenseExisting = await drivingLicensesCollection.findOne({ number: number });
+
+//         if (licenseExisting) {
+//             return res.status(400).json({ msg: "La licence existe déjà" });
+//         }
+
+//         let photoPath;
+
+//         if (req.files && Object.keys(req.files).length > 0) {
+
+
+//             // Vérifier que les fichiers respectent la taille maximale autorisée.
+//             const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
+
+//             // Vérifier que le nombre de fichiers ne dépasse pas la limite autorisée.
+//             const maxFileQuantity = 1; // Définit le nombre maximum de fichiers autorisés.
+//             const { isValid: isQuantityValid } = checkFileQuantity(req.files, maxFileQuantity);
+
+//             // Si la taille des fichiers n'est pas valide
+//             if (!isSizeValid) {
+//                 // Supprimer tous les fichiers téléchargés dans le système de fichiers
+//                 deleteUploadedFiles(req.files);
+//                 return res.status(400).json({ msg: `La taille du fichier ${oversizedFileName} doit être inférieure à 500KB` });
+//             }
+
+//             // Si la quantité de fichiers n'est pas valide
+//             if (!isQuantityValid) {
+//                 // Supprimer tous les fichiers téléchargés dans le système de fichiers
+//                 deleteUploadedFiles(req.files);
+//                 return res.status(400).json({ msg: `Le nombre de fichiers ne peut pas dépasser ${maxFileQuantity}` });
+//             }
+
+//             photoPath = getFileName(req.files[`photo`]);
+
+
+
+//         }
+
+//         let formattedBirthdateDate;
+
+//         if (birthdate) {
+//             // const birthdateDate = new Date(birthdate);
+//             // formattedBirthdateDate = birthdateDate.toISOString().split('T')[0];
+//             const issuedArray = birthdate.split('-');
+//             formattedBirthdateDate = `${issuedArray[0]}`;
+//         }
+
+//         // const issuedDate = new Date(issued);
+//         // const formattedIssuedDate = issuedDate.toISOString().split('T')[0];
+
+//         // const expiresDate = new Date(expires);
+//         // const formattedExpiresDate = expiresDate.toISOString().split('T')[0];
+
+//         const issuedArray = issued.split('-');
+//         const formattedIssuedDate = `${issuedArray[0]}`;
+
+//         const expiresArray = expires.split('-');
+//         const formattedExpiresDate = `${expiresArray[0]}`;
+
+//         //.toLowerCase(),
+//         // const newDriverLicense = new DriverLicense({
+//         //     user: myToken.user_id,
+//         //     number: number,
+//         //     name: name,
+//         //     lastName: lastName,
+//         //     birthdate: formattedBirthdateDate,
+//         //     address: address,
+//         //     appartment: appartment,
+//         //     province: province,
+//         //     postalCode: postalCode,
+//         //     licenseClass: licenseClass,
+//         //     sex: sex,
+//         //     rest: rest,
+//         //     mention: mention,
+//         //     height: height,
+//         //     weight: weight,
+//         //     issued: formattedIssuedDate,
+//         //     expires: formattedExpiresDate,
+//         //     city: city,
+//         //     country: country,
+//         //     photo: photoPath,
+//         // });
+
+//         const newDriverLicense = new DriverLicense({
+//             user: myToken.user_id,
+//             number: number,
+//             name: myUser.name,
+//             lastName: myUser.lastName,
+//             birthdate: birthdate ? formattedBirthdateDate : myUser.birthdate,
+//             address: address,
+//             appartment: appartment,
+//             province: province,
+//             postalCode: postalCode,
+//             licenseClass: licenseClass,
+//             sex: sex.toUpperCase(),
+//             rest: rest,
+//             mention: mention,
+//             height: height,
+//             weight: weight,
+//             issued: formattedIssuedDate,
+//             expires: formattedExpiresDate,
+//             city: city,
+//             country: country,
+//             photo: photoPath,
+//         });
+
+//         const [updateUser, insertResult] = await Promise.all([
+//             userCollection.updateOne(
+//                 { _id: myToken.user_id },
+//                 { $set: { driverLicense: newDriverLicense._id } }
+//             ),
+//             drivingLicensesCollection.insertOne(newDriverLicense)
+//         ]);
+
+//         if (!insertResult || !updateUser) {
+//             return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
+//         }
+
+//         // // Création de l'applicant dans Onfido
+//         // const applicantResult = await createApplicant(myUser, newDriverLicense);
+//         // console.log(applicantResult);
+
+//         // // Vérification du résultat de la création de l'applicant dans Onfido
+//         // if (!applicantResult.success) {
+//         //     return res.status(400).json({ msg: applicantResult.msg });
+//         // }
+
+//         // // veriication du permis de conduire 
+//         // applicantResult.applicantId
+//         // const fronDriverLicensecheck = await verifyDrivingLicense(
+//         //     myUser,
+//         //     newDriverLicense,
+//         //     applicantResult.applicantId,
+//         //     "front"
+//         // );
+
+//         // const backDriverLicense = await verifyDrivingLicense(
+//         //     myUser,
+//         //     newDriverLicense,
+//         //     applicantResult.applicantId,
+//         //     "back"
+//         // );
+
+//         // const userSelfie = await verifyDrivingLicense(
+//         //     myUser,
+//         //     newDriverLicense,
+//         //     applicantResult.applicantId,
+//         //     "selfie"
+//         // );
+
+//         // if (!fronDriverLicensecheck.success) {
+//         //     return res.status(400).json({ msg: fronDriverLicensecheck.msg })
+//         // }
+
+//         // if (!fronDriverLicensecheck.success) {
+//         //     return res.status(400).json({
+//         //         frontCheck: fronDriverLicensecheck.msg,
+//         //         backCheck: backDriverLicense.msg,
+//         //         selfieCheck: userSelfie.msg,
+//         //     });
+//         // }
+
+//         res.status(201).json({
+//             msg: 'Nouvelle licence ajoutée avec succès',
+//             // applicandID: applicantResult.applicantId,
+//             // fronDriverLicensecheck: fronDriverLicensecheck,
+//             // userSelfieCheck: userSelfie
+//         });
+
+
+//     } catch (error) {
+//         console.error(`UploadDriverLicense: Erreur interne du serveur : ${error.message}, ${error}`);
+//         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+//     }
+// }
 
 async function generateQRCode(req, res) {
     try {
@@ -1308,7 +1308,6 @@ async function readAndSendUserInfo(req, res) {
     }
 }
 
-
 async function getMyAutoFullInfo(req, res) {
     try {
         // Récupérer le jeton du header de la requête
@@ -1333,8 +1332,9 @@ async function getMyAutoFullInfo(req, res) {
         const userPromise = userCollection.findOne({ _id: myToken.user_id });
         const vehiclePromise = vehicleCollection.findOne({ _id: vehicleId });
         const insurancePromise = insuranceCollection.findOne({ vehicle: vehicleId });
+        const driverLicensePromise = drivingLicensesCollection.findOne({ user: myToken.user_id });
 
-        const [user, vehicle, insurance] = await Promise.all([userPromise, vehiclePromise, insurancePromise]);
+        const [user, vehicle, insurance, driverLicense] = await Promise.all([userPromise, vehiclePromise, insurancePromise, driverLicensePromise]);
 
         let vehicleOwner;
         let response;
@@ -1349,6 +1349,10 @@ async function getMyAutoFullInfo(req, res) {
 
         if (!vehicle) {
             return res.status(404).json({ msg: "Vehicle not found" });
+        }
+
+        if(!driverLicense){
+            return res.status(404).json({ msg: "Driver license not found" });
         }
 
         if (vehicle.owner != user._id) {
@@ -1378,7 +1382,8 @@ async function getMyAutoFullInfo(req, res) {
                 country: vehicleOwner.country
             },
             vehicle,
-            insurance
+            insurance,
+            driverLicense
         }
         
         return res.status(200).json(response);
@@ -1387,8 +1392,6 @@ async function getMyAutoFullInfo(req, res) {
         return res.status(500).json({ msg: "Erreur de serveur interne", error: error });
     }
 }
-
-
 
 async function encryptMyData (req,res){
 
@@ -1469,7 +1472,7 @@ module.exports = {
     verifyAndChangePassword,
     DeleteUser,
     UploadDocument,
-    UploadDriverLicense,
+   // UploadDriverLicense,
     generateQRCode,
     readAndSendUserInfo,
     encryptMyData,

@@ -96,23 +96,28 @@ async function validateLicenseData(req) {
     ]);
 }
 
+async function validateUpdateLicenseData(req){
+    try {
+        
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "GET DL : Erreur de serveur interne", error: error });
+    }
+}
+
 async function UploadDriverLicense(req, res) {
     try {
-
-        // const documentFile = req.files.document;
 
         // Récupérer le jeton du header de la requête
         const token = req.headers.authorization?.replace("Bearer ", "");
         // Vérifier si le jeton est présent
         if (!token) {
-            console.error('Le Token n\'est pas fourni');
-            deleteUploadedFiles(req.files);
+            console.error('Le Token n\'est pas fourni');    
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
         }
         // Décoder le token pour obtenir les informations de l'utilisateur
         const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
         if (!myToken) {
-            deleteUploadedFiles(req.files);
             return res.status(400).json({ msg: "Token invalide" });
         }
 
@@ -125,10 +130,7 @@ async function UploadDriverLicense(req, res) {
             return res.status(400).json({ errors: validationErrors.array() });
         }
 
-
-
         let myUser = await userCollection.findOne({ _id: myToken.user_id });
-
 
         if (!myUser) {
             deleteUploadedFiles(req.files);
@@ -141,12 +143,10 @@ async function UploadDriverLicense(req, res) {
             return res.status(402).json({ msg: "l'utilisateur possède déjà un permis de conduire enregistré" });
         }
 
-
         if (myUser.name === 'pending' || myUser.lastName === 'pending') {
             deleteUploadedFiles(req.files);
             return res.status(402).json({ msg: "Veuillez saisir d'abord le nom et le prénom de l'utilisateur" });
         }
-
 
         // if (!documentFile) {
         //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
@@ -156,13 +156,10 @@ async function UploadDriverLicense(req, res) {
             return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
         }
 
-
-
         const { number, name, lastName, birthdate, address, appartment, province,
             postalCode, licenseClass, sex, rest, mention, referenceNumber, height,
             weight, issued, expires, city, country
         } = req.body;
-
 
         let licenseExisting = await drivingLicensesCollection.findOne({ number: number });
 
@@ -173,8 +170,6 @@ async function UploadDriverLicense(req, res) {
         let photoPath;
 
         if (req.files && Object.keys(req.files).length > 0) {
-
-
             // Vérifier que les fichiers respectent la taille maximale autorisée.
             const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
 
@@ -188,64 +183,27 @@ async function UploadDriverLicense(req, res) {
                 deleteUploadedFiles(req.files);
                 return res.status(400).json({ msg: `La taille du fichier ${oversizedFileName} doit être inférieure à 500KB` });
             }
-
             // Si la quantité de fichiers n'est pas valide
             if (!isQuantityValid) {
                 // Supprimer tous les fichiers téléchargés dans le système de fichiers
                 deleteUploadedFiles(req.files);
                 return res.status(400).json({ msg: `Le nombre de fichiers ne peut pas dépasser ${maxFileQuantity}` });
             }
-
             photoPath = getFileName(req.files[`photo`]);
-
-
-
         }
 
         let formattedBirthdateDate;
 
         if (birthdate) {
-            // const birthdateDate = new Date(birthdate);
-            // formattedBirthdateDate = birthdateDate.toISOString().split('T')[0];
             const issuedArray = birthdate.split('-');
             formattedBirthdateDate = `${issuedArray[0]}`;
         }
-
-        // const issuedDate = new Date(issued);
-        // const formattedIssuedDate = issuedDate.toISOString().split('T')[0];
-
-        // const expiresDate = new Date(expires);
-        // const formattedExpiresDate = expiresDate.toISOString().split('T')[0];
 
         const issuedArray = issued.split('-');
         const formattedIssuedDate = `${issuedArray[0]}`;
 
         const expiresArray = expires.split('-');
         const formattedExpiresDate = `${expiresArray[0]}`;
-
-        //.toLowerCase(),
-        // const newDriverLicense = new DriverLicense({
-        //     user: myToken.user_id,
-        //     number: number,
-        //     name: name,
-        //     lastName: lastName,
-        //     birthdate: formattedBirthdateDate,
-        //     address: address,
-        //     appartment: appartment,
-        //     province: province,
-        //     postalCode: postalCode,
-        //     licenseClass: licenseClass,
-        //     sex: sex,
-        //     rest: rest,
-        //     mention: mention,
-        //     height: height,
-        //     weight: weight,
-        //     issued: formattedIssuedDate,
-        //     expires: formattedExpiresDate,
-        //     city: city,
-        //     country: country,
-        //     photo: photoPath,
-        // });
 
         const newDriverLicense = new DriverLicense({
             user: myToken.user_id,
@@ -282,66 +240,152 @@ async function UploadDriverLicense(req, res) {
             return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
         }
 
-        // // Création de l'applicant dans Onfido
-        // const applicantResult = await createApplicant(myUser, newDriverLicense);
-        // console.log(applicantResult);
-
-        // // Vérification du résultat de la création de l'applicant dans Onfido
-        // if (!applicantResult.success) {
-        //     return res.status(400).json({ msg: applicantResult.msg });
-        // }
-
-        // // veriication du permis de conduire 
-        // applicantResult.applicantId
-        // const fronDriverLicensecheck = await verifyDrivingLicense(
-        //     myUser,
-        //     newDriverLicense,
-        //     applicantResult.applicantId,
-        //     "front"
-        // );
-
-        // const backDriverLicense = await verifyDrivingLicense(
-        //     myUser,
-        //     newDriverLicense,
-        //     applicantResult.applicantId,
-        //     "back"
-        // );
-
-        // const userSelfie = await verifyDrivingLicense(
-        //     myUser,
-        //     newDriverLicense,
-        //     applicantResult.applicantId,
-        //     "selfie"
-        // );
-
-        // if (!fronDriverLicensecheck.success) {
-        //     return res.status(400).json({ msg: fronDriverLicensecheck.msg })
-        // }
-
-        // if (!fronDriverLicensecheck.success) {
-        //     return res.status(400).json({
-        //         frontCheck: fronDriverLicensecheck.msg,
-        //         backCheck: backDriverLicense.msg,
-        //         selfieCheck: userSelfie.msg,
-        //     });
-        // }
 
         res.status(201).json({
             msg: 'Nouvelle licence ajoutée avec succès',
-            // applicandID: applicantResult.applicantId,
-            // fronDriverLicensecheck: fronDriverLicensecheck,
-            // userSelfieCheck: userSelfie
         });
 
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "UPLOAD DL :Erreur interne du serveur", error: error });
+    }
+}
+
+async function GetMyLicense(req,res){
+    try {
+
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');  
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+           
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const myLicense = await drivingLicensesCollection.findOne({ user: myToken.user_id });
+
+        if(!myLicense){
+            return res.status(404).json({msg: "Aucune licence n'a été trouvée"});
+        }
+
+        res.status(200).json(myLicense);
 
     } catch (error) {
-        console.error(`UploadDriverLicense: Erreur interne du serveur : ${error.message}, ${error}`);
-        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
+        console.error(error);
+        return res.status(500).json({ msg: "GET DL : Erreur de serveur interne", error: error });
+    }
+}
+
+async function GetDrivingLicense(req, res) {
+    try {
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+    
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const { licenseId } = req.body;
+
+        const myLicense = await drivingLicensesCollection.findOne({ _id: licenseId});
+
+        if(!myLicense){
+            return res.status(404).json({msg: "Aucune licence n'a été trouvée"});
+        }
+
+        res.status(200).json(myLicense);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "GET DL : Erreur de serveur interne", error: error });
+    }
+}
+
+async function UpdateDrivingLicense(req, res) {
+    try {
+
+        res.status(200).json({ msg: "Hello from UpdateDrivingLicense" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "UPDATE DL : Erreur de serveur interne", error: error });
+    }
+}
+
+async function DeleteDrivingLicense(req, res) {
+    try {
+        let responseSent = false; // Variable pour contrôler si une réponse a été envoyée
+
+        // Récupérer le jeton du header de la requête
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            responseSent = true;
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            responseSent = true;
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const { licenseId } = req.body;
+
+        // Recherche de la licence à supprimer
+        const findLicensePromise = drivingLicensesCollection.findOne({ _id: licenseId })
+            // Une fois la licence trouvée, cette fonction est appelée pour traiter le résultat
+            .then(myLicense => {
+                // Vérifier si la licence a été trouvée
+                if (!myLicense) {
+                    responseSent = true;
+                    return res.status(404).json({ msg: "Aucune licence n'a été trouvée" });
+                }
+                // Renvoyer l'ID de l'utilisateur associé à la licence
+                return myLicense.user;
+            });
+
+        // Suppression de la licence
+        const deleteLicensePromise = drivingLicensesCollection.deleteOne({ _id: licenseId });
+
+        // Exécution des promesses en parallèle
+        const [userId, deleteResult] = await Promise.all([findLicensePromise, deleteLicensePromise]);
+
+        // Vérification du résultat de la suppression et envoi de la réponse appropriée
+        if (!responseSent && deleteResult.deletedCount > 0) {
+            // Modification du champ driverLicense de l'utilisateur correspondant à "pending"
+            await userCollection.updateOne(
+                { _id: userId },
+                { $set: { driverLicense: "pending" } }
+            );
+            return res.status(200).json({ msg: "Licence de conduire supprimée avec succès" });
+        } else if (!responseSent) {
+            return res.status(400).json({ msg: "La licence n'a pas pu être effacée" });
+        }
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "DELETE DL : Erreur de serveur interne", error: error });
     }
 }
 
 
-module.exports ={
+module.exports = {
 
-    uploadCollectedData
+    UploadDriverLicense,
+    GetMyLicense,
+    GetDrivingLicense,
+    DeleteDrivingLicense
 }
