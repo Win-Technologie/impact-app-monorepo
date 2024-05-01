@@ -40,6 +40,10 @@ const vehicleSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  immatriculation: {
+    type: immatriculationSchema,
+    required: true
+  },
   brand: {
     type: String,
     required: true,
