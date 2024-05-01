@@ -4,6 +4,7 @@ const router = Router();
 const userAuth = require('../../auth/jwt.authenticated.js')
 //CONTROLLERS
 const userController = require('../../controllers/user/user.controller.js');
+const driverLicenseController = require('../../controllers/driverLicense/driverLicense.controller.js');
 // VARIABLES
 const USER_ROUTER_IMG_PATH = process.env.USER_ROUTER_IMG_PATH;
 const DOCS_ROUTER_IMG_PATH = process.env.DOCS_ROUTER_DOC_PATH;
@@ -40,10 +41,8 @@ router.delete('/user/:id', [userAuth.ensureAuth, userAuth.isActiveSession], user
 // router.post('/user/uploads', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserDocs],
 //     userController.UploadDocument
 // );
-// To upload driver licence
-router.post('/user/license', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserDocs],
-    userController.UploadDriverLicense
-);
+
+/* CODE QR USER INFO ENDPOINTS */
 
 // To generate QR code
 router.post('/code/generate', [userAuth.ensureAuth, userAuth.isActiveSession],
@@ -51,8 +50,27 @@ router.post('/code/generate', [userAuth.ensureAuth, userAuth.isActiveSession],
 );
 
 // To get id user and send all user info
-router.post('/code/read', [userAuth.ensureAuth, userAuth.isActiveSession],
+router.get('/code/read', [userAuth.ensureAuth, userAuth.isActiveSession],
     userController.readAndSendUserInfo
 );
+
+/* ENCRYPT DATA TESTING ENDPOINTS */
+
+//test security encrypted data
+router.post('/test/data/encrypt', [userAuth.ensureAuth, userAuth.isActiveSession],
+    userController.encryptMyData
+);
+
+//get user's full data (auto, assurance)
+router.get('/user/vehicle/info', [userAuth.ensureAuth, userAuth.isActiveSession],
+    userController.getMyAutoFullInfo
+);
+
+
+// /* DRIVER LICENCE ENDPOINTS */
+// // To upload driver licence
+// router.post('/user/license', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserDocs],
+//     userController.UploadDriverLicense
+// );
 
 module.exports = router;

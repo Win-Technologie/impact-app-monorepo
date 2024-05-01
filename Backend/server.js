@@ -24,8 +24,8 @@ const userRoutes = require('./routes/user/user.routes');
 const vehicleRoutes = require('./routes/vehicle/vehicle.routes');
 const insuranceRoutes = require('./routes/insurance/insurance.routes');
 const onfidoRoutes = require('./routes/onfido/onfido.routes');
-
-const veriffRoutes = require('./routes/veriff/veriff.routes')
+const veriffRoutes = require('./routes/veriff/veriff.routes');
+const driverLicenseRoutes = require('./routes/driverLicense/driverLicense.routes');
 
 connectToMongo();
 
@@ -65,6 +65,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/insurances', insuranceRoutes);
 app.use('/api/onfido', onfidoRoutes);
+app.use('/api/dl', driverLicenseRoutes);
 
 app.use('/api/veriff', veriffRoutes);
 
