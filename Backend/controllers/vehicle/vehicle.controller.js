@@ -39,6 +39,44 @@ async function validateFields(req) {
     ]);
 }
 
+
+
+// Fonction privée pour ajouter les informations d'immatriculation à un véhicule
+async function addImmatriculationV2(carId, immatriculationData) {
+    try {
+        // Vérifier si le véhicule existe dans la base de données
+        const car = await vehicleCollection.findOne({ _id: carId });
+        if (!car) {
+            throw new Error("Véhicule non trouvé");
+        }
+
+        // Vérifier si le véhicule a déjà des informations d'immatriculation
+        if (car.immatriculation) {
+            throw new Error("Ce véhicule a déjà des informations d'immatriculation");
+        }
+
+        // Ajouter les informations d'immatriculation au véhicule
+        await vehicleCollection.updateOne(
+            { _id: carId },
+            { $set: { immatriculation: immatriculationData } }
+        );
+
+        // Mettre à jour le cache si nécessaire
+        const cacheKeyCar = `${ownerId}_${carId}`;
+        const cachedData = myCache.get(cacheKeyCar);
+        if (cachedData) {
+            // Si les données sont en cache, les mettre à jour
+            const decryptedData = decryptData(cachedData, AES_KEY);
+            decryptedData.immatriculation = immatriculationData;
+            const reencryptedData = encryptData(decryptedData, AES_KEY);
+            myCache.set(cacheKeyCar, reencryptedData, 600);
+        }
+    } catch (error) {
+        throw new Error(`Erreur lors de l'ajout des informations d'immatriculation au véhicule : ${error.message}`);
+    }
+}
+
+
 /**
  * Route POST /api/cars/add pour ajouter une nouvelle voiture pour un utilisateur.
  * @param {Object} req - Requête HTTP contenant les informations de la nouvelle voiture.
@@ -64,6 +102,8 @@ async function addCar(req, res) {
 
         // Exécution des validations
         await validateFields(req);
+        
+        await addImmatriculationV2(newCar._id, req.body.immatriculation);
 
         // Vérifie les erreurs de validation
         const errors = validationResult(req);
@@ -471,6 +511,73 @@ async function toggleCarActivation(req, res) {
     }
 }
 
+async function addImmatriculation(req, res) {
+    try {
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            console.error("Le Token n'est pas fourni");
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const ownerId = myToken.user_id;
+
+        // Récupérer l'identifiant du véhicule depuis les paramètres de la requête
+        const carId = req.params.id;
+
+        // Vérifier si l'identifiant du véhicule est fourni
+        if (!carId) {
+            return res.status(400).json({ error: "Identifiant de véhicule manquant dans la requête" });
+        }
+
+        // Extraction des données d'immatriculation à ajouter de la requête
+        const immatriculationData = req.body;
+
+        // Vérification si le véhicule existe dans la base de données
+        const car = await vehicleCollection.findOne({ _id: carId });
+        if (!car) {
+            return res.status(404).json({ error: "Véhicule non trouvé" });
+        }
+
+        // Vérifier si l'utilisateur a accès à ce véhicule
+        const user = await userCollection.findOne({ _id: ownerId, vehicles: carId });
+        if (!user) {
+            return res.status(403).json({ error: "L'utilisateur n'a pas accès à ce véhicule" });
+        }
+
+        // Vérifier si le véhicule a déjà des informations d'immatriculation
+        if (car.immatriculation) {
+            return res.status(400).json({ error: "Ce véhicule a déjà des informations d'immatriculation" });
+        }
+
+        // Ajouter les informations d'immatriculation au véhicule
+        await vehicleCollection.updateOne(
+            { _id: carId },
+            { $set: { immatriculation: immatriculationData } }
+        );
+
+        // Mettre à jour le cache si nécessaire
+        const cacheKeyCar = `${ownerId}_${carId}`;
+        const cachedData = myCache.get(cacheKeyCar);
+        if (cachedData) {
+            // Si les données sont en cache, les mettre à jour
+            console.log("Données trouvées dans le cache. Mise à jour du cache...");
+            const decryptedData = decryptData(cachedData, AES_KEY);
+            decryptedData.immatriculation = immatriculationData;
+            const reencryptedData = encryptData(decryptedData, AES_KEY);
+            myCache.set(cacheKeyCar, reencryptedData, 600);
+        }
+
+        return res.status(200).json({ message: 'Informations d\'immatriculation ajoutées avec succès au véhicule' });
+    } catch (error) {
+        console.error("Erreur lors de l'ajout des informations d'immatriculation au véhicule :", error);
+        return res.status(500).json({ error: "Erreur interne du serveur" });
+    }
+}
 
 module.exports = {
     addCar, // Ajouter une voiture
