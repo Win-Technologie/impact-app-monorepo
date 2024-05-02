@@ -39,6 +39,51 @@ async function validateFields(req) {
     ]);
 }
 
+/**
+ * Valide les champs des informations d'immatriculation.
+ * @param {Object} immatriculationData - Les données d'immatriculation à valider.
+ * @throws {Error} Une erreur si la validation échoue.
+ */
+function validateImmatriculationFields(immatriculationData) {
+    const {
+        numeroCertificatImmatriculation,
+        dateDelivrance,
+        dateExpiration,
+        numeroEssieux,
+        masseNette,
+        cylindree,
+        numeroDossier,
+        categorieUsage
+    } = immatriculationData;
+
+    // Validation des champs obligatoires
+    if (!numeroCertificatImmatriculation) {
+        throw new Error("Le numéro de certificat d'immatriculation est requis");
+    }
+    if (!dateDelivrance) {
+        throw new Error("La date de délivrance est requise");
+    }
+    if (!dateExpiration) {
+        throw new Error("La date d'expiration est requise");
+    }
+
+    // Validation des champs optionnels
+    if (numeroEssieux && typeof numeroEssieux !== 'number') {
+        throw new Error("Le numéro d'essieux doit être un nombre");
+    }
+    if (masseNette && typeof masseNette !== 'number') {
+        throw new Error("La masse nette doit être un nombre");
+    }
+    if (cylindree && typeof cylindree !== 'number') {
+        throw new Error("La cylindrée doit être un nombre");
+    }
+    if (numeroDossier && typeof numeroDossier !== 'string') {
+        throw new Error("Le numéro de dossier doit être une chaîne de caractères");
+    }
+    if (categorieUsage && typeof categorieUsage !== 'string') {
+        throw new Error("La catégorie d'usage doit être une chaîne de caractères");
+    }
+}
 
 
 // Fonction privée pour ajouter les informations d'immatriculation à un véhicule
