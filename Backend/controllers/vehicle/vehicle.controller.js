@@ -60,29 +60,39 @@ function validateImmatriculationFields(immatriculationData) {
     if (!numeroCertificatImmatriculation) {
         throw new Error("Le numéro de certificat d'immatriculation est requis");
     }
-    if (!dateDelivrance) {
-        throw new Error("La date de délivrance est requise");
+    if (!dateDelivrance || !isValidDate(dateDelivrance)) {
+        throw new Error("La date de délivrance est invalide");
     }
-    if (!dateExpiration) {
-        throw new Error("La date d'expiration est requise");
+    if (!dateExpiration || !isValidDate(dateExpiration)) {
+        throw new Error("La date d'expiration est invalide");
     }
 
     // Validation des champs optionnels
-    if (numeroEssieux && typeof numeroEssieux !== 'number') {
+    if (numeroEssieux !== undefined && typeof numeroEssieux !== 'number') {
         throw new Error("Le numéro d'essieux doit être un nombre");
     }
-    if (masseNette && typeof masseNette !== 'number') {
+    if (masseNette !== undefined && typeof masseNette !== 'number') {
         throw new Error("La masse nette doit être un nombre");
     }
-    if (cylindree && typeof cylindree !== 'number') {
+    if (cylindree !== undefined && typeof cylindree !== 'number') {
         throw new Error("La cylindrée doit être un nombre");
     }
-    if (numeroDossier && typeof numeroDossier !== 'string') {
+    if (numeroDossier !== undefined && typeof numeroDossier !== 'string') {
         throw new Error("Le numéro de dossier doit être une chaîne de caractères");
     }
-    if (categorieUsage && typeof categorieUsage !== 'string') {
+    if (categorieUsage !== undefined && typeof categorieUsage !== 'string') {
         throw new Error("La catégorie d'usage doit être une chaîne de caractères");
     }
+}
+
+/**
+ * Vérifie si une date est valide.
+ * @param {string} dateString - La chaîne représentant la date.
+ * @returns {boolean} true si la date est valide, sinon false.
+ */
+function isValidDate(dateString) {
+    const date = new Date(dateString);
+    return !isNaN(date.getTime());
 }
 
 
