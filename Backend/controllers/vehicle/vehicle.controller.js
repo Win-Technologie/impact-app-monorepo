@@ -110,6 +110,10 @@ async function addImmatriculationV2(ownerId ,carId, immatriculationData) {
             throw new Error("Ce véhicule a déjà des informations d'immatriculation");
         }
 
+        // Valider les champs des informations d'immatriculation
+        validateImmatriculationFields(immatriculationData);
+
+
         // Ajouter les informations d'immatriculation au véhicule
         await vehicleCollection.updateOne(
             { _id: carId },
