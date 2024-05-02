@@ -1327,7 +1327,8 @@ async function getMyAutoFullInfo(req, res) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        const { vehicleId } = req.body;
+        // const { vehicleId } = req.body;
+        const { vehicleId } = req.params;
 
         const userPromise = userCollection.findOne({ _id: myToken.user_id });
         const vehiclePromise = vehicleCollection.findOne({ _id: vehicleId });

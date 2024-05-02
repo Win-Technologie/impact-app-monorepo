@@ -62,7 +62,7 @@ router.post('/test/data/encrypt', [userAuth.ensureAuth, userAuth.isActiveSession
 );
 
 //get user's full data (auto, assurance)
-router.get('/user/vehicle/info', [userAuth.ensureAuth, userAuth.isActiveSession],
+router.get('/user/vehicle/info/:vehicleId', [userAuth.ensureAuth, userAuth.isActiveSession],
     userController.getMyAutoFullInfo
 );
 
