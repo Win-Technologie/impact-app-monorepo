@@ -42,7 +42,7 @@ async function validateFields(req) {
 
 
 // Fonction privée pour ajouter les informations d'immatriculation à un véhicule
-async function addImmatriculationV2(carId, immatriculationData) {
+async function addImmatriculationV2(ownerId ,carId, immatriculationData) {
     try {
         // Vérifier si le véhicule existe dans la base de données
         const car = await vehicleCollection.findOne({ _id: carId });
@@ -103,7 +103,6 @@ async function addCar(req, res) {
         // Exécution des validations
         await validateFields(req);
         
-        await addImmatriculationV2(newCar._id, req.body.immatriculation);
 
         // Vérifie les erreurs de validation
         const errors = validationResult(req);
@@ -148,6 +147,8 @@ async function addCar(req, res) {
             vehicleCollection.insertOne(newCar),
             userCollection.updateOne({ _id: ownerId }, { $addToSet: { vehicles: newCar._id} })
         ]);
+        console.log(req.body.immatriculation);
+        await addImmatriculationV2(ownerId ,newCar._id, req.body.immatriculation);
 
         // Met à jour le cache avec les informations de la nouvelle voiture
         const cacheKeyCar = `${ownerId}_${newCar._id}`;
