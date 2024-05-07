@@ -143,12 +143,6 @@ async function addCar(req, res) {
 }
 
 
-
-
-
-
-
-
 /**
  * Route GET /api/cars/:id pour récupérer les informations d'une voiture par son identifiant.
  * @param {Object} req - Requête HTTP contenant l'identifiant de la voiture.
@@ -288,8 +282,6 @@ async function editCar(req, res) {
     }
 }
 
-
-
 /**
  * 
  * @param {*} req 
@@ -403,7 +395,6 @@ async function getAllCars(req, res) {
     }
 }
 
-
 /**
  * Fonction pour activer ou désactiver une voiture par son ID.
  * @param {Object} req - Requête HTTP contenant l'identifiant de la voiture à activer ou désactiver.
@@ -480,9 +471,6 @@ async function toggleCarActivation(req, res) {
         return res.status(500).json({ error: "Erreur interne du serveur" });
     }
 }
-
-
-
 
 // Fonctions liees a l'immatriculations specifiquements 
 async function addImmatriculation(req, res) {
@@ -593,7 +581,6 @@ async function addImmatriculationV2(ownerId, carId, immatriculationData) {
     }
 }
 
-
 async function checkUserImmatriculationExpiration(ownerId) {
     try {
         // Récupérer tous les véhicules de l'utilisateur spécifié
@@ -638,14 +625,11 @@ async function updateImmatriculation(req, res) {
         const ownerId = myToken.user_id;
         // Récupérer l'identifiant de la voiture depuis les paramètres de la requête
         const vehicleId = req.params.id;
-        const { immatriculationData } = req.body;
+        const immatriculationData = req.body;
 
-        // Valider les données d'immatriculation
-        try {
-            validateImmatriculationFields(immatriculationData);
-        } catch (validationError) {
-            return res.status(400).json({ error: validationError.message });
-        }
+        // Valider les données d'immatriculation avec le modèle Immatriculation
+        const newImmatriculation = new Immatriculation(immatriculationData);
+        await newImmatriculation.validate();
 
         // Rechercher la voiture par ID et propriétaire
         const car = await vehicleCollection.findOne({ _id: vehicleId, owner: ownerId });
@@ -654,18 +638,7 @@ async function updateImmatriculation(req, res) {
         }
 
         // Mettre à jour les informations d'immatriculation
-        const updateFields = {
-            "immatriculation.numeroCertificatImmatriculation": immatriculationData.numeroCertificatImmatriculation,
-            "immatriculation.dateDelivrance": immatriculationData.dateDelivrance,
-            "immatriculation.dateExpiration": immatriculationData.dateExpiration,
-            "immatriculation.numeroEssieux": immatriculationData.numeroEssieux,
-            "immatriculation.masseNette": immatriculationData.masseNette,
-            "immatriculation.cylindree": immatriculationData.cylindree,
-            "immatriculation.numeroDossier": immatriculationData.numeroDossier,
-            "immatriculation.categorieUsage": immatriculationData.categorieUsage
-        };
-
-        await vehicleCollection.updateOne({ _id: vehicleId }, { $set: updateFields });
+        await vehicleCollection.updateOne({ _id: vehicleId }, { $set: { immatriculation: immatriculationData } });
 
         // Mettre à jour le cache si nécessaire
         const cacheKey = `${ownerId}_${vehicleId}`;
@@ -673,7 +646,7 @@ async function updateImmatriculation(req, res) {
         if (cachedData) {
             console.log("Données trouvées dans le cache. Mise à jour du cache...");
             const decryptedData = decryptData(cachedData, AES_KEY);
-            Object.assign(decryptedData, updateFields); // Mise à jour des champs
+            decryptedData.immatriculation = immatriculationData; // Mise à jour des informations d'immatriculation
             const reencryptedData = encryptData(decryptedData, AES_KEY); // Rechiffrement
             myCache.set(cacheKey, reencryptedData, 600); // Mise à jour du cache
         }
@@ -684,6 +657,7 @@ async function updateImmatriculation(req, res) {
         return res.status(500).json({ error: 'Erreur interne du serveur' });
     }
 }
+
 
 /**
  * Valide les champs des informations d'immatriculation.
