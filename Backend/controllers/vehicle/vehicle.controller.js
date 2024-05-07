@@ -7,6 +7,7 @@ const { body, validationResult } = require('express-validator');
 const { deleteUploadedFiles, checkFileSize, checkFileQuantity, getFilePath, getFileName } = require('../../utils/files');
 // MODELS
 const Vehicle = require('../../modeles/vehicle/vehicle');
+const Immatriculation = require('../../modeles/immatriculation/immatriculation');
 // NODE MAILER
 const { sendVerificationEmail } = require('../../utils/nodemailer');
 const { sendExpirationEmail ,sendNotificationMail} = require('../../utils/nodemailer');
@@ -553,7 +554,7 @@ async function addImmatriculation(req, res) {
 }
 
 // Fonction privée pour ajouter les informations d'immatriculation à un véhicule
-async function addImmatriculationV2(ownerId ,carId, immatriculationData) {
+async function addImmatriculationV2(ownerId, carId, immatriculationData) {
     try {
         // Vérifier si le véhicule existe dans la base de données
         const car = await vehicleCollection.findOne({ _id: carId });
@@ -566,14 +567,15 @@ async function addImmatriculationV2(ownerId ,carId, immatriculationData) {
             throw new Error("Ce véhicule a déjà des informations d'immatriculation");
         }
 
+        // Créer une nouvelle instance du modèle Immatriculation
+        const newImmatriculation = new Immatriculation(immatriculationData);
         // Valider les champs des informations d'immatriculation
-        validateImmatriculationFields(immatriculationData);
-
+        await newImmatriculation.validate();
 
         // Ajouter les informations d'immatriculation au véhicule
         await vehicleCollection.updateOne(
             { _id: carId },
-            { $set: { immatriculation: immatriculationData } }
+            { $set: { immatriculation: newImmatriculation } }
         );
 
         // Mettre à jour le cache si nécessaire
