@@ -9,6 +9,8 @@ const { deleteUploadedFiles, checkFileSize, checkFileQuantity, getFilePath, getF
 const Vehicle = require('../../modeles/vehicle/vehicle');
 // NODE MAILER
 const { sendVerificationEmail } = require('../../utils/nodemailer');
+const { sendExpirationEmail ,sendNotificationMail} = require('../../utils/nodemailer');
+
 // CACHE
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
 
@@ -38,103 +40,6 @@ async function validateFields(req) {
         body('serialNumber').notEmpty().withMessage('Le numéro de serie est requis').run(req)
     ]);
 }
-
-/**
- * Valide les champs des informations d'immatriculation.
- * @param {Object} immatriculationData - Les données d'immatriculation à valider.
- * @throws {Error} Une erreur si la validation échoue.
- */
-function validateImmatriculationFields(immatriculationData) {
-    const {
-        numeroCertificatImmatriculation,
-        dateDelivrance,
-        dateExpiration,
-        numeroEssieux,
-        masseNette,
-        cylindree,
-        numeroDossier,
-        categorieUsage
-    } = immatriculationData;
-
-    // Validation des champs obligatoires
-    if (!numeroCertificatImmatriculation) {
-        throw new Error("Le numéro de certificat d'immatriculation est requis");
-    }
-    if (!dateDelivrance || !isValidDate(dateDelivrance)) {
-        throw new Error("La date de délivrance est invalide");
-    }
-    if (!dateExpiration || !isValidDate(dateExpiration)) {
-        throw new Error("La date d'expiration est invalide");
-    }
-
-    // Validation des champs optionnels
-    if (numeroEssieux !== undefined && typeof numeroEssieux !== 'number') {
-        throw new Error("Le numéro d'essieux doit être un nombre");
-    }
-    if (masseNette !== undefined && typeof masseNette !== 'number') {
-        throw new Error("La masse nette doit être un nombre");
-    }
-    if (cylindree !== undefined && typeof cylindree !== 'number') {
-        throw new Error("La cylindrée doit être un nombre");
-    }
-    if (numeroDossier !== undefined && typeof numeroDossier !== 'string') {
-        throw new Error("Le numéro de dossier doit être une chaîne de caractères");
-    }
-    if (categorieUsage !== undefined && typeof categorieUsage !== 'string') {
-        throw new Error("La catégorie d'usage doit être une chaîne de caractères");
-    }
-}
-
-/**
- * Vérifie si une date est valide.
- * @param {string} dateString - La chaîne représentant la date.
- * @returns {boolean} true si la date est valide, sinon false.
- */
-function isValidDate(dateString) {
-    const date = new Date(dateString);
-    return !isNaN(date.getTime());
-}
-
-
-// Fonction privée pour ajouter les informations d'immatriculation à un véhicule
-async function addImmatriculationV2(ownerId ,carId, immatriculationData) {
-    try {
-        // Vérifier si le véhicule existe dans la base de données
-        const car = await vehicleCollection.findOne({ _id: carId });
-        if (!car) {
-            throw new Error("Véhicule non trouvé");
-        }
-
-        // Vérifier si le véhicule a déjà des informations d'immatriculation
-        if (car.immatriculation) {
-            throw new Error("Ce véhicule a déjà des informations d'immatriculation");
-        }
-
-        // Valider les champs des informations d'immatriculation
-        validateImmatriculationFields(immatriculationData);
-
-
-        // Ajouter les informations d'immatriculation au véhicule
-        await vehicleCollection.updateOne(
-            { _id: carId },
-            { $set: { immatriculation: immatriculationData } }
-        );
-
-        // Mettre à jour le cache si nécessaire
-        const cacheKeyCar = `${ownerId}_${carId}`;
-        const cachedData = myCache.get(cacheKeyCar);
-        if (cachedData) {
-            // Si les données sont en cache, les mettre à jour
-            const decryptedData = decryptData(cachedData, AES_KEY);
-            decryptedData.immatriculation = immatriculationData;
-            const reencryptedData = encryptData(decryptedData, AES_KEY);
-            myCache.set(cacheKeyCar, reencryptedData, 600);
-        }
-    } catch (error) {
-        throw new Error(`Erreur lors de l'ajout des informations d'immatriculation au véhicule : ${error.message}`);
-    }
-}
-
 
 /**
  * Route POST /api/cars/add pour ajouter une nouvelle voiture pour un utilisateur.
@@ -206,8 +111,10 @@ async function addCar(req, res) {
             vehicleCollection.insertOne(newCar),
             userCollection.updateOne({ _id: ownerId }, { $addToSet: { vehicles: newCar._id} })
         ]);
-        console.log(req.body.immatriculation);
-        await addImmatriculationV2(ownerId ,newCar._id, req.body.immatriculation);
+        
+        // Immatriculation 
+        //console.log(req.body.immatriculation);
+        //await addImmatriculationV2(ownerId ,newCar._id, req.body.immatriculation);
 
         // Met à jour le cache avec les informations de la nouvelle voiture
         const cacheKeyCar = `${ownerId}_${newCar._id}`;
@@ -233,6 +140,8 @@ async function addCar(req, res) {
         return res.status(500).json({ error: 'Erreur interne du serveur' });
     }
 }
+
+
 
 
 
@@ -571,6 +480,10 @@ async function toggleCarActivation(req, res) {
     }
 }
 
+
+
+
+// Fonctions liees a l'immatriculations specifiquements 
 async function addImmatriculation(req, res) {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");
@@ -639,6 +552,194 @@ async function addImmatriculation(req, res) {
     }
 }
 
+// Fonction privée pour ajouter les informations d'immatriculation à un véhicule
+async function addImmatriculationV2(ownerId ,carId, immatriculationData) {
+    try {
+        // Vérifier si le véhicule existe dans la base de données
+        const car = await vehicleCollection.findOne({ _id: carId });
+        if (!car) {
+            throw new Error("Véhicule non trouvé");
+        }
+
+        // Vérifier si le véhicule a déjà des informations d'immatriculation
+        if (car.immatriculation) {
+            throw new Error("Ce véhicule a déjà des informations d'immatriculation");
+        }
+
+        // Valider les champs des informations d'immatriculation
+        validateImmatriculationFields(immatriculationData);
+
+
+        // Ajouter les informations d'immatriculation au véhicule
+        await vehicleCollection.updateOne(
+            { _id: carId },
+            { $set: { immatriculation: immatriculationData } }
+        );
+
+        // Mettre à jour le cache si nécessaire
+        const cacheKeyCar = `${ownerId}_${carId}`;
+        const cachedData = myCache.get(cacheKeyCar);
+        if (cachedData) {
+            // Si les données sont en cache, les mettre à jour
+            const decryptedData = decryptData(cachedData, AES_KEY);
+            decryptedData.immatriculation = immatriculationData;
+            const reencryptedData = encryptData(decryptedData, AES_KEY);
+            myCache.set(cacheKeyCar, reencryptedData, 600);
+        }
+    } catch (error) {
+        throw new Error(`Erreur lors de l'ajout des informations d'immatriculation au véhicule : ${error.message}`);
+    }
+}
+
+
+async function checkUserImmatriculationExpiration(ownerId) {
+    try {
+        // Récupérer tous les véhicules de l'utilisateur spécifié
+        const userCars = await vehicleCollection.find({ owner: ownerId }).toArray();
+
+        // Parcourir tous les véhicules de l'utilisateur pour vérifier la date d'expiration de l'immatriculation
+        userCars.forEach(async (car) => {
+            const immatriculationDate = new Date(car.immatriculation.date);
+            const currentDate = new Date();
+
+            // Vérifier si la date d'expiration est dépassée
+            if (currentDate > immatriculationDate) {
+                // Envoyer un email à l'utilisateur pour informer de l'expiration de l'immatriculation du véhicule
+                await sendExpirationEmail(ownerId, car._id);
+            }
+        });
+    } catch (error) {
+        console.error("Erreur lors de la vérification de l'expiration de l'immatriculation :", error);
+        throw new Error("Erreur lors de la vérification de l'expiration de l'immatriculation");
+    }
+}
+
+/**
+ * Route PUT /api/cars/updateImmatriculation pour mettre à jour les informations d'immatriculation d'une voiture.
+ * @param {Object} req - Requête HTTP contenant les nouvelles informations d'immatriculation.
+ * @param {Object} res - Réponse HTTP pour renvoyer le résultat de la mise à jour.
+ * @returns {Object} Une réponse HTTP indiquant le succès ou l'échec de la mise à jour.
+ */
+async function updateImmatriculation(req, res) {
+    try {
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            console.error("Le Token n'est pas fourni");
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        const myToken = jwt.decode(token);
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const ownerId = myToken.user_id;
+        // Récupérer l'identifiant de la voiture depuis les paramètres de la requête
+        const vehicleId = req.params.id;
+        const { immatriculationData } = req.body;
+
+        // Valider les données d'immatriculation
+        try {
+            validateImmatriculationFields(immatriculationData);
+        } catch (validationError) {
+            return res.status(400).json({ error: validationError.message });
+        }
+
+        // Rechercher la voiture par ID et propriétaire
+        const car = await vehicleCollection.findOne({ _id: vehicleId, owner: ownerId });
+        if (!car) {
+            return res.status(404).json({ message: "Voiture non trouvée" });
+        }
+
+        // Mettre à jour les informations d'immatriculation
+        const updateFields = {
+            "immatriculation.numeroCertificatImmatriculation": immatriculationData.numeroCertificatImmatriculation,
+            "immatriculation.dateDelivrance": immatriculationData.dateDelivrance,
+            "immatriculation.dateExpiration": immatriculationData.dateExpiration,
+            "immatriculation.numeroEssieux": immatriculationData.numeroEssieux,
+            "immatriculation.masseNette": immatriculationData.masseNette,
+            "immatriculation.cylindree": immatriculationData.cylindree,
+            "immatriculation.numeroDossier": immatriculationData.numeroDossier,
+            "immatriculation.categorieUsage": immatriculationData.categorieUsage
+        };
+
+        await vehicleCollection.updateOne({ _id: vehicleId }, { $set: updateFields });
+
+        // Mettre à jour le cache si nécessaire
+        const cacheKey = `${ownerId}_${vehicleId}`;
+        const cachedData = myCache.get(cacheKey);
+        if (cachedData) {
+            console.log("Données trouvées dans le cache. Mise à jour du cache...");
+            const decryptedData = decryptData(cachedData, AES_KEY);
+            Object.assign(decryptedData, updateFields); // Mise à jour des champs
+            const reencryptedData = encryptData(decryptedData, AES_KEY); // Rechiffrement
+            myCache.set(cacheKey, reencryptedData, 600); // Mise à jour du cache
+        }
+
+        return res.status(200).json({ message: 'Informations d\'immatriculation mises à jour avec succès' });
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour des informations d'immatriculation :", error);
+        return res.status(500).json({ error: 'Erreur interne du serveur' });
+    }
+}
+
+/**
+ * Valide les champs des informations d'immatriculation.
+ * @param {Object} immatriculationData - Les données d'immatriculation à valider.
+ * @throws {Error} Une erreur si la validation échoue.
+ */
+function validateImmatriculationFields(immatriculationData) {
+    const {
+        numeroCertificatImmatriculation,
+        dateDelivrance,
+        dateExpiration,
+        numeroEssieux,
+        masseNette,
+        cylindree,
+        numeroDossier,
+        categorieUsage
+    } = immatriculationData;
+
+    // Validation des champs obligatoires
+    if (!numeroCertificatImmatriculation) {
+        throw new Error("Le numéro de certificat d'immatriculation est requis");
+    }
+    if (!dateDelivrance || !isValidDate(dateDelivrance)) {
+        throw new Error("La date de délivrance est invalide");
+    }
+    if (!dateExpiration || !isValidDate(dateExpiration)) {
+        throw new Error("La date d'expiration est invalide");
+    }
+
+    // Validation des champs optionnels
+    if (numeroEssieux !== undefined && typeof numeroEssieux !== 'number') {
+        throw new Error("Le numéro d'essieux doit être un nombre");
+    }
+    if (masseNette !== undefined && typeof masseNette !== 'number') {
+        throw new Error("La masse nette doit être un nombre");
+    }
+    if (cylindree !== undefined && typeof cylindree !== 'number') {
+        throw new Error("La cylindrée doit être un nombre");
+    }
+    if (numeroDossier !== undefined && typeof numeroDossier !== 'string') {
+        throw new Error("Le numéro de dossier doit être une chaîne de caractères");
+    }
+    if (categorieUsage !== undefined && typeof categorieUsage !== 'string') {
+        throw new Error("La catégorie d'usage doit être une chaîne de caractères");
+    }
+}
+
+/**
+ * Vérifie si une date est valide.
+ * @param {string} dateString - La chaîne représentant la date.
+ * @returns {boolean} true si la date est valide, sinon false.
+ */
+function isValidDate(dateString) {
+    const date = new Date(dateString);
+    return !isNaN(date.getTime());
+}
+
+
 module.exports = {
     addCar, // Ajouter une voiture
     getCarById, // Obtenir une voiture par son ID
@@ -646,6 +747,8 @@ module.exports = {
     deleteCarById, // Supprimer une voiture par son ID
     getAllCars, // Obtenir toutes les voitures d'un utilisateur connecté 
     toggleCarActivation, // Activer ou désactiver une voiture par son ID
+    addImmatriculation,
+    updateImmatriculation,
   };
   
   

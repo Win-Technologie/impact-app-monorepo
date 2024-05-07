@@ -31,6 +31,8 @@ router.get('/', [userAuth.ensureAuth], vehicleController.getAllCars);
 // Route pour activer ou désactiver une voiture par son ID
 router.put('/toggle-activation/:id', [userAuth.ensureAuth], vehicleController.toggleCarActivation);
 
+// Route pour modifier une immatriculation par l'ID de son vehicule 
+router.put('/immatriculation/:id', [userAuth.ensureAuth], vehicleController.updateImmatriculation);
 
 
 module.exports = router;
