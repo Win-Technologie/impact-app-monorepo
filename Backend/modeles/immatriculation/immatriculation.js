@@ -34,6 +34,6 @@ const immatriculationSchema = new mongoose.Schema({
 
 
 // Modèle immatriculation basé sur le schéma
-const Immatriculation = mongoose.model('Immatriculation', immatriculationSchema);
+const Immatriculation = mongoose.model('immatriculations', immatriculationSchema);
 
 module.exports = Immatriculation;
