@@ -183,6 +183,16 @@ const userSchema = new mongoose.Schema({
     verificationCodeExpiration: {
         type: Date,
         default: null
+    },
+    alphaNumCode: {
+        type: String,
+        default: "non",
+        index: true,
+    },
+    findMyVehicle: {
+        type: String,
+        default: "non",
+        index: true,
     }
 });
 

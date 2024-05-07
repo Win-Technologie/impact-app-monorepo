@@ -121,62 +121,6 @@ async function validateUpdateRegisterUserFields(req) {
     }
 
 }
-/*
-async function validateRegisterUserFields(req) {
-    await Promise.all([
-        // Validation de l'email
-        body('email')
-            .isEmail().withMessage('L\'adresse e-mail est requise et doit être valide')
-            .matches(/^.+@.+\..+$/).withMessage('L\'adresse e-mail est invalide, l\'arobase (@) est manquante').run(req),
-        // Validation du nom
-        body('name').notEmpty().isLength({ min: 2 }).withMessage('Le nom est requis et doit contenir au moins 2 caractères.').run(req),
-
-        // Validation du nom
-        body('lastName').notEmpty().isLength({ min: 2 }).withMessage('le nom de famille est requis et doit contenir au moins 2 caractères.').run(req),
-
-        // Validation du mot de passe
-        body('password').isLength({ min: 8 }).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe est requis et doit contenir au moins 8 caractères').run(req),
-        // body('password').matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/).withMessage('Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre').run(req),
-
-        // Validation du numéro de téléphone
-        body('phone').isNumeric().isLength({ min: 10 }).withMessage('Le numéro de téléphone est requis et doit être numérique').run(req),
-
-        // Validation de l'adresse
-        body('address').isLength({ min: 4 }).withMessage('L\'adresse est requise et doit avoir au moins 4 caractères').run(req),
-
-        // Validation de postal code
-        body('postalCode').isLength({ min: 4 }).withMessage('Le code postal est requis et doit contenir au moins 4 caractères.').run(req),
-
-        // Validation de province
-        body('province').isLength({ min: 4 }).withMessage('La province est requis et doit contenir au moins 4 caractères.').run(req),
-
-        // Validation de ville
-        body('city').isLength({ min: 4 }).withMessage('La ville est requis et doit contenir au moins 4 caractères.').run(req),
-
-        // Validation de ville
-        body('country').isLength({ min: 4 }).withMessage('Le pays est requis et doit contenir au moins 4 caractères.').run(req),
-
-        // Validation de genre
-        body('gender').isLength({ min: 4 }).withMessage('Le genre est requis et doit contenir au moins 4 caractères.').run(req),
-        // Validation de date
-        //  body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req),
-        // Validación de fecha
-        //  body('birthDay')
-        //     .custom(value => {
-        //         // Intenta crear un objeto Date a partir de la cadena
-        //         const date = new Date(value);
-        //         // Verifica si el objeto Date es válido
-        //         if (isNaN(date.getTime())) {
-        //             // Si no es válido, devuelve un mensaje de error
-        //             throw new Error('La date est requise et doit être du type date');
-        //         }
-        //         // Si es válido, devuelve true para indicar que la validación pasó
-        //         return true;
-        //     })
-        //     .run(req),
-        body('birthDay').notEmpty().withMessage('La date est requise et doit être du type date').run(req),
-    ]);
-} */
 
 async function validateRegisterUserFields(req) {
     await Promise.all([
@@ -256,73 +200,6 @@ async function validateLicenseData(req) {
         body('country').optional().isString().isLength({ min: 4 }).withMessage('Le pays doit contenir au moins 4 caractères').run(req)
     ]);
 }
-
-/*async function RegisterUser(req, res) {
-    try {
-        // Extraction des données de la requête
-        const { email, name, lastName, password, phone, address, postalCode,
-            province, city, country, gender, birthDay, companyName
-        } = req.body;
-        const emailLowerCase = email.toLowerCase();
-
-        // Validation des champs de la requête
-        await validateRegisterUserFields(req);
-        const validationErrors = validationResult(req);
-        if (!validationErrors.isEmpty()) {
-            return res.status(400).json({ errors: validationErrors.array() });
-        }
-
-        // Vérification si l'utilisateur existe déjà dans Onfido
-        let userExisting = await userCollection.findOne({ email: emailLowerCase });
-        if (userExisting) {
-            return res.status(400).json({ msg: "Cet utilisateur existe déjà" });
-        }
-
-        // Hachage du mot de passe
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Création de l'objet User
-        const newUser = new User({
-            email: emailLowerCase,
-            name: name,
-            lastName: lastName,
-            password: hashedPassword,
-            phone: phone,
-            address: address,
-            postalCode: postalCode,
-            companyName: companyName,
-            province: province,
-            city: city,
-            country: country,
-            gender: gender,
-            birthDay: birthDay,
-            typeAccount: "free",
-        });
-
-        // Création de l'applicant dans Onfido
-        const applicantResult = await createApplicant(newUser);
-
-        // Vérification du résultat de la création de l'applicant dans Onfido
-        if (!applicantResult.success) {
-             return res.status(400).json({ msg: applicantResult.msg });
-         }
-
-        // Sauvegarde du nouvel utilisateur dans la collection 'users'
-        const insertResult = await userCollection.insertOne(newUser);
-
-        if (!insertResult.acknowledged) {
-            return res.status(500).json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
-        }
-
-        res.status(201).json({ msg: "Utilisateur créé avec succès", newUser: newUser._id });
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
-    }
-}
-*/
 
 async function RegisterUser(req, res) {
     try {
@@ -529,40 +406,6 @@ async function RefresLogin(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
-
-/*async function GetUserById(req, res) {
-
-    try {
-        const userId = req.params.id;
-
-        // Récupérer le jeton du header de la requête
-        const token = req.headers.authorization?.replace("Bearer ", "");
-
-        // Vérifier si le jeton est présent
-        if (!token) {
-            console.error('Le Token n\'est pas fourni');
-            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-        }
-        // Décoder le token pour obtenir les informations de l'utilisateur
-        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
-        if (!myToken) {
-            return res.status(400).json({ msg: "Token invalide" });
-        }
-
-        const userProfile = await userCollection.findOne({ _id: userId });
-
-        if (!userProfile) {
-            return res.status(404).json({ msg: "Profil introuvable" });
-        }
-
-        res.status(200).json({ user: userProfile });
-
-    } catch (error) {
-        // Gérer les erreurs et renvoyer une réponse d'erreur du serveur
-        console.error(`Erreur lors de la déconnexion : ${error.message}`);
-        return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
-    }
-}*/
 
 async function GetUserById(req, res) {
     try {
@@ -985,250 +828,6 @@ async function UploadDocument(req, res) {
     }
 }
 
-// async function UploadDriverLicense(req, res) {
-//     try {
-
-//         // const documentFile = req.files.document;
-
-//         // Récupérer le jeton du header de la requête
-//         const token = req.headers.authorization?.replace("Bearer ", "");
-//         // Vérifier si le jeton est présent
-//         if (!token) {
-//             console.error('Le Token n\'est pas fourni');
-//             deleteUploadedFiles(req.files);
-//             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-//         }
-//         // Décoder le token pour obtenir les informations de l'utilisateur
-//         const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
-//         if (!myToken) {
-//             deleteUploadedFiles(req.files);
-//             return res.status(400).json({ msg: "Token invalide" });
-//         }
-
-//         // Validation des champs de la requête
-//         await validateLicenseData(req);
-//         const validationErrors = validationResult(req);
-
-//         if (!validationErrors.isEmpty()) {
-//             deleteUploadedFiles(req.files);
-//             return res.status(400).json({ errors: validationErrors.array() });
-//         }
-
-
-
-//         let myUser = await userCollection.findOne({ _id: myToken.user_id });
-
-
-//         if (!myUser) {
-//             deleteUploadedFiles(req.files);
-//             return res.status(402).json({ msg: "Cet utilisateur n'existe pas" });
-//         }
-
-//         // restriction, do not allow double licenses
-//         if (myUser.driverLicense != 'pending') {
-//             deleteUploadedFiles(req.files);
-//             return res.status(402).json({ msg: "l'utilisateur possède déjà un permis de conduire enregistré" });
-//         }
-
-
-//         if (myUser.name === 'pending' || myUser.lastName === 'pending') {
-//             deleteUploadedFiles(req.files);
-//             return res.status(402).json({ msg: "Veuillez saisir d'abord le nom et le prénom de l'utilisateur" });
-//         }
-
-
-//         // if (!documentFile) {
-//         //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
-//         // }
-
-//         if (!req.files) {
-//             return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
-//         }
-
-
-
-//         const { number, name, lastName, birthdate, address, appartment, province,
-//             postalCode, licenseClass, sex, rest, mention, referenceNumber, height,
-//             weight, issued, expires, city, country
-//         } = req.body;
-
-
-//         let licenseExisting = await drivingLicensesCollection.findOne({ number: number });
-
-//         if (licenseExisting) {
-//             return res.status(400).json({ msg: "La licence existe déjà" });
-//         }
-
-//         let photoPath;
-
-//         if (req.files && Object.keys(req.files).length > 0) {
-
-
-//             // Vérifier que les fichiers respectent la taille maximale autorisée.
-//             const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
-
-//             // Vérifier que le nombre de fichiers ne dépasse pas la limite autorisée.
-//             const maxFileQuantity = 1; // Définit le nombre maximum de fichiers autorisés.
-//             const { isValid: isQuantityValid } = checkFileQuantity(req.files, maxFileQuantity);
-
-//             // Si la taille des fichiers n'est pas valide
-//             if (!isSizeValid) {
-//                 // Supprimer tous les fichiers téléchargés dans le système de fichiers
-//                 deleteUploadedFiles(req.files);
-//                 return res.status(400).json({ msg: `La taille du fichier ${oversizedFileName} doit être inférieure à 500KB` });
-//             }
-
-//             // Si la quantité de fichiers n'est pas valide
-//             if (!isQuantityValid) {
-//                 // Supprimer tous les fichiers téléchargés dans le système de fichiers
-//                 deleteUploadedFiles(req.files);
-//                 return res.status(400).json({ msg: `Le nombre de fichiers ne peut pas dépasser ${maxFileQuantity}` });
-//             }
-
-//             photoPath = getFileName(req.files[`photo`]);
-
-
-
-//         }
-
-//         let formattedBirthdateDate;
-
-//         if (birthdate) {
-//             // const birthdateDate = new Date(birthdate);
-//             // formattedBirthdateDate = birthdateDate.toISOString().split('T')[0];
-//             const issuedArray = birthdate.split('-');
-//             formattedBirthdateDate = `${issuedArray[0]}`;
-//         }
-
-//         // const issuedDate = new Date(issued);
-//         // const formattedIssuedDate = issuedDate.toISOString().split('T')[0];
-
-//         // const expiresDate = new Date(expires);
-//         // const formattedExpiresDate = expiresDate.toISOString().split('T')[0];
-
-//         const issuedArray = issued.split('-');
-//         const formattedIssuedDate = `${issuedArray[0]}`;
-
-//         const expiresArray = expires.split('-');
-//         const formattedExpiresDate = `${expiresArray[0]}`;
-
-//         //.toLowerCase(),
-//         // const newDriverLicense = new DriverLicense({
-//         //     user: myToken.user_id,
-//         //     number: number,
-//         //     name: name,
-//         //     lastName: lastName,
-//         //     birthdate: formattedBirthdateDate,
-//         //     address: address,
-//         //     appartment: appartment,
-//         //     province: province,
-//         //     postalCode: postalCode,
-//         //     licenseClass: licenseClass,
-//         //     sex: sex,
-//         //     rest: rest,
-//         //     mention: mention,
-//         //     height: height,
-//         //     weight: weight,
-//         //     issued: formattedIssuedDate,
-//         //     expires: formattedExpiresDate,
-//         //     city: city,
-//         //     country: country,
-//         //     photo: photoPath,
-//         // });
-
-//         const newDriverLicense = new DriverLicense({
-//             user: myToken.user_id,
-//             number: number,
-//             name: myUser.name,
-//             lastName: myUser.lastName,
-//             birthdate: birthdate ? formattedBirthdateDate : myUser.birthdate,
-//             address: address,
-//             appartment: appartment,
-//             province: province,
-//             postalCode: postalCode,
-//             licenseClass: licenseClass,
-//             sex: sex.toUpperCase(),
-//             rest: rest,
-//             mention: mention,
-//             height: height,
-//             weight: weight,
-//             issued: formattedIssuedDate,
-//             expires: formattedExpiresDate,
-//             city: city,
-//             country: country,
-//             photo: photoPath,
-//         });
-
-//         const [updateUser, insertResult] = await Promise.all([
-//             userCollection.updateOne(
-//                 { _id: myToken.user_id },
-//                 { $set: { driverLicense: newDriverLicense._id } }
-//             ),
-//             drivingLicensesCollection.insertOne(newDriverLicense)
-//         ]);
-
-//         if (!insertResult || !updateUser) {
-//             return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
-//         }
-
-//         // // Création de l'applicant dans Onfido
-//         // const applicantResult = await createApplicant(myUser, newDriverLicense);
-//         // console.log(applicantResult);
-
-//         // // Vérification du résultat de la création de l'applicant dans Onfido
-//         // if (!applicantResult.success) {
-//         //     return res.status(400).json({ msg: applicantResult.msg });
-//         // }
-
-//         // // veriication du permis de conduire 
-//         // applicantResult.applicantId
-//         // const fronDriverLicensecheck = await verifyDrivingLicense(
-//         //     myUser,
-//         //     newDriverLicense,
-//         //     applicantResult.applicantId,
-//         //     "front"
-//         // );
-
-//         // const backDriverLicense = await verifyDrivingLicense(
-//         //     myUser,
-//         //     newDriverLicense,
-//         //     applicantResult.applicantId,
-//         //     "back"
-//         // );
-
-//         // const userSelfie = await verifyDrivingLicense(
-//         //     myUser,
-//         //     newDriverLicense,
-//         //     applicantResult.applicantId,
-//         //     "selfie"
-//         // );
-
-//         // if (!fronDriverLicensecheck.success) {
-//         //     return res.status(400).json({ msg: fronDriverLicensecheck.msg })
-//         // }
-
-//         // if (!fronDriverLicensecheck.success) {
-//         //     return res.status(400).json({
-//         //         frontCheck: fronDriverLicensecheck.msg,
-//         //         backCheck: backDriverLicense.msg,
-//         //         selfieCheck: userSelfie.msg,
-//         //     });
-//         // }
-
-//         res.status(201).json({
-//             msg: 'Nouvelle licence ajoutée avec succès',
-//             // applicandID: applicantResult.applicantId,
-//             // fronDriverLicensecheck: fronDriverLicensecheck,
-//             // userSelfieCheck: userSelfie
-//         });
-
-
-//     } catch (error) {
-//         console.error(`UploadDriverLicense: Erreur interne du serveur : ${error.message}, ${error}`);
-//         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
-//     }
-// }
-
 async function generateQRCode(req, res) {
     try {
 
@@ -1245,29 +844,100 @@ async function generateQRCode(req, res) {
         }
 
         const userId = myToken.user_id;
+        const { vehicleId } = req.body;
+
+        if(!vehicleId){
+            return res.status(400).json({ msg: "Veuillez indiquer un véhicule." });
+        }
+
         //Check if user ID has Driver license
         const user = await userCollection.findOne({ _id: userId });
+        const vehicle = await vehicleCollection.findOne({ _id: vehicleId });
 
-        if(!user || user.driverLicense === 'pending'){
+        if (!user || user.driverLicense === 'pending') {
             return res.status(400).json({ msg: "Veuillez mettre à jour les détails de votre permis de conduire." });
         }
 
-        const myIdhashed = encryptDataAES(userId);
+        if (!vehicle || !user.vehicles.includes(vehicleId)) {
+            return res.status(400).json({ msg: "Vérifier les véhicules de l'utilisateur." });
+        }
+
+        const concatenated_id = `uid:${userId}_vid:${vehicleId}`;
+
+        // const myIdhashed = encryptDataAES(userId);
+        const myIdhashed = encryptDataAES(concatenated_id);
 
         const qrData = {
             id: myIdhashed.ed,
             iv: myIdhashed.iv,
-        }; 
+        };
 
-        console.log(qrData);
+        const userName = user.name;
+        const userLastNAme = user.lastName;
+
+        // Obtener las dos primeras letras de cada cadena
+        const initials = `${replaceSpecialCharacters(userName.slice(0, 2))}${replaceSpecialCharacters(userLastNAme.slice(0, 2))}`;
+
+        const alphaNum = generateAlphanumericCode(4);
+
+        const AlphNumCode = `${initials}${alphaNum}`;
+
+
+        await userCollection.updateOne(
+            { _id: userId },
+            {
+                $set: {
+                    alphaNumCode: AlphNumCode,
+                    findMyVehicle: vehicleId
+                }
+            }
+        );
+
+        // my code 
+        
+        // console.log(qrData);
+        
+        // // Obtener id e iv
+        // const id = myIdhashed.ed;
+        // const iv = myIdhashed.iv;
+        
+        // // Generar el código corto
+        // const codigoCortoGenerado = generarCodigoCorto(id, iv);
+        // console.log("Código corto generado:", codigoCortoGenerado);
+
+        // // Decodificar el código corto para obtener id e iv
+        // const valoresOriginales = decodificarCodigoCorto(codigoCortoGenerado);
+        // console.log("Valores originales obtenidos:", valoresOriginales);
+
+        // // Générer un code QR
+        // const qrImage = await qr.toDataURL(JSON.stringify(qrData));
+
+        // // Renvoyer le code QR en tant que réponse avec le type de contenu approprié
+        // res.setHeader('Content-Type', 'image/png');
+        // // RESPONSE
+        // res.send(Buffer.from(qrImage.split(',')[1], 'base64'));
+
+        // Générer un code alphanumérique
+        // const alphanumericCode = generateAlphanumericCode(qrData);
 
         // Générer un code QR
+        // const qrImageBuffer = await qr.toBuffer(JSON.stringify(qrData));
+        // const cleanQRBase64 = qrImageBuffer.toString('base64');
+
+
+        // /** BASE 64 */
         const qrImage = await qr.toDataURL(JSON.stringify(qrData));
 
+        // // Retourne le code QR en base64 et alphanumérique comme réponse
+        // return res.status(200).json({ qrImage});
+        // return res.status(200).json({ cleanQRBase64 });
+
+
+        /* LAMINE */
         // Renvoyer le code QR en tant que réponse avec le type de contenu approprié
-        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Type', 'text/plain');
         // RESPONSE
-        res.send(Buffer.from(qrImage.split(',')[1], 'base64'));
+        res.status(200).json({qrImage,AlphNumCode});
 
 
     } catch (error) {
@@ -1276,31 +946,98 @@ async function generateQRCode(req, res) {
     }
 }
 
+
+function replaceSpecialCharacters(string) {
+    return string.replace(/[áÁéÉíÍóÓúÚüÜ']/g, 'Z');
+}
+
+
+function generateAlphanumericCode(size) {
+    const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    let result = '';
+
+    // Obtain four random characters without repetition
+    for (let i = 0; i < size; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        result += characters.charAt(randomIndex);
+    }
+
+    return result;
+}
+
+
+function extractIds(dataString) {
+    // Expression régulière pour rechercher les valeurs de userId et vehicleId
+    const regex = /uid:([a-zA-Z0-9]+)_vid:([a-zA-Z0-9]+)/;
+    // Exécute l'expression régulière sur la chaîne fournie
+    const matches = dataString.match(regex);
+    // Vérifier si des correspondances ont été trouvées
+    if (matches && matches.length === 3) {
+        const userId = matches[1];
+        const vehicleId = matches[2];
+        return { userId, vehicleId };
+    } else {
+        throw new Error("Les identifiants n'ont pas pu être extraits de la chaîne fournie.");
+    }
+}
+
 async function readAndSendUserInfo(req, res) {
     try {
 
-        const { id, iv } = req.body;
+        const { id, iv, alphaNum } = req.body;
         const decryptedDataId = decryptDataAES(id, iv);
 
-        //Vérifier si l'id et l'iv sont présents dans le corps. 
-        if (!id || !iv) {
-            return res.status(400).json({ msg: "Veuillez compléter tous les champs pertinents" });
+        if (alphaNum) {
+            // userCollection
+            // KyMZXoQ7
+            const user = await userCollection.findOne({ alphaNumCode: alphaNum });
+
+            if (!user) {
+                return res.status(404).json({ msg: "Le code alphanumérique ne fonctionne pas" });
+            }
+
+            if (user.alphaNumCode == 'non' || user.findMyVehicle == 'non') {
+                return res.status(404).json({ msg: "Demander un nouveau code alphanumérique" });
+            }
+
+            let { response, statusCode, msg } = await getUserInfo(user._id, user.findMyVehicle);
+
+            if (!response) {
+                return res.status(statusCode).json({ msg });
+            }
+
+            await userCollection.updateOne(
+                { _id: user._id },
+                {
+                    $set: {
+                        alphaNumCode: "non",
+                        findMyVehicle: "non"
+                    }
+                }
+            );
+
+            // Renvoi des informations sur l'utilisateur en tant que réponse
+            return res.status(statusCode).json({ msg, response });
+
+
+        } else {
+
+            //Vérifier si l'id et l'iv sont présents dans le corps. 
+            if (!id || !iv) {
+                return res.status(400).json({ msg: "Veuillez compléter tous les champs pertinents" });
+            }
+
+            const { userId, vehicleId } = extractIds(decryptedDataId);
+
+            let { response, statusCode, msg } = await getUserInfo(userId, vehicleId);
+
+            if (!response) {
+                return res.status(statusCode).json({ msg });
+            }
+            // Renvoi des informations sur l'utilisateur en tant que réponse
+            return res.status(statusCode).json({ msg, response });
         }
 
-        // Recherche de l'utilisateur dans la base de données à l'aide de l'ID de l'utilisateur
-        const user = await userCollection.findOne({ _id: decryptedDataId });
-        const driverLicense = await drivingLicensesCollection.findOne({ user: user._id });
-
-        // Vérifier si l'utilisateur a été trouvé
-        if (!user) {
-            return res.status(404).json({ msg: "Utilisateur non trouvé" });
-        }
-        if (!driverLicense) {
-            return res.status(404).json({ msg: "Licensia introuvable" });
-        }
-
-        // // Renvoi des informations sur l'utilisateur en tant que réponse
-        return res.status(200).json({ user: user, driverL: driverLicense });
 
     } catch (error) {
         console.error(error);
@@ -1308,91 +1045,94 @@ async function readAndSendUserInfo(req, res) {
     }
 }
 
+
+async function getUserInfo(userId, vehicleId) {
+    try {
+        const [user, vehicle, insurance, driverLicense] = await Promise.all([
+            userCollection.findOne({ _id: userId }),
+            vehicleCollection.findOne({ _id: vehicleId }),
+            insuranceCollection.findOne({ vehicle: vehicleId }),
+            drivingLicensesCollection.findOne({ user: userId })
+        ]);
+
+        let statusCode = 200;
+        let msg = "Success";
+        let response = null;
+
+        if (!user) {
+            statusCode = 404;
+            msg = "Utilisateur non trouvé";
+        } else if (!user.vehicles.includes(vehicleId)) {
+            statusCode = 404;
+            msg = "L'utilisateur n'enregistre pas le véhicule envoyé";
+        } else if (!vehicle) {
+            statusCode = 404;
+            msg = "Véhicule non trouvé";
+        } else if (!driverLicense) {
+            statusCode = 404;
+            msg = "Permis de conduire introuvable";
+        } else {
+            let vehicleOwner = (vehicle.owner !== user._id) ? await userCollection.findOne({ _id: vehicle.owner }) : user;
+
+            if (!insurance) {
+                statusCode = 404;
+                msg = "Assurance non trouvée";
+            }
+
+            response = {
+                owner: {
+                    name: vehicleOwner.name,
+                    lastName: vehicleOwner.lastName,
+                    email: vehicleOwner.email,
+                    phone: vehicleOwner.phone,
+                    address: vehicleOwner.address,
+                    postalCode: vehicleOwner.postalCode,
+                    city: vehicleOwner.city,
+                    province: vehicleOwner.province,
+                    country: vehicleOwner.country
+                },
+                vehicle,
+                insurance,
+                driverLicense
+            };
+        }
+
+        return { response, statusCode, msg };
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 async function getMyAutoFullInfo(req, res) {
     try {
-        // Récupérer le jeton du header de la requête
         const token = req.headers.authorization?.replace("Bearer ", "");
 
-        // Vérifier si le jeton est présent
         if (!token) {
-            console.error('Le Token n\'est pas fourni');
-            deleteUploadedFiles(req.files);
+            console.error("Le Token n'est pas fourni");
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
         }
 
-        // Décoder le token pour obtenir les informations de l'utilisateur
-        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        const myToken = jwt.decoded(token);
         if (!myToken) {
-            deleteUploadedFiles(req.files);
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        // const { vehicleId } = req.body;
         const { vehicleId } = req.params;
 
-        const userPromise = userCollection.findOne({ _id: myToken.user_id });
-        const vehiclePromise = vehicleCollection.findOne({ _id: vehicleId });
-        const insurancePromise = insuranceCollection.findOne({ vehicle: vehicleId });
-        const driverLicensePromise = drivingLicensesCollection.findOne({ user: myToken.user_id });
+        const { response, statusCode, msg } = await getUserInfo(myToken.user_id, vehicleId);
 
-        const [user, vehicle, insurance, driverLicense] = await Promise.all([userPromise, vehiclePromise, insurancePromise, driverLicensePromise]);
-
-        let vehicleOwner;
-        let response;
-
-        if (!user) {
-            return res.status(404).json({ msg: "User not found" });
+        if (!response) {
+            return res.status(statusCode).json({ msg });
         }
 
-        if (!user.vehicles.includes(vehicleId)) {
-            return res.status(404).json({ msg: "The user does not register the sent vehicle" });
-        }
-
-        if (!vehicle) {
-            return res.status(404).json({ msg: "Vehicle not found" });
-        }
-
-        if(!driverLicense){
-            return res.status(404).json({ msg: "Driver license not found" });
-        }
-
-        if (vehicle.owner != user._id) {
-
-            const userPromise = userCollection.findOne({ _id: vehicle.owner });
-            const [userOwner] = await Promise.all([userPromise]);
-            vehicleOwner = userOwner;
-
-        } else {
-            vehicleOwner = user;
-        }
-
-        if (!insurance) {
-            return res.status(404).json({ msg: "Insurance not found" });
-        }
-
-        response ={
-            owner:{
-                name: vehicleOwner.name,
-                lastName: vehicleOwner.lastName,
-                email: vehicleOwner.email,
-                phone: vehicleOwner.phone,
-                address: vehicleOwner.address,
-                postalCode: vehicleOwner.postalCode,
-                city: vehicleOwner.city,
-                province: vehicleOwner.province,
-                country: vehicleOwner.country
-            },
-            vehicle,
-            insurance,
-            driverLicense
-        }
-        
         return res.status(200).json(response);
     } catch (error) {
         console.error(error);
         return res.status(500).json({ msg: "Erreur de serveur interne", error: error });
     }
 }
+
 
 async function encryptMyData (req,res){
 
