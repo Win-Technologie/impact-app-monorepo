@@ -14,11 +14,13 @@ const cors = require('cors');
 const cron = require('node-cron');
 const { connectToMongo } = require('./mongoConnection');
 const { removeRevokedTokens } = require('./utils/jwt');
+const { sendExpirationImmatriculationNotifications } = require("./utils/nodemailer");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 // TIMER
 const MYCRONTIMER = process.env.CRONTIMER_EVERYHOUR;
+const CHECKEXPIRATIONTIMER = process.env.CRONTIMER_EVERYMINUTE;
 // Routes
 const userRoutes = require('./routes/user/user.routes');
 const vehicleRoutes = require('./routes/vehicle/vehicle.routes');
@@ -89,6 +91,42 @@ cron.schedule(`${MYCRONTIMER}`, async () => {
     scheduled: true,
     timezone: "America/New_York" // Régler le fuseau horaire en fonction de votre lieu de résidence
 });
+
+// // Programar la tarea cron para enviar notificaciones de expiración
+// cron.schedule(CHECKEXPIRATIONTIMER, async () => {
+//     console.log("Exécution de la révision des certificats d'immatriculation proches de l'expiration...");
+//     try {
+
+//         const notificationsSent = await sendExpirationImmatriculationNotifications();
+//         console.log(`${notificationsSent} les notifications envoyées.`);
+
+//     } catch (error) {
+//         console.error('Error al ejecutar la tarea cron de envío de notificaciones de expiración:', error);
+//     }
+// }, {
+//     scheduled: true,
+//     timezone: "America/New_York" // Ajustar el huso horario según tu ubicación
+// });
+
+// Programar la tarea cron para enviar notificaciones de expiración
+cron.schedule(CHECKEXPIRATIONTIMER, async () => {
+    console.log("Exécution de la révision des certificats d'immatriculation proches de l'expiration...");
+    try {
+
+        const { tenDaysNotificationSent, FiveDaysNotificationSent, expiredNotificationSent } = await sendExpirationImmatriculationNotifications();
+        // console.log(`${tenDaysNotificationSent} les notifications 10 jeurs envoyées.`);
+        // console.log(`${FiveDaysNotificationSent} les notifications 5 jeurs envoyées.`);
+        // console.log(`${currentDateNotificationSent} les notifications expires  envoyées.`);
+        //My code
+
+    } catch (error) {
+        console.error('Error al ejecutar la tarea cron de envío de notificaciones de expiración:', error);
+    }
+}, {
+    scheduled: true,
+    timezone: "America/New_York" // Ajustar el huso horario según tu ubicación
+});
+
 
 
 // Start the server

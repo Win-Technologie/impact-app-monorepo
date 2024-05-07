@@ -894,7 +894,7 @@ async function generateQRCode(req, res) {
         );
 
         // my code 
-        
+
         // console.log(qrData);
         
         // // Obtener id e iv
@@ -964,7 +964,6 @@ function generateAlphanumericCode(size) {
 
     return result;
 }
-
 
 function extractIds(dataString) {
     // Expression régulière pour rechercher les valeurs de userId et vehicleId
@@ -1044,7 +1043,6 @@ async function readAndSendUserInfo(req, res) {
         return res.status(500).json({ msg: "Erreur de serveur interne", error: error });
     }
 }
-
 
 async function getUserInfo(userId, vehicleId) {
     try {
