@@ -20,7 +20,8 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 // TIMER
 const MYCRONTIMER = process.env.CRONTIMER_EVERYHOUR;
-const CHECKEXPIRATIONTIMER = process.env.CRONTIMER_DAILY1AM;
+// const CHECKEXPIRATIONTIMER = process.env.CRONTIMER_DAILY1AM;
+const CHECKEXPIRATIONTIMER = process.env.CRONTIMER_EVERYMINUTE;
 // Routes
 const userRoutes = require('./routes/user/user.routes');
 const vehicleRoutes = require('./routes/vehicle/vehicle.routes');

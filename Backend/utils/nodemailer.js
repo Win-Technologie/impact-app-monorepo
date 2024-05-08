@@ -69,116 +69,134 @@ async function sendExpirationEmail(email, plate) {
     }
 }
 
-
-// Fonction asynchrone pour envoyer des notifications d'expiration d'immatriculation
+/**
+ * Cette fonction envoie des notifications d'expiration d'immatriculation.
+ * Elle récupère la date actuelle, calcule les dates de notification pour les prochains 10 jours,
+ * 5 jours et  le jour précédent.(expired ones), puis envoie les notifications correspondantes.
+ * @returns Un objet contenant le nombre de notifications envoyées pour chaque échéance.
+ */
 async function sendExpirationImmatriculationNotifications() {
     try {
-        // Obtener la fecha actual
+        // Récupérer la date actuelle
         const currentDate = new Date();
-        // Création de la date dans 10 jours à partir de maintenant
-        const tenDaysFromNow = new Date(currentDate.getTime());
-        tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
-        // Réinitialisation des heures, minutes, secondes et millisecondes à 0 pour la date dans 10 jours (YYY-MM-DDT00:00:00.000Z)
-        // tenDaysFromNow.setHours(0, 0, 0, 0);
-        tenDaysFromNow.setUTCHours(0, 0, 0, 0);
-        // Envoi des notifications pour la date dans 10 jours
-        const tenDaysNotificationSent = await automaticNotificationSender(tenDaysFromNow);
-        console.log(`${tenDaysNotificationSent} las notificaciones de 10 días fueron enviadas.`);
+        // Calculer les dates de notification pour les prochains 10 jours, 5 jours et  le jour précédent(expired ones).
+        const notificationDates = [
+            calculateNotificationDate(currentDate, 10),
+            calculateNotificationDate(currentDate, 5),
+            calculateNotificationDate(currentDate, -1)
+        ];
 
-        // Création de la date dans 5 jours à partir de maintenant
-        const fiveDaysFromNow = new Date(currentDate.getTime());
-        fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
-        // Réinitialisation des heures, minutes, secondes et millisecondes à 0 pour la date dans 5 jours
-        // fiveDaysFromNow.setHours(0, 0, 0, 0);
-        fiveDaysFromNow.setUTCHours(0, 0, 0, 0);
-        // Envoi des notifications pour la date dans 5 jours
-        const FiveDaysNotificationSent = await automaticNotificationSender(fiveDaysFromNow);
-        console.log(`${FiveDaysNotificationSent} las notificaciones de 5 días fueron enviadas.`);
+        // // Mapper les dates de notification à des promesses d'envoi de notifications
+        const promises = notificationDates.map(async (notificationDate) => {
+            // Récupérer les véhicules à notifier pour la date donnée
+            const vehiclesToNotify = await getVehiclesToNotify(notificationDate);
+            // Vérifier si la date de notification est expirée ou non
+            const isExpired = notificationDate < currentDate;
+            // Traiter les véhicules à notifier et retourner le nombre de notifications envoyées
+            const notificationsSent = await processVehicles(vehiclesToNotify, isExpired);
+            return notificationsSent;
+        });
 
-        // Création de la date d'hier
-        const yesterday = new Date(currentDate.getTime());
-        yesterday.setDate(currentDate.getDate() - 1);
-        // Réinitialisation des heures, minutes, secondes et millisecondes à 0 pour la date d'hier
-        yesterday.setHours(0, 0, 0, 0);
-        // Envoi des notifications pour la date d'hier
-        const expiredNotificationSent = await automaticNotificationSender(yesterday);
-        console.log(`${expiredNotificationSent} las notificaciones de expiración fueron enviadas.`);
+        // Attendre l'exécution de toutes les promesses et obtenir les résultats
+        const results = await Promise.all(promises);
 
+        // Afficher les résultats
+        console.log(`${results[0]} notifications for 10 days were sent.`);
+        console.log(`${results[1]} notifications for 5 days were sent.`);
+        console.log(`${results[2]} expiration notifications were sent.`);
+
+        // Retourner les résultats
+        return {
+            tenDaysNotificationSent: results[0],
+            FiveDaysNotificationSent: results[1],
+            expiredNotificationSent: results[2]
+        };
 
     } catch (error) {
-        console.error(error);
+        console.error('Error executing the cron task to send expiration notifications:', error);
     }
 }
 
-// Fonction asynchrone pour envoyer des notifications automatiques
-async function automaticNotificationSender(notificationDate) {
+/**
+ * Cette fonction récupère les véhicules à notifier pour une date donnée.
+ * Elle vérifie si la date de notification est antérieure à la date actuelle
+ * pour déterminer si les véhicules sont expirés ou non.
+ * @param {Date} notificationDate - La date de notification
+ * @returns Les véhicules à notifier
+ */
+async function getVehiclesToNotify(notificationDate) {
     try {
-
-        // Obtenir la date et l'heure actuelles
+        // Récupérer la date actuelle
         const currentDate = new Date();
-        // Vérifier si la notification est expirée
+        // Vérifier si la date de notification est expirée ou non
         const isExpired = notificationDate < currentDate;
-        let vehiclesToNotify;
+        // console.log(isExpired);
+        // Construire la requête de recherche en fonction de la date de notification
+        const query = isExpired ? { 'immatriculation.dateExpiration': { $lte: notificationDate } } : { 'immatriculation.dateExpiration': notificationDate };
+        // Récupérer les véhicules à notifier
+        const vehiclesToNotify = await vehicleCollection.find(query, {
+            projection: {
+                owner: 1,
+                plate: 1,
+                immatriculation: 1,
+            },
+        }).toArray();
+    
+        return vehiclesToNotify;
+    } catch (error) {
+        console.error('Error fetching vehicles to notify:', error);
+        throw error;
+    }
+}
 
-        // Récupérer les véhicules à notifier en fonction de la date de notification
-        if (isExpired) {
-            // Rechercher les véhicules dont la date d'expiration est antérieure ou égale à la date de notification
-            vehiclesToNotify = await vehicleCollection.find({
-                'immatriculation.dateExpiration': { $lte: notificationDate },
-            }, {
-                // Sélectionner uniquement les champs nécessaires pour la notification
-                projection: {
-                    owner: 1,
-                    plate: 1,
-                    immatriculation: 1,
-                },
-            }).toArray();
 
-        } else {
-            // Rechercher les véhicules dont la date d'expiration correspond à la date de notification
-            vehiclesToNotify = await vehicleCollection.find({
-                'immatriculation.dateExpiration': notificationDate,
-            }, {
-                projection: {
-                    owner: 1,
-                    plate: 1,
-                    immatriculation: 1,
-                },
-            }).toArray();
-        }
-
+/**
+ * Cette fonction traite les véhicules à notifier en envoyant des notifications par email.
+ * Elle détermine le sujet et le contenu du message en fonction de la date d'expiration du véhicule.
+ * @param {Object[]} vehiclesToNotify - Les véhicules à notifier
+ * @param {boolean} isExpired - Indique si la date de notification est expirée
+ * @returns Le nombre de notifications envoyées
+ */
+async function processVehicles(vehiclesToNotify, isExpired) {
+    try {
         let notificationsSent = 0;
-        // Boucle à travers les véhicules à notifier
         for (const vehicle of vehiclesToNotify) {
-            // Récupérer les informations du propriétaire du véhicule
             const owner = await userCollection.findOne({ _id: vehicle.owner });
-            // Vérifier si le propriétaire existe et a un e-mail valide
             if (owner && owner.email) {
-                // Préparer le contenu du courriel
-                let subject = "Votre immatriculation est proche de l'expiration !";
-                let expirationDate = vehicle.immatriculation.dateExpiration;
-                let msg = `Bonjour ${owner.name}, le numéro d'immatriculation de votre véhicule avec la plaque ${vehicle.plate} a une date d'expiration du ${expirationDate} et est sur le point d'expirer. Veuillez prendre les mesures nécessaires.`;
-                // Modifier le sujet et le message si la notification est expirée
-                if (isExpired) {
-                    subject = "Votre immatriculation a expiré ";
-                    expirationDate = vehicle.immatriculation.dateExpiration;
-                    msg = `Bonjour ${owner.name}, le numéro d'immatriculation de votre véhicule avec la plaque ${vehicle.plate} a une date d'expiration du ${expirationDate} a déjà expiré. Veuillez prendre les mesures nécessaires.`;
+                // console.log(owner.name);
+                // Déterminer le sujet et le contenu du message en fonction de la date d'expiration du véhicule
+                const subject = isExpired ? "Your registration has expired" : "Your registration is about to expire!";
+                const expirationDate = vehicle.immatriculation.dateExpiration;
+                const msg = isExpired ? `Hello ${owner.name}, the registration number of your vehicle with the plate ${vehicle.plate} has an expiration date of ${expirationDate} and has already expired. Please take the necessary actions.` :
+                    `Hello ${owner.name}, the registration number of your vehicle with the plate ${vehicle.plate} has an expiration date of ${expirationDate} and is about to expire. Please take the necessary actions.`;
 
-                }
-
-                // Envoyer le courriel de notification
+                // Envoyer la notification par email
                 await sendNotificationMail(owner.email, subject, msg);
-                // Incrémenter le compteur de notifications envoyées
                 notificationsSent++;
             }
         }
-        // Retourner le nombre de notifications envoyées
         return notificationsSent;
-
     } catch (error) {
-        console.error(error);
+        console.error('Error processing vehicles:', error);
+        throw error;
     }
 }
+
+/**
+ * Cette fonction calcule la date de notification en ajoutant un certain nombre de jours à la date actuelle.
+ * Elle réinitialise les heures, les minutes, les secondes et les millisecondes à 0.
+ * @param {Date} currentDate - La date actuelle
+ * @param {number} daysToAdd - Le nombre de jours à ajouter
+ * @returns La date de notification calculée
+ */
+function calculateNotificationDate(currentDate, daysToAdd) {
+    const notificationDate = new Date(currentDate.getTime());
+    notificationDate.setDate(notificationDate.getDate() + daysToAdd);
+    notificationDate.setUTCHours(0, 0, 0, 0);
+    console.log(notificationDate);
+    return notificationDate;
+}
+
 
 module.exports = {
     transporter,

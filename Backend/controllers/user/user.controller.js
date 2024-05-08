@@ -201,6 +201,7 @@ async function validateLicenseData(req) {
     ]);
 }
 
+//CACHE : 
 async function RegisterUser(req, res) {
     try {
         // Extraction des données de la requête
@@ -287,6 +288,7 @@ async function RegisterUser(req, res) {
     }
 }
 
+//CACHE :
 async function Login(req, res) {
     try {
 
@@ -296,9 +298,6 @@ async function Login(req, res) {
         await body('password').notEmpty().withMessage('Le mot de passe est requis').run(req);
         // Vérification des erreurs de validation
         const validationErrors = validationResult(req);
-
-        // const randomCode = generateVerificationCode();
-        // await sendVerificationEmail('nelson.cuervo89@gmail.com', randomCode);
 
         if (!validationErrors.isEmpty()) {
             return res.status(400).json({ errors: validationErrors.array() });
@@ -347,9 +346,9 @@ async function Login(req, res) {
     }
 }
 
+//CACHE:
 async function Logout(req, res) {
 
-    // res.status(200).json({ msg: "hello from logout" });
     try {
         // Récupérer le jeton du header de la requête
         const token = req.headers.authorization?.replace("Bearer ", "");
@@ -365,8 +364,7 @@ async function Logout(req, res) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        // const userEmail = myToken.user_email; // Assurez-vous que le token contient bien l'email
-        // Révoquer le jeton
+        // Révoquer le token
         jwt.revokeToken(token);
 
         // Envoyer une réponse réussie en cas de déconnexion réussie
@@ -406,7 +404,7 @@ async function RefresLogin(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
-
+// CACHE
 async function GetUserById(req, res) {
     try {
         const userId = req.params.id;
@@ -455,7 +453,7 @@ async function GetUserById(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
-
+// CACHE
 async function RestorePassword(req, res) {
     try {
         const { oldPassword, newPassword } = req.body;
@@ -498,7 +496,7 @@ async function RestorePassword(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
-
+// CACHE
 async function EditUser(req, res) {
     try {
 
@@ -680,7 +678,7 @@ async function SendVerificationCode(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
-
+// CACHE
 async function verifyAndChangePassword(req, res) {
     try {
         const { email, verificationCode, newPassword } = req.body;
@@ -750,7 +748,7 @@ async function verifyAndChangePassword(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
-
+//CACHE
 async function DeleteUser(req, res) {
     try {
 
@@ -946,11 +944,9 @@ async function generateQRCode(req, res) {
     }
 }
 
-
 function replaceSpecialCharacters(string) {
     return string.replace(/[áÁéÉíÍóÓúÚüÜ']/g, 'Z');
 }
-
 
 function generateAlphanumericCode(size) {
     const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -1043,7 +1039,7 @@ async function readAndSendUserInfo(req, res) {
         return res.status(500).json({ msg: "Erreur de serveur interne", error: error });
     }
 }
-
+// CACHE
 async function getUserInfo(userId, vehicleId) {
     try {
         const [user, vehicle, insurance, driverLicense] = await Promise.all([
@@ -1101,7 +1097,7 @@ async function getUserInfo(userId, vehicleId) {
         throw error;
     }
 }
-
+// CACHE
 async function getMyAutoFullInfo(req, res) {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");
