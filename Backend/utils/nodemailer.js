@@ -127,25 +127,32 @@ async function sendExpirationImmatriculationNotifications() {
 
 
 // Fonction asynchrone pour envoyer des notifications d'expiration d'immatriculation
+// Función asincrónica para enviar notificaciones de expiración de inmatriculación
 async function sendExpirationImmatriculationNotifications() {
     try {
         // Obtener la fecha actual
         const currentDate = new Date();
 
-        const tenDaysFromNow = new Date();
+        const tenDaysFromNow = new Date(currentDate.getTime());
         tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
-        const tenDaysNotificationSent = await automaticNotificationSender(formatDate(tenDaysFromNow)); // Formatear la fecha antes de pasarla
-        console.log(formatDate(tenDaysFromNow));
+        tenDaysFromNow.setHours(0, 0, 0, 0);
+        const tenDaysFormatted = tenDaysFromNow.toLocaleString('en-US', { timeZone: 'UTC', hour12: false });
+        
+        const tenDaysNotificationSent = await automaticNotificationSender(tenDaysFormatted);
         console.log(`${tenDaysNotificationSent} las notificaciones de 10 días fueron enviadas.`);
 
-        const fiveDaysFromNow = new Date();
+        const fiveDaysFromNow = new Date(currentDate.getTime());
         fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
-        const FiveDaysNotificationSent = await automaticNotificationSender(formatDate(fiveDaysFromNow)); // Formatear la fecha antes de pasarla
+        fiveDaysFromNow.setHours(0, 0, 0, 0);
+        const fiveDaysFormatted = fiveDaysFromNow.toLocaleString('en-US', { timeZone: 'UTC', hour12: false });
+
+        const FiveDaysNotificationSent = await automaticNotificationSender(fiveDaysFormatted);
         console.log(`${FiveDaysNotificationSent} las notificaciones de 5 días fueron enviadas.`);
 
-        const yesterday = new Date(currentDate);
+        const yesterday = new Date(currentDate.getTime());
         yesterday.setDate(currentDate.getDate() - 1);
-        const expiredNotificationSent = await automaticNotificationSender(formatDate(yesterday)); // Formatear la fecha antes de pasarla
+        yesterday.setHours(0, 0, 0, 0);
+        const expiredNotificationSent = await automaticNotificationSender(yesterday);
         console.log(`${expiredNotificationSent} las notificaciones de expiración fueron enviadas.`);
 
         return { tenDaysNotificationSent, FiveDaysNotificationSent, expiredNotificationSent };
@@ -155,50 +162,62 @@ async function sendExpirationImmatriculationNotifications() {
     }
 }
 
-// Función para formatear la fecha al formato YYYY-MM-DD
-function formatDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-
+// Función asincrónica para enviar notificaciones automáticas
 async function automaticNotificationSender(notificationDate) {
     try {
-        const currentDate = new Date();
 
-        // console.log(notificationDate.toISOString());
+        const currentDate = new Date(); // Obtener la fecha actual
+        const isExpired = notificationDate < currentDate;
+        let vehiclesToNotify;
 
-        const vehiclesToNotify = await vehicleCollection.find({
-            // 'immatriculation.dateExpiration': notificationDate.toISOString(),
-            'immatriculation.dateExpiration': notificationDate,
-        }, {
-            projection: {
-                owner: 1,
-                plate: 1,
-                immatriculation: 1,
-            },
-        }).toArray();
+        console.log("===>>> notificationDate : ",notificationDate);
 
-        console.log(vehiclesToNotify);
+        if (isExpired) {
+             vehiclesToNotify = await vehicleCollection.find({
+                'immatriculation.dateExpiration': { $lte: notificationDate }, // Fecha de expiración menor o igual a la fecha de notificación
+            }, {
+                projection: {
+                    owner: 1,
+                    plate: 1,
+                    immatriculation: 1,
+                },
+            }).toArray();
+
+        } else {
+            console.log("From notifications beyond actual date");
+             vehiclesToNotify = await vehicleCollection.find({
+                'immatriculation.dateExpiration': notificationDate,
+            }, {
+                projection: {
+                    owner: 1,
+                    plate: 1,
+                    immatriculation: 1,
+                },
+            }).toArray();
+        }
+
+        // console.log(vehiclesToNotify);
 
         let notificationsSent = 0;
 
         for (const vehicle of vehiclesToNotify) {
             const owner = await userCollection.findOne({ _id: vehicle.owner });
             if (owner && owner.email) {
-                let subject = "Votre immatriculation est proche de l'expiration !";
-                let expirationDate = vehicle.immatriculation.dateExpiration;
-                let msg = `Bonjour ${owner.name}, le numéro d'immatriculation de votre véhicule avec la plaque ${vehicle.plate} a une date d'expiration du ${expirationDate} et est sur le point d'expirer. Veuillez prendre les mesures nécessaires.`;
+                // // Preparar el correo electrónico
+                // let subject = "Votre immatriculation est proche de l'expiration !";
+                // let expirationDate = vehicle.immatriculation.dateExpiration;
+                // let msg = `Bonjour ${owner.name}, le numéro d'immatriculation de votre véhicule avec la plaque ${vehicle.plate} a une date d'expiration du ${expirationDate} et est sur le point d'expirer. Veuillez prendre les mesures nécessaires.`;
 
-                if (notificationDate < currentDate) {
-                    subject = "Votre immatriculation a expiré ";
-                    expirationDate = vehicle.immatriculation.dateExpiration;
-                    msg = `Bonjour ${owner.name}, le numéro d'immatriculation de votre véhicule avec la plaque ${vehicle.plate} a une date d'expiration du ${expirationDate} a déjà expiré. Veuillez prendre les mesures nécessaires.`;
-                }
+                // if (isExpired) {
+                //     subject = "Votre immatriculation a expiré ";
+                //     expirationDate = vehicle.immatriculation.dateExpiration;
+                //     msg = `Bonjour ${owner.name}, le numéro d'immatriculation de votre véhicule avec la plaque ${vehicle.plate} a une date d'expiration du ${expirationDate} a déjà expiré. Veuillez prendre les mesures nécessaires.`;
 
-                await sendNotificationMail(owner.email, subject, msg);
+                // }
+
+                // // Enviar el correo electrónico
+                // await sendNotificationMail(owner.email, subject, msg);
+                
                 notificationsSent++;
             }
         }
