@@ -136,17 +136,14 @@ async function sendExpirationImmatriculationNotifications() {
         const tenDaysFromNow = new Date(currentDate.getTime());
         tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
         tenDaysFromNow.setHours(0, 0, 0, 0);
-        const tenDaysFormatted = tenDaysFromNow.toLocaleString('en-US', { timeZone: 'UTC', hour12: false });
         
-        const tenDaysNotificationSent = await automaticNotificationSender(tenDaysFormatted);
+        const tenDaysNotificationSent = await automaticNotificationSender(tenDaysFromNow);
         console.log(`${tenDaysNotificationSent} las notificaciones de 10 días fueron enviadas.`);
 
         const fiveDaysFromNow = new Date(currentDate.getTime());
         fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
         fiveDaysFromNow.setHours(0, 0, 0, 0);
-        const fiveDaysFormatted = fiveDaysFromNow.toLocaleString('en-US', { timeZone: 'UTC', hour12: false });
-
-        const FiveDaysNotificationSent = await automaticNotificationSender(fiveDaysFormatted);
+        const FiveDaysNotificationSent = await automaticNotificationSender(fiveDaysFromNow);
         console.log(`${FiveDaysNotificationSent} las notificaciones de 5 días fueron enviadas.`);
 
         const yesterday = new Date(currentDate.getTime());
