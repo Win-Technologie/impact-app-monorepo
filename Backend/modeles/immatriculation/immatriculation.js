@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 // Schéma de l'immatriculation
+// Pour l'instant utiliser celui de vehicule js
 const immatriculationSchema = new mongoose.Schema({
   certificateNumber: {
     type: String,
