@@ -113,7 +113,8 @@ cron.schedule(CHECKEXPIRATIONTIMER, async () => {
     console.log("Exécution de la révision des certificats d'immatriculation proches de l'expiration...");
     try {
 
-        const { tenDaysNotificationSent, FiveDaysNotificationSent, expiredNotificationSent } = await sendExpirationImmatriculationNotifications();
+         await sendExpirationImmatriculationNotifications();
+        // const { tenDaysNotificationSent, FiveDaysNotificationSent, expiredNotificationSent } = await sendExpirationImmatriculationNotifications();
         // console.log(`${tenDaysNotificationSent} les notifications 10 jeurs envoyées.`);
         // console.log(`${FiveDaysNotificationSent} les notifications 5 jeurs envoyées.`);
         // console.log(`${currentDateNotificationSent} les notifications expires  envoyées.`);
