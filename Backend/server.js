@@ -92,23 +92,8 @@ cron.schedule(`${MYCRONTIMER}`, async () => {
     timezone: "America/New_York" // Régler le fuseau horaire en fonction de votre lieu de résidence
 });
 
-// // Programar la tarea cron para enviar notificaciones de expiración
-// cron.schedule(CHECKEXPIRATIONTIMER, async () => {
-//     console.log("Exécution de la révision des certificats d'immatriculation proches de l'expiration...");
-//     try {
 
-//         const notificationsSent = await sendExpirationImmatriculationNotifications();
-//         console.log(`${notificationsSent} les notifications envoyées.`);
-
-//     } catch (error) {
-//         console.error('Error al ejecutar la tarea cron de envío de notificaciones de expiración:', error);
-//     }
-// }, {
-//     scheduled: true,
-//     timezone: "America/New_York" // Ajustar el huso horario según tu ubicación
-// });
-
-// Programar la tarea cron para enviar notificaciones de expiración
+//Programmer une tâche cron pour envoyer des notifications d'expiration
 cron.schedule(CHECKEXPIRATIONTIMER, async () => {
     console.log("Exécution de la révision des certificats d'immatriculation proches de l'expiration...");
     try {
@@ -116,7 +101,7 @@ cron.schedule(CHECKEXPIRATIONTIMER, async () => {
         await sendExpirationImmatriculationNotifications();
 
     } catch (error) {
-        console.error('Error al ejecutar la tarea cron de envío de notificaciones de expiración:', error);
+        console.error("Erreur lors de l'exécution de la tâche cron pour envoyer les notifications d'expiration :", error);
     }
 }, {
     scheduled: true,
