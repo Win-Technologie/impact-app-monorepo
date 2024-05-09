@@ -14,7 +14,8 @@ const cors = require('cors');
 const cron = require('node-cron');
 const { connectToMongo } = require('./mongoConnection');
 const { removeRevokedTokens } = require('./utils/jwt');
-const { sendExpirationImmatriculationNotifications } = require("./utils/nodemailer");
+const { sendExpirationImmatriculationNotifications, sendExpirationDriverLicensesNotifications } = require("./utils/cron");
+
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -22,6 +23,7 @@ const PORT = process.env.PORT || 8000;
 const MYCRONTIMER = process.env.CRONTIMER_EVERYHOUR;
 const CHECKEXPIRATIONTIMER = process.env.CRONTIMER_DAILY1AM;
 // const CHECKEXPIRATIONTIMER = process.env.CRONTIMER_EVERYMINUTE;
+
 // Routes
 const userRoutes = require('./routes/user/user.routes');
 const vehicleRoutes = require('./routes/vehicle/vehicle.routes');
@@ -99,7 +101,9 @@ cron.schedule(CHECKEXPIRATIONTIMER, async () => {
     console.log("Exécution de la révision des certificats d'immatriculation proches de l'expiration...");
     try {
 
-        await sendExpirationImmatriculationNotifications();
+       await sendExpirationImmatriculationNotifications();
+
+       await sendExpirationDriverLicensesNotifications();
 
     } catch (error) {
         console.error("Erreur lors de l'exécution de la tâche cron pour envoyer les notifications d'expiration :", error);

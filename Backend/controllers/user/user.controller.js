@@ -548,6 +548,14 @@ async function EditUser(req, res) {
         //     return res.status(403).json({ msg: "Utilisateur présentant des problèmes avec le compte, contactez l'administrateur" });
         // }
 
+        let myBirthdate;
+
+        if(userData.birthdate){
+                myBirthdate = new Date(userData.birthdate);
+                userData.birthdate = myBirthdate;
+        }
+
+
         // Mettre à jour les données de la propriété avec les nouvelles données
         Object.assign(foundUser, userData);
 

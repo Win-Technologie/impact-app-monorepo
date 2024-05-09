@@ -192,25 +192,38 @@ async function UploadDriverLicense(req, res) {
             photoPath = getFileName(req.files[`photo`]);
         }
 
-        let formattedBirthdateDate;
+        // let formattedBirthdateDate;
 
+        // if (birthdate) {
+        //     const issuedArray = birthdate.split('-');
+        //     formattedBirthdateDate = `${issuedArray[0]}`;
+        // }
+
+        // const issuedArray = issued.split('-');
+        // const formattedIssuedDate = `${issuedArray[0]}`;
+
+        // const expiresArray = expires.split('-');
+        // const formattedExpiresDate = `${expiresArray[0]}`;
+
+        
+        let myBirthdate
+        // Recuperer les dates de delivrance et d'expiration et les transformer en objets Date
         if (birthdate) {
-            const issuedArray = birthdate.split('-');
-            formattedBirthdateDate = `${issuedArray[0]}`;
+            myBirthdate = new Date(birthdate);
         }
 
-        const issuedArray = issued.split('-');
-        const formattedIssuedDate = `${issuedArray[0]}`;
+        const issuedDate = new Date(issued);
+        const expirationDate = new Date(expires);
 
-        const expiresArray = expires.split('-');
-        const formattedExpiresDate = `${expiresArray[0]}`;
+        // console.log(myUser.birthdate);
 
         const newDriverLicense = new DriverLicense({
             user: myToken.user_id,
             number: number,
             name: myUser.name,
             lastName: myUser.lastName,
-            birthdate: birthdate ? formattedBirthdateDate : myUser.birthdate,
+            // birthdate: birthdate ? formattedBirthdateDate : myUser.birthdate,
+            birthdate: birthdate ? myBirthdate : myUser.birthdate,
             address: address,
             appartment: appartment,
             province: province,
@@ -221,8 +234,10 @@ async function UploadDriverLicense(req, res) {
             mention: mention,
             height: height,
             weight: weight,
-            issued: formattedIssuedDate,
-            expires: formattedExpiresDate,
+            // issued: formattedIssuedDate,
+            // expires: formattedExpiresDate,
+            issued: issuedDate,
+            expires: expirationDate,
             city: city,
             country: country,
             photo: photoPath,

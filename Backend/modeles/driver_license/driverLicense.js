@@ -28,7 +28,7 @@ const driverLicenseSchema = new mongoose.Schema({
         // minlength: 3
     },
     birthdate: {
-        type: String,
+        type: Date,
         required: true
     },
     address: {
@@ -90,12 +90,12 @@ const driverLicenseSchema = new mongoose.Schema({
         // minlength: 2
     },
     issued: {
-        type: String,
+        type: Date,
         required: true,
         index: true,
     },
     expires: {
-        type: String,
+        type: Date,
         required: true,
         index: true
     },
