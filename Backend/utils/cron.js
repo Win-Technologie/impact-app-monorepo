@@ -66,7 +66,6 @@ async function sendExpirationImmatriculationNotifications() {
     }
 }
 
-
 async function sendExpirationDriverLicensesNotifications() {
     try {
         // Récupérer la date actuelle
@@ -94,6 +93,50 @@ async function sendExpirationDriverLicensesNotifications() {
 
 
         console.log("DRIVING LICENCES EXPIRING CHECK ... ")
+        // Afficher les résultats
+        console.log(`${results[0]} notifications for 10 days were sent.`);
+        console.log(`${results[1]} notifications for 5 days were sent.`);
+        console.log(`${results[2]} expiration notifications were sent.`);
+
+        // Retourner les résultats
+        return {
+            tenDaysNotificationSent: results[0],
+            FiveDaysNotificationSent: results[1],
+            expiredNotificationSent: results[2]
+        };
+
+    } catch (error) {
+        console.error('Error executing the cron task to send expiration notifications:', error);
+    }
+}
+
+async function sendExpirationInsuranceNotifications() {
+    try {
+        // Récupérer la date actuelle
+        const currentDate = new Date();
+        // Calculer les dates de notification pour les prochains 10 jours, 5 jours et  le jour précédent(expired ones).
+        const notificationDates = [
+            calculateNotificationDate(currentDate, 10),
+            calculateNotificationDate(currentDate, 5),
+            calculateNotificationDate(currentDate, -1)
+        ];
+
+        // // Mapper les dates de notification à des promesses d'envoi de notifications
+        const promises = notificationDates.map(async (notificationDate) => {
+            // Récupérer les véhicules à notifier pour la date donnée
+            const insurancesToNotify = await getInsurancesToNotify(notificationDate);
+            // Vérifier si la date de notification est expirée ou non
+            const isExpired = notificationDate < currentDate;
+            // Traiter les véhicules à notifier et retourner le nombre de notifications envoyées
+            const notificationsSent = await processInsurances(insurancesToNotify, isExpired);
+            return notificationsSent;
+        });
+
+        // Attendre l'exécution de toutes les promesses et obtenir les résultats
+        const results = await Promise.all(promises);
+
+
+        console.log("INSURANCES EXPIRING CHECK ... ")
         // Afficher les résultats
         console.log(`${results[0]} notifications for 10 days were sent.`);
         console.log(`${results[1]} notifications for 5 days were sent.`);
@@ -169,6 +212,33 @@ async function getDriverLicensesToNotify(notificationDate) {
     }
 }
 
+async function getInsurancesToNotify(notificationDate) {
+    try {
+        // Récupérer la date actuelle
+        const currentDate = new Date();
+        // Vérifier si la date de notification est expirée ou non
+        const isExpired = notificationDate < currentDate;
+        // console.log(isExpired);
+        // Construire la requête de recherche en fonction de la date de notification
+        const query = isExpired ? { 'expirationDate': { $lte: notificationDate } } : { 'expirationDate': notificationDate };
+        // Récupérer les driver licenses à notifier
+        const insurancesToNotify = await insuranceCollection.find(query, {
+            projection: {
+                subscriber: 1,
+                insuranceNumber: 1,
+                expirationDate: 1,
+                insuranceCompany: 1,
+                // licenseClass: 1,
+            },
+        }).toArray();
+
+        return insurancesToNotify;
+    } catch (error) {
+        console.error('Error fetching driving licences to notify:', error);
+        throw error;
+    }
+}
+
 
 /**
  * Cette fonction traite les véhicules à notifier en envoyant des notifications par email.
@@ -232,6 +302,36 @@ async function processDriverLicenses(driverLicensesToNotify, isExpired) {
     }
 }
 
+async function processInsurances(insurancesToNotify, isExpired) {
+    try {
+        // console.log("hello from process insurances");
+        let notificationsSent = 0;
+        for (const insurance of insurancesToNotify) {
+            // console.log(insurance);
+            const user = await userCollection.findOne({ _id: insurance.subscriber });
+            if (user && user.email) {
+                // console.log(user.name);
+                // Déterminer le sujet et le contenu du message en fonction de la date d'expiration du permis de conduire
+                const subject = isExpired ? "Your your insurance has expired!" : "Your your insurance is about to expire!";
+                const expirationDate = insurance.expirationDate;
+                // console.log(expirationDate);
+                const msg = isExpired ? `Hello ${user.name}, your insurance with number ${insurance.insuranceNumber} has an expiration date of ${expirationDate} and has already expired. Please take the necessary actions.` :
+                    `Hello ${user.name}, your insurance with number ${insurance.insuranceNumber} has an expiration date of ${expirationDate} and is about to expire. Please take the necessary actions.`;
+
+                // console.log("subject : ", subject);
+                // console.log("msg : ", msg);
+               // Envoyer la notification par email
+               await sendNotificationMail(user.email, subject, msg);
+                notificationsSent++;
+            }
+        }
+        return notificationsSent;
+    } catch (error) {
+        console.error('Error processing vehicles:', error);
+        throw error;
+    }
+}
+
 /**
  * Cette fonction calcule la date de notification en ajoutant un certain nombre de jours à la date actuelle.
  * Elle réinitialise les heures, les minutes, les secondes et les millisecondes à 0.
@@ -243,13 +343,14 @@ function calculateNotificationDate(currentDate, daysToAdd) {
     const notificationDate = new Date(currentDate.getTime());
     notificationDate.setDate(notificationDate.getDate() + daysToAdd);
     notificationDate.setUTCHours(0, 0, 0, 0);
-    // console.log(notificationDate);
+    // console.log("currentDate : ", currentDate);
+    // console.log("notificationDate : ", notificationDate);
     return notificationDate;
 }
-
 
 module.exports = {
     sendExpirationImmatriculationNotifications,
     sendExpirationDriverLicensesNotifications,
+    sendExpirationInsuranceNotifications
 };
 
