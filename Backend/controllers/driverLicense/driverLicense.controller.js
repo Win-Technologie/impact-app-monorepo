@@ -27,6 +27,7 @@ const { encryptDataAES, decryptDataAES } = require('../../utils/encryptdata');
 const qr = require('qrcode');
 const jsQR = require('jsqr');
 
+
 // MODELS
 const User = require('../../modeles/users/user');
 const DriverLicense = require('../../modeles/driver_license/driverLicense');
@@ -104,6 +105,7 @@ async function validateUpdateLicenseData(req){
         return res.status(500).json({ msg: "GET DL : Erreur de serveur interne", error: error });
     }
 }
+
 
 async function UploadDriverLicense(req, res) {
     try {
@@ -191,20 +193,6 @@ async function UploadDriverLicense(req, res) {
             }
             photoPath = getFileName(req.files[`photo`]);
         }
-
-        // let formattedBirthdateDate;
-
-        // if (birthdate) {
-        //     const issuedArray = birthdate.split('-');
-        //     formattedBirthdateDate = `${issuedArray[0]}`;
-        // }
-
-        // const issuedArray = issued.split('-');
-        // const formattedIssuedDate = `${issuedArray[0]}`;
-
-        // const expiresArray = expires.split('-');
-        // const formattedExpiresDate = `${expiresArray[0]}`;
-
         
         let myBirthdate
         // Recuperer les dates de delivrance et d'expiration et les transformer en objets Date
@@ -214,8 +202,6 @@ async function UploadDriverLicense(req, res) {
 
         const issuedDate = new Date(issued);
         const expirationDate = new Date(expires);
-
-        // console.log(myUser.birthdate);
 
         const newDriverLicense = new DriverLicense({
             user: myToken.user_id,
@@ -255,6 +241,8 @@ async function UploadDriverLicense(req, res) {
             return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
         }
 
+        const cacheKeyDriverL = newDriverLicense._id;
+        myCache.set(cacheKeyDriverL, newDriverLicense);
 
         res.status(201).json({
             msg: 'Nouvelle licence ajoutée avec succès',

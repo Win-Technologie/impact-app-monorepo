@@ -31,6 +31,7 @@ const insuranceRoutes = require('./routes/insurance/insurance.routes');
 const onfidoRoutes = require('./routes/onfido/onfido.routes');
 const veriffRoutes = require('./routes/veriff/veriff.routes');
 const driverLicenseRoutes = require('./routes/driverLicense/driverLicense.routes');
+const accidentReportRoutes = require('./routes/accidentReport/accidentReport.routes');
 
 connectToMongo();
 
@@ -73,6 +74,8 @@ app.use('/api/onfido', onfidoRoutes);
 app.use('/api/dl', driverLicenseRoutes);
 
 app.use('/api/veriff', veriffRoutes);
+
+app.use('/api/accidents',accidentReportRoutes);
 
 // Programmation de tâches qui s'exécutent automatiquement après un certain laps de temps
 cron.schedule(`${MYCRONTIMER}`, async () => {
