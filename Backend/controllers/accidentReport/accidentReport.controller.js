@@ -107,7 +107,47 @@ async function newAccidentReport(req, res) {
         const userAllInfo = getMyAutoFullInfo(req, res);
 
         // Création d'une nouvelle instance du rapport d'accident
-       
+        const accidentReport = new Accident({
+            vehicleA: {
+                personalDetails: {
+                    name: userAllInfo.owner.name,
+                    lastName: userAllInfo.owner.lastName,
+                    address: userAllInfo.owner.address,
+                    phone: userAllInfo.owner.phone,
+                    postalCode: userAllInfo.owner.postalCode,
+                    email: userAllInfo.owner.email
+                },
+                documents: {
+                    drivingLicense: {
+                        issuanceDate: new Date(userAllInfo.driverLicense.issued),
+                        expirationDate: new Date(userAllInfo.driverLicense.expires)
+                    },
+                    registrationCertificate: {
+                        fileNumber: userAllInfo.vehicle.immatriculation.numeroDossier,
+                        owner: userAllInfo.owner.name + ' ' + userAllInfo.owner.lastName,
+                        address: userAllInfo.owner.address,
+                        city: userAllInfo.owner.city,
+                        postalCode: userAllInfo.owner.postalCode,
+                        phone: userAllInfo.owner.phone,
+                        vehicleBrand: userAllInfo.vehicle.brand,
+                        year: userAllInfo.vehicle.year,
+                        vehicleSerialNumber: userAllInfo.vehicle.serialNumber,
+                        licensePlateNumber: userAllInfo.vehicle.plate,
+                        issuanceDate: new Date(userAllInfo.vehicle.immatriculation.dateDelivrance)
+                    },
+                    insuranceCertification: {
+                        policyNumber: userAllInfo.insurance ? userAllInfo.insurance.policyNumber : '',
+                        effectiveDate: userAllInfo.insurance ? new Date(userAllInfo.insurance.effectiveDate) : null,
+                        insuredName: userAllInfo.owner.name,
+                        insuredLastName: userAllInfo.owner.lastName,
+                        insuredAddress: userAllInfo.owner.address,
+                        insuredCity: userAllInfo.owner.city,
+                        insuredPhone: userAllInfo.owner.phone
+                    }
+                }
+            },
+            // Ajoutez d'autres champs comme accidentDate, accidentLocation, etc., selon les besoins de votre application
+        });
 
        
         // Save the accident report to the database
