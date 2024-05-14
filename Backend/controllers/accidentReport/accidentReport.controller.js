@@ -104,6 +104,8 @@ async function newAccidentReport(req, res) {
     try {
 
         res.status(201).json({ msg: "Hello from new accident report" });
+
+        
     } catch (error) {
         console.error(error);
         return res.status(500).json({ msg: "New Accident : Erreur de serveur interne", error: error });
@@ -113,7 +115,30 @@ async function newAccidentReport(req, res) {
 async function getAccidentReport(req, res) {
     try {
 
-         res.status(201).json({ msg: "Hello from get accident report" });
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const { id } = req.params;
+
+        const accidentReportCollection = mainDb.collection(VEHICLES_COLLECTION);
+
+        const accidentRFound = await accidentReportCollection.findOne({ _id: id })
+
+        if (!accidentRFound) {
+            return res.status(404).json({ msg: "Accident Report not found" });
+        }
+
+
+        res.status(201).json({ msg: accidentRFound });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ msg: "GET Accident : Erreur de serveur interne", error: error });
@@ -125,6 +150,43 @@ async function updateAccidentReport(req, res) {
     try {
 
         res.status(201).json({ msg: "Hello from update accident report" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "GET Accident : Erreur de serveur interne", error: error });
+    }
+}
+
+
+async function deleteAccidentReport(req, res) {
+    try {
+
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const { id } = req.params;
+
+        const accidentReportCollection = mainDb.collection(VEHICLES_COLLECTION);
+
+        const reportToDelete = await accidentReportCollection.findOne({ _id: id });
+
+        if (!reportToDelete) {
+            return res.status(404).json({ msg: "Profil introuvable" });
+        }
+
+        await userCollection.deleteOne({ _id: userToDelete._id });
+
+
+        return res.status(200).json({ msg: 'Constat supprimé avec succès' });
+        
     } catch (error) {
         console.error(error);
         return res.status(500).json({ msg: "GET Accident : Erreur de serveur interne", error: error });

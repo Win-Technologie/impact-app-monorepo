@@ -1,23 +1,24 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
 // schema for witnesses
 const WitnessSchema = new Schema({
     name: String,
     phone: String,
     address: String,
-    is_vehicle_passenger: { type: String, enum: ['A', 'B'] },
+    is_vehicle_passenger: { type: String, enum: ['A', 'B', 'NON'] },
     is_pedestrian: { type: String }
 });
-
 // main schema for accident report
 const AccidentSchema = new Schema({
     accidentDate: Date,
+    hourAccident: DateTime, // TO CHECK ALSO AUTOMATIC
     accidentLocation: String,
-    vehicleADamage: String,
+    vehicleADamage: Boolean,
     vehicleADamageDescription: String,
-    vehicleBDamage: String,
+    vehicleBDamage: Boolean,
     vehicleBDamageDescription: String,
+    injured: Boolean,
+    injuredDescription: String,
     witnesses: [WitnessSchema],
     vehicleA: {
         personalDetails: {
@@ -26,16 +27,27 @@ const AccidentSchema = new Schema({
             address: String,
             phone: String,
             postalCode: String,
-            email: String
+            email: String,
+            user: {
+                type: String,
+                ref: 'User',
+                index: true
+            }
         },
         documents: {
             drivingLicense: {
                 issuanceDate: Date,
-                expirationDate: Date
+                expirationDate: Date,
+                driverLicense: {
+                    type: String,
+                    ref: 'DriverLicense',
+                    index: true
+                }
             },
             registrationCertificate: {
                 fileNumber: String,
-                owner: String,
+                owner: Boolean,
+                ownerName: String,
                 address: String,
                 city: String,
                 postalCode: String,
@@ -44,7 +56,12 @@ const AccidentSchema = new Schema({
                 year: String,
                 vehicleSerialNumber: String,
                 licensePlateNumber: String,
-                issuanceDate: Date
+                issuanceDate: Date,
+                driverLicense: {
+                    type: String,
+                    ref: 'immatriculations',
+                    index: true
+                }
             },
             insuranceCertification: {
                 policyNumber: String,
@@ -53,7 +70,12 @@ const AccidentSchema = new Schema({
                 insuredLastName: String,
                 insuredAddress: String,
                 insuredCity: String,
-                insuredPhone: String
+                insuredPhone: String,
+                assurance: {
+                    type: String,
+                    ref: 'assurances',
+                    index: true
+                }
             }
         }
     },
@@ -64,18 +86,27 @@ const AccidentSchema = new Schema({
             address: String,
             phone: String,
             postalCode: String,
-            email: String
+            email: String,
+            user: {
+                type: String,
+                ref: 'User',
+                index: true
+            }
         },
         documents: {
             drivingLicense: {
-                licenseNumber: String,
                 issuanceDate: Date,
-                expirationDate: Date
+                expirationDate: Date,
+                driverLicense: {
+                    type: String,
+                    ref: 'DriverLicense',
+                    index: true
+                }
             },
             registrationCertificate: {
                 fileNumber: String,
-                isOwner: Boolean,
-                owner: String,
+                owner: Boolean,
+                ownerName: String,
                 address: String,
                 city: String,
                 postalCode: String,
@@ -84,7 +115,12 @@ const AccidentSchema = new Schema({
                 year: String,
                 vehicleSerialNumber: String,
                 licensePlateNumber: String,
-                issuanceDate: Date
+                issuanceDate: Date,
+                driverLicense: {
+                    type: String,
+                    ref: 'immatriculations',
+                    index: true
+                }
             },
             insuranceCertification: {
                 policyNumber: String,
@@ -93,7 +129,12 @@ const AccidentSchema = new Schema({
                 insuredLastName: String,
                 insuredAddress: String,
                 insuredCity: String,
-                insuredPhone: String
+                insuredPhone: String,
+                assurance: {
+                    type: String,
+                    ref: 'assurances',
+                    index: true
+                }
             }
         }
     },
@@ -105,7 +146,6 @@ const AccidentSchema = new Schema({
     vehicleADriverSignature: String,
     vehicleBDriverSignature: String
 });
-
 // Create and export the model based on the schema
 const Accident = mongoose.model('AccidentReport', AccidentSchema);
 module.exports = Accident;

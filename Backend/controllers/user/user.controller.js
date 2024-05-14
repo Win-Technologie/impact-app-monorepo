@@ -1047,7 +1047,7 @@ async function readAndSendUserInfo(req, res) {
         return res.status(500).json({ msg: "Erreur de serveur interne", error: error });
     }
 }
-// CACHE
+
 async function getUserInfo(userId, vehicleId) {
     try {
         const [user, vehicle, insurance, driverLicense] = await Promise.all([
@@ -1105,7 +1105,7 @@ async function getUserInfo(userId, vehicleId) {
         throw error;
     }
 }
-// CACHE
+
 async function getMyAutoFullInfo(req, res) {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");

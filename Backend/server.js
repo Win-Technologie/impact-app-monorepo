@@ -104,11 +104,11 @@ cron.schedule(CHECKEXPIRATIONTIMER, async () => {
     console.log("Exécution de la révision des certificats d'immatriculation proches de l'expiration...");
     try {
 
-        await sendExpirationImmatriculationNotifications();
+        // await sendExpirationImmatriculationNotifications();
 
-        await sendExpirationDriverLicensesNotifications();
+        // await sendExpirationDriverLicensesNotifications();
 
-        await sendExpirationInsuranceNotifications();
+        // await sendExpirationInsuranceNotifications();
 
     } catch (error) {
         console.error("Erreur lors de l'exécution de la tâche cron pour envoyer les notifications d'expiration :", error);
