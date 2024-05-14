@@ -41,6 +41,7 @@ const USERSCOLLECTION = process.env.USERSCOLLECTION;
 const DRIVERLICENSECOLLECTION = process.env.DRIVERSLICENSECOLLECTION;
 const VEHICLES_COLLECTION = process.env.VEHICLESCOLLECTION;
 const INSURANCES_COLLECTION = process.env.INSURANCESCOLLECTION;
+const ACCIDENTREPORTS_COLLECTION = process.env.ACCIDENTREPORTSCOLLECTION;
 
 const SECRETKEY_IDQR = process.env.SECRETKEY_IDQR;
 
@@ -50,6 +51,7 @@ const userCollection = mainDb.collection(USERSCOLLECTION);
 const drivingLicensesCollection = mainDb.collection(DRIVERLICENSECOLLECTION);
 const insuranceCollection = mainDb.collection(INSURANCES_COLLECTION);
 const vehicleCollection = mainDb.collection(VEHICLES_COLLECTION);
+const accidentReportCollection = mainDb.collection(ACCIDENTREPORTS_COLLECTION);
 
 // verify driver license info from request
 async function validateLicenseData(req) {
@@ -102,8 +104,22 @@ async function validateLicenseData(req) {
 
 async function newAccidentReport(req, res) {
     try {
+        const userAllInfo = getMyAutoFullInfo(req, res);
 
-        res.status(201).json({ msg: "Hello from new accident report" });
+        // Création d'une nouvelle instance du rapport d'accident
+       
+
+       
+        // Save the accident report to the database
+        const result = await accidentReportCollection.insertOne(accidentReport);
+        if (result.insertedCount !== 1) {
+            throw new Error("Failed to create accident report");
+        }
+        
+        // Return a success message
+        return res.status(201).json({ msg: "New accident report created successfully" });
+        
+        
     } catch (error) {
         console.error(error);
         return res.status(500).json({ msg: "New Accident : Erreur de serveur interne", error: error });
