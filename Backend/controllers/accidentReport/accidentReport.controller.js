@@ -20,6 +20,9 @@ const { createApplicant, verifyDrivingLicense } = require('../onfido/onfido.cont
 // CACHE
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
 
+// MODELS
+const Accident = require('../../modeles/accidentReport/accidentReport');
+
 // CRYPTO
 const { encryptDataAES, decryptDataAES } = require('../../utils/encryptdata');
 
@@ -52,6 +55,7 @@ const drivingLicensesCollection = mainDb.collection(DRIVERLICENSECOLLECTION);
 const insuranceCollection = mainDb.collection(INSURANCES_COLLECTION);
 const vehicleCollection = mainDb.collection(VEHICLES_COLLECTION);
 const accidentReportCollection = mainDb.collection(ACCIDENTREPORTS_COLLECTION);
+
 
 // verify driver license info from request
 async function validateLicenseData(req) {
