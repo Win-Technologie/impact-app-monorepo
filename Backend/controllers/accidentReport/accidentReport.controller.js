@@ -27,6 +27,8 @@ const { encryptDataAES, decryptDataAES } = require('../../utils/encryptdata');
 const qr = require('qrcode');
 const jsQR = require('jsqr');
 
+// getMyAutoFullInfo from user controller
+const { getMyAutoFullInfo } = require('../user/user.controller');
 
 // MODELS
 const User = require('../../modeles/users/user');
