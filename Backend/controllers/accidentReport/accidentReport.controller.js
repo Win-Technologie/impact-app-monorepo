@@ -20,6 +20,9 @@ const { createApplicant, verifyDrivingLicense } = require('../onfido/onfido.cont
 // CACHE
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
 
+// MODELS
+const Accident = require('../../modeles/accidentReport/accidentReport');
+
 // CRYPTO
 const { encryptDataAES, decryptDataAES } = require('../../utils/encryptdata');
 
@@ -41,6 +44,7 @@ const USERSCOLLECTION = process.env.USERSCOLLECTION;
 const DRIVERLICENSECOLLECTION = process.env.DRIVERSLICENSECOLLECTION;
 const VEHICLES_COLLECTION = process.env.VEHICLESCOLLECTION;
 const INSURANCES_COLLECTION = process.env.INSURANCESCOLLECTION;
+const ACCIDENTREPORTS_COLLECTION = process.env.ACCIDENTREPORTSCOLLECTION;
 
 const SECRETKEY_IDQR = process.env.SECRETKEY_IDQR;
 
@@ -50,6 +54,8 @@ const userCollection = mainDb.collection(USERSCOLLECTION);
 const drivingLicensesCollection = mainDb.collection(DRIVERLICENSECOLLECTION);
 const insuranceCollection = mainDb.collection(INSURANCES_COLLECTION);
 const vehicleCollection = mainDb.collection(VEHICLES_COLLECTION);
+const accidentReportCollection = mainDb.collection(ACCIDENTREPORTS_COLLECTION);
+
 
 // verify driver license info from request
 async function validateLicenseData(req) {
@@ -102,9 +108,60 @@ async function validateLicenseData(req) {
 
 async function newAccidentReport(req, res) {
     try {
+        const userAllInfo = getMyAutoFullInfo(req, res);
 
-        res.status(201).json({ msg: "Hello from new accident report" });
+        // Création d'une nouvelle instance du rapport d'accident
+        const accidentReport = new Accident({
+            vehicleA: {
+                personalDetails: {
+                    name: userAllInfo.owner.name,
+                    lastName: userAllInfo.owner.lastName,
+                    address: userAllInfo.owner.address,
+                    phone: userAllInfo.owner.phone,
+                    postalCode: userAllInfo.owner.postalCode,
+                    email: userAllInfo.owner.email
+                },
+                documents: {
+                    drivingLicense: {
+                        issuanceDate: new Date(userAllInfo.driverLicense.issued),
+                        expirationDate: new Date(userAllInfo.driverLicense.expires)
+                    },
+                    registrationCertificate: {
+                        fileNumber: userAllInfo.vehicle.immatriculation.numeroDossier,
+                        owner: userAllInfo.owner.name + ' ' + userAllInfo.owner.lastName,
+                        address: userAllInfo.owner.address,
+                        city: userAllInfo.owner.city,
+                        postalCode: userAllInfo.owner.postalCode,
+                        phone: userAllInfo.owner.phone,
+                        vehicleBrand: userAllInfo.vehicle.brand,
+                        year: userAllInfo.vehicle.year,
+                        vehicleSerialNumber: userAllInfo.vehicle.serialNumber,
+                        licensePlateNumber: userAllInfo.vehicle.plate,
+                        issuanceDate: new Date(userAllInfo.vehicle.immatriculation.dateDelivrance)
+                    },
+                    insuranceCertification: {
+                        policyNumber: userAllInfo.insurance ? userAllInfo.insurance.policyNumber : '',
+                        effectiveDate: userAllInfo.insurance ? new Date(userAllInfo.insurance.effectiveDate) : null,
+                        insuredName: userAllInfo.owner.name,
+                        insuredLastName: userAllInfo.owner.lastName,
+                        insuredAddress: userAllInfo.owner.address,
+                        insuredCity: userAllInfo.owner.city,
+                        insuredPhone: userAllInfo.owner.phone
+                    }
+                }
+            },
+            // Ajoutez d'autres champs comme accidentDate, accidentLocation, etc., selon les besoins de votre application
+        });
 
+       
+        // Save the accident report to the database
+        const result = await accidentReportCollection.insertOne(accidentReport);
+        if (result.insertedCount !== 1) {
+            throw new Error("Failed to create accident report");
+        }
+        
+        // Return a success message
+        return res.status(201).json({ msg: "New accident report created successfully" });
         
     } catch (error) {
         console.error(error);
