@@ -103,7 +103,13 @@ const immatriculationSchema = new mongoose.Schema({
   },
   usageCategory: {
     type: String
-  }
+  },
+  serialNumber: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true
+  },
 });
 
 

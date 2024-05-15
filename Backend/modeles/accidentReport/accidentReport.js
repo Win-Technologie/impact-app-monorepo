@@ -10,8 +10,14 @@ const WitnessSchema = new Schema({
 });
 // main schema for accident report
 const AccidentSchema = new Schema({
+    _id: {
+        type: String,
+        default: () => new mongoose.Types.ObjectId().toString(),
+        required: true,
+        index: true
+    },
     accidentDate: Date,
-    hourAccident: DateTime, // TO CHECK ALSO AUTOMATIC
+    hourAccident: Date, // TO CHECK ALSO AUTOMATIC
     accidentLocation: String,
     vehicleADamage: Boolean,
     vehicleADamageDescription: String,
@@ -28,56 +34,62 @@ const AccidentSchema = new Schema({
             phone: String,
             postalCode: String,
             email: String,
+            city: String,
+            province: String,
+            country: String,
             user: {
                 type: String,
                 ref: 'User',
                 index: true
             }
         },
-        documents: {
-            drivingLicense: {
-                issuanceDate: Date,
-                expirationDate: Date,
-                driverLicense: {
-                    type: String,
-                    ref: 'DriverLicense',
-                    index: true
-                }
-            },
-            registrationCertificate: {
-                fileNumber: String,
-                owner: Boolean,
-                ownerName: String,
-                address: String,
-                city: String,
-                postalCode: String,
-                phone: String,
-                vehicleBrand: String,
-                year: String,
-                vehicleSerialNumber: String,
-                licensePlateNumber: String,
-                issuanceDate: Date,
-                driverLicense: {
-                    type: String,
-                    ref: 'immatriculations',
-                    index: true
-                }
-            },
-            insuranceCertification: {
-                policyNumber: String,
-                effectiveDate: Date,
-                insuredName: String,
-                insuredLastName: String,
-                insuredAddress: String,
-                insuredCity: String,
-                insuredPhone: String,
-                assurance: {
-                    type: String,
-                    ref: 'assurances',
-                    index: true
-                }
+
+        drivingLicense: {
+            number: String,
+            issuanceDate: Date,
+            licenseClass: String,
+            expirationDate: Date,
+            driverLicenseId: {
+                type: String,
+                ref: 'DriverLicense',
+                index: true
+            }
+        },
+        registrationCertificate: {
+            fileNumber: String,
+            // owner: Boolean,
+            // ownerName: String,
+            // address: String,
+            //    // city: String,
+            //     postalCode: String,
+            // phone: String,
+            vehicleBrand: String,
+            year: String,
+            vehicleSerialNumber: String,
+            licensePlateNumber: String,
+            dateDelivrance: Date,
+            vehicleId: {
+                type: String,
+                ref: 'immatriculations',
+                index: true
+            }
+        },
+        insuranceCertification: {
+            insuranceCompany: String,
+            policyNumber: String,
+            effectiveDate: Date,
+            insuredName: String,
+            insuredLastName: String,
+            insuredAddress: String,
+            insuredCity: String,
+            insuredPhone: String,
+            assuranceId: {
+                type: String,
+                ref: 'assurances',
+                index: true
             }
         }
+
     },
     vehicleB: {
         personalDetails: {
@@ -93,49 +105,49 @@ const AccidentSchema = new Schema({
                 index: true
             }
         },
-        documents: {
-            drivingLicense: {
-                issuanceDate: Date,
-                expirationDate: Date,
-                driverLicense: {
-                    type: String,
-                    ref: 'DriverLicense',
-                    index: true
-                }
-            },
-            registrationCertificate: {
-                fileNumber: String,
-                owner: Boolean,
-                ownerName: String,
-                address: String,
-                city: String,
-                postalCode: String,
-                phone: String,
-                vehicleBrand: String,
-                year: String,
-                vehicleSerialNumber: String,
-                licensePlateNumber: String,
-                issuanceDate: Date,
-                driverLicense: {
-                    type: String,
-                    ref: 'immatriculations',
-                    index: true
-                }
-            },
-            insuranceCertification: {
-                policyNumber: String,
-                effectiveDate: Date,
-                insuredName: String,
-                insuredLastName: String,
-                insuredAddress: String,
-                insuredCity: String,
-                insuredPhone: String,
-                assurance: {
-                    type: String,
-                    ref: 'assurances',
-                    index: true
-                }
+
+        drivingLicense: {
+            issuanceDate: Date,
+            expirationDate: Date,
+            driverLicense: {
+                type: String,
+                ref: 'DriverLicense',
+                index: true
             }
+        },
+        registrationCertificate: {
+            fileNumber: String,
+            owner: Boolean,
+            ownerName: String,
+            address: String,
+            city: String,
+            postalCode: String,
+            phone: String,
+            vehicleBrand: String,
+            year: String,
+            vehicleSerialNumber: String,
+            licensePlateNumber: String,
+            issuanceDate: Date,
+            driverLicense: {
+                type: String,
+                ref: 'immatriculations',
+                index: true
+            }
+        },
+        insuranceCertification: {
+            policyNumber: String,
+            effectiveDate: Date,
+            insuredName: String,
+            insuredLastName: String,
+            insuredAddress: String,
+            insuredCity: String,
+            insuredPhone: String,
+            assurance: {
+                type: String,
+                ref: 'assurances',
+                index: true
+            }
+
         }
     },
     accidentSketch: String,
