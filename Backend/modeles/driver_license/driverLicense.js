@@ -104,7 +104,19 @@ const driverLicenseSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    photo: {
+    photoRecto: {
+        type: String,
+        required: true,
+        index: true
+    }
+    ,
+    photoVerso: {
+        type: String,
+        required: true,
+        index: true
+    }
+    ,
+    photoSelfie: {
         type: String,
         required: true,
         index: true

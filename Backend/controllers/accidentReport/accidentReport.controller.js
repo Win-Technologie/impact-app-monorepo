@@ -265,7 +265,7 @@ async function newAccidentReport(req, res) {
         
         // // Return a success message
         // return res.status(201).json({ msg: "New accident report created successfully" });
-        return res.status(201).json({ msg: "New accident report created successfully", No: "v01" });
+        return res.status(201).json({ msg: "New accident report created successfully", No: "v01", roomId: accidentReport._id });
         
     } catch (error) {
         console.error(error);
@@ -324,7 +324,7 @@ async function joinToAccidentReport(req, res) {
         { $push: { accidentReports: findAccidentReport._id } }
     );
 
-    return res.status(statusCode).json({msg: "Connection to accident report OK", No: "v01" });
+    return res.status(statusCode).json({msg: "Connection to accident report OK", No: "v02" });
 }
 
 function instanceVehicleData(owner, vehicle, insurance, driverLicense,user_id) {
@@ -418,10 +418,127 @@ async function updateAccidentReport(req, res) {
             return res.status(404).json({ msg: "Rapport d'accident non trouvé" });
         }
 
+        let myUserData = {};
+
+        if (userData.vehicleNumber === 'v01') {
+
+            if (userData.vehicleDamage) {
+
+                if (userData.vehicleDamage == 'true') {
+                    if (!userData.vehicleDamageDescription) {
+                        return res.status(400).json({ msg: "Vous devez introduire une description des dommages" });
+                    }
+                    myUserData.vehicleADamage = true;
+                    myUserData.vehicleADamageDescription = userData.vehicleDamageDescription;
+                } else {
+                    myUserData.vehicleADamage = false;
+                    myUserData.vehicleADamageDescription = "Aucun dommage"
+                }
+            }
+
+            if (userData.injured && userData.injured == 'true') {
+                if (!userData.injuredDescription) {
+                    return res.status(400).json({ msg: "Vous devez fournir une description des lésions" });
+                }
+                myUserData.injuredVehicleA = true;
+                myUserData.injuredDescriptionVehicleA = userData.injuredDescription;
+            } else {
+                myUserData.injuredVehicleA = false;
+                myUserData.injuredDescriptionVehicleA = "non blessé";
+            }
+            // if(userData.witnesses){
+                
+            // }
+            // if(userData.accidentSketch){
+                
+            // }
+            if(userData.vehicleDamageComments){
+                myUserData.vehicleADamageComments = userData.vehicleDamageComments ;
+            }
+
+            if (userData.vehicleTowed) {
+                // Cambiar la lógica para verificar si el valor no es 'true' y no es 'false'
+                if(userData.vehicleTowed !== 'true' && userData.vehicleTowed !== 'false'){
+                    return res.status(400).json({ msg: "le véhicule remorqué doit être <<vrai>> ou <<faux>>" });
+                }
+                if (userData.vehicleTowed === 'true') {
+                    myUserData.vehicleATowed = true;
+                } else if (userData.vehicleTowed === 'false') {
+                    myUserData.vehicleATowed = false;
+                }
+            } else {
+                return res.status(400).json({ msg: "Vous devez indiquer si votre véhicule a été remorqué" });
+            }
+
+            if(userData.vehicleDriverSignature){
+                myUserData.vehicleADriverSignature = userData.vehicleDriverSignature;
+            }
+
+             
+
+        } else if (userData.vehicleNumber === 'v02') {
+
+            if (userData.vehicleDamage) {
+
+                if (userData.vehicleDamage == 'true') {
+                    if (!userData.vehicleDamageDescription) {
+                        return res.status(400).json({ msg: "Vous devez introduire une description des dommages" });
+                    }
+                    myUserData.vehicleBDamage = true;
+                    myUserData.vehicleBDamageDescription = userData.vehicleDamageDescription;
+                } else {
+                    myUserData.vehicleBDamage = false;
+                    myUserData.vehicleBDamageDescription = "Aucun dommage"
+                }
+            }
+
+            if (userData.injured && userData.injured == 'true') {
+                if (!userData.injuredDescription) {
+                    return res.status(400).json({ msg: "Vous devez fournir une description des lésions" });
+                }
+                myUserData.injuredVehicleB = true;
+                myUserData.injuredDescriptionVehicleB = userData.injuredDescription;
+            } else {
+                myUserData.injuredVehicleB = false;
+                myUserData.injuredDescriptionVehicleB = "non blessé";
+            }
+            // if(userData.witnesses){
+                
+            // }
+            // if(userData.accidentSketch){
+                
+            // }
+            if(userData.vehicleDamageComments){
+                myUserData.vehicleBDamageComments = userData.vehicleDamageComments ;
+            }
+
+            if (userData.vehicleTowed) {
+                // Cambiar la lógica para verificar si el valor no es 'true' y no es 'false'
+                if(userData.vehicleTowed !== 'true' && userData.vehicleTowed !== 'false'){
+                    return res.status(400).json({ msg: "le véhicule remorqué doit être <<vrai>> ou <<faux>>" });
+                }
+                if (userData.vehicleTowed === 'true') {
+                    myUserData.vehicleBTowed = true;
+                } else if (userData.vehicleTowed === 'false') {
+                    myUserData.vehicleBTowed = false;
+                }
+            } else {
+                return res.status(400).json({ msg: "Vous devez indiquer si votre véhicule a été remorqué" });
+            }
+
+            if(userData.vehicleDriverSignature){
+                myUserData.vehicleBDriverSignature = userData.vehicleDriverSignature;
+            }
+
+
+        } else if (userData.vehicleNumber != 'v01' || userData.vehicleNumber != 'v02') {
+            return res.status(400).json({ msg: "you must indicate vehicle's number" });
+
+        }
 
         // console.log(myUserData);
 
-       // Object.assign(foundAccidentR, myUserData);
+        Object.assign(foundAccidentR, myUserData);
 
 
         const result = await accidentReportCollection.updateOne(
