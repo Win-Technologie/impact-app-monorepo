@@ -23,8 +23,10 @@ const AccidentSchema = new Schema({
     vehicleADamageDescription: String,
     vehicleBDamage: Boolean,
     vehicleBDamageDescription: String,
-    injured: Boolean,
-    injuredDescription: String,
+    injuredVehicleA: Boolean,
+    injuredDescriptionVehicleA: String,
+    injuredVehicleB: Boolean,
+    injuredDescriptionVehicleB: String,
     witnesses: [WitnessSchema],
     vehicleA: {
         personalDetails: {

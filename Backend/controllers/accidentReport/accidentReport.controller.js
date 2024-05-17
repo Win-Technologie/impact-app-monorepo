@@ -18,6 +18,8 @@ const Accident = require('../../modeles/accidentReport/accidentReport');
 const User = require('../../modeles/users/user');
 const DriverLicense = require('../../modeles/driver_license/driverLicense');
 
+const { getUserInfo } = require('../../controllers/user/user.controller');
+
 // getMyAutoFullInfo from user controller
 const { getMyAutoFullInfo } = require('../user/user.controller');
 
@@ -123,21 +125,21 @@ async function newAccidentReport(req, res) {
     try {
 
         // ??????????????????????????????????????
-       // const userAllInfo = getMyAutoFullInfo(req, res);
+        // const userAllInfo = getMyAutoFullInfo(req, res);
 
-       const token = req.headers.authorization?.replace("Bearer ", "");
-       // Vérifier si le jeton est présent
-       if (!token) {
-           console.error('Le Token n\'est pas fourni');
-           return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-       }
-       // Décoder le token pour obtenir les informations de l'utilisateur
-       const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
-       if (!myToken) {
-           return res.status(400).json({ msg: "Token invalide" });
-       }
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
 
-       const userAllInfo = req.body;
+        //    const userAllInfo = req.body;
        const {owner,vehicle,insurance,driverLicense} = req.body;
 
 
@@ -199,7 +201,6 @@ async function newAccidentReport(req, res) {
         });
 
         // console.log(accidentReport);
-
         accidentReport.set('witnesses', undefined);
 
         // // Création d'une nouvelle instance du rapport d'accident
@@ -251,8 +252,11 @@ async function newAccidentReport(req, res) {
        
         // // Save the accident report to the database
         const result = await accidentReportCollection.insertOne(accidentReport);
-
-        console.log(result);
+        // console.log(result);
+        await userCollection.updateOne(
+            { "_id": myToken.user_id },
+            { $push: { accidentReports: accidentReport._id } }
+        );
 
         // ???????????????????????????????????????????????
         // if (result.insertedCount !== 1) {
@@ -261,7 +265,7 @@ async function newAccidentReport(req, res) {
         
         // // Return a success message
         // return res.status(201).json({ msg: "New accident report created successfully" });
-        return res.status(201).json({ msg: "New accident report created successfully", result });
+        return res.status(201).json({ msg: "New accident report created successfully", No: "v01" });
         
     } catch (error) {
         console.error(error);
@@ -269,8 +273,119 @@ async function newAccidentReport(req, res) {
     }
 }
 
-async function getAccidentReport(req, res) {
+async function joinToAccidentReport(req, res) {
+
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    // Vérifier si le jeton est présent
+    if (!token) {
+        console.error('Le Token n\'est pas fourni');
+        return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+    }
+    // Décoder le token pour obtenir les informations de l'utilisateur
+    const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+    if (!myToken) {
+        return res.status(400).json({ msg: "Token invalide" });
+    }
+
+    // "subscriber": "65fc4565e55d51baf95cc907",
+    // "vehicle": "663a42e0f730983f95848238",
+
+    const { vehicleId, userId, accidentReportId } = req.body;
+
+    const findAccidentReport = await accidentReportCollection.findOne({ _id: accidentReportId });
+
+    if (!findAccidentReport) {
+        return res.status(404).json({ msg: "accident report not found" });
+    }
+
+
+    // const { response, statusCode, msg } = await getUserInfo(myToken.user_id, vehicleId);
+   
+    const { response, statusCode, msg } = await getUserInfo(userId, vehicleId);
+
+    if (!response) {
+        return res.status(statusCode).json({ msg });
+    }
+  
+    const { owner, vehicle, insurance, driverLicense } = response;
+
+    // const vehicleData = instanceVehicleData(owner, vehicle, insurance, driverLicense, myToken.user_id);
+    const vehicleData = instanceVehicleData(owner, vehicle, insurance, driverLicense, userId);
+
+    // console.log(vehicleData);
+
+    await accidentReportCollection.updateOne(
+        { "_id": accidentReportId },
+        { $set: { vehicleB: vehicleData } }
+    );
+
+    await userCollection.updateOne(
+        { "_id": userId },
+        { $push: { accidentReports: findAccidentReport._id } }
+    );
+
+    return res.status(statusCode).json({msg: "Connection to accident report OK", No: "v01" });
+}
+
+function instanceVehicleData(owner, vehicle, insurance, driverLicense,user_id) {
+
+    const now = new Date();
+
+    const issuedDateFormat = new Date(driverLicense.issued);
+    const expiresDateFormat = new Date(driverLicense.expires);
+    const dateDelivranceFormat = new Date(vehicle.immatriculation.dateDelivrance);
+    const dateStartInsuranceFormat = new Date(insurance.startDate);
+
+    const vehicleData = {
+        personalDetails: {
+            name: owner.name,
+            lastName: owner.lastName,
+            address: owner.address,
+            phone: owner.phone,
+            email: owner.email,
+            user: user_id,
+            postalCode: owner.postalCode,
+            city: owner.city,
+            province: owner.province,
+            country: owner.country
+        },
+        drivingLicense: {
+            number: driverLicense.number,
+            licenseClass: driverLicense.licenseClass,
+            issuanceDate: issuedDateFormat,
+            expirationDate: expiresDateFormat,
+            driverLicenseId: driverLicense._id,
+        },
+        registrationCertificate: {
+            fileNumber: vehicle.immatriculation.numeroDossier,
+            vehicleBrand: vehicle.brand,
+            year: vehicle.year,
+            vehicleSerialNumber: vehicle.immatriculation.serialNumber,
+            licensePlateNumber: vehicle.plate,
+            dateDelivrance: dateDelivranceFormat,
+            immatriculationId: vehicle._id
+        },
+        insuranceCertification: {
+            insuranceCompany: insurance.insuranceCompany,
+            policyNumber: insurance.insuranceNumber,
+            effectiveDate: dateStartInsuranceFormat,
+            insuredName: owner.name,
+            insuredLastName: owner.lastName,
+            insuredAddress: owner.address,
+            insuredCity: owner.city,
+            insuredPhone: owner.phone,
+            assuranceId: insurance._id,
+        }
+    };
+
+    return vehicleData;
+}
+
+async function updateAccidentReport(req, res) {
     try {
+
+        const userData = req.body;
+        const {accidentId} = req.params;
 
         const token = req.headers.authorization?.replace("Bearer ", "");
         // Vérifier si le jeton est présent
@@ -284,27 +399,41 @@ async function getAccidentReport(req, res) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        const { id } = req.params;
+        const id = userData && userData.user_id ? userData.user_id : myToken.user_id;
 
-        const accidentReportCollection = mainDb.collection(VEHICLES_COLLECTION);
 
-        const accidentRFound = await accidentReportCollection.findOne({ _id: id })
+        // console.log(id);
+        // console.log(userData);
 
-        if (!accidentRFound) {
-            return res.status(404).json({ msg: "Accident Report not found" });
+        const [foundUser, foundAccidentR] = await Promise.all([
+            userCollection.findOne({ _id: id }),
+            accidentReportCollection.findOne({ _id: accidentId }),
+        ]);
+
+        if (!foundUser) {
+            return res.status(404).json({ msg: "Utilisateur non trouvé" });
+        }
+
+        if(!foundAccidentR){
+            return res.status(404).json({ msg: "Rapport d'accident non trouvé" });
         }
 
 
-        res.status(201).json({ msg: accidentRFound });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ msg: "GET Accident : Erreur de serveur interne", error: error });
-    }
-}
+        // console.log(myUserData);
+
+       // Object.assign(foundAccidentR, myUserData);
 
 
-async function updateAccidentReport(req, res) {
-    try {
+        const result = await accidentReportCollection.updateOne(
+            { _id: accidentId }, 
+            { $set: foundAccidentR } 
+        );
+
+        // Verifier si la mise à jour s'est déroulée avec succès
+        if (result.modifiedCount === 0) {
+            // La mise à jour a échoué
+            return res.status(400).json({ msg: "Aucun changement n'a été effectué" });
+        }
 
         res.status(201).json({ msg: "Hello from update accident report" });
     } catch (error) {
@@ -350,10 +479,42 @@ async function deleteAccidentReport(req, res) {
     }
 }
 
+async function getAccidentReport(req, res) {
+    try {
 
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const { id } = req.params;
+
+        const accidentReportCollection = mainDb.collection(VEHICLES_COLLECTION);
+
+        const accidentRFound = await accidentReportCollection.findOne({ _id: id })
+
+        if (!accidentRFound) {
+            return res.status(404).json({ msg: "Accident Report not found" });
+        }
+
+
+        res.status(201).json({ msg: accidentRFound });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "GET Accident : Erreur de serveur interne", error: error });
+    }
+}
 
 module.exports = {
     newAccidentReport,
     getAccidentReport,
-    updateAccidentReport
+    updateAccidentReport,
+    joinToAccidentReport
 }

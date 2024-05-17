@@ -1219,7 +1219,8 @@ module.exports = {
     generateQRCode,
     readAndSendUserInfo,
     encryptMyData,
-    getMyAutoFullInfo
+    getMyAutoFullInfo,
+    getUserInfo
 };
 
 

@@ -20,7 +20,8 @@ router.post('/report/new/:vehicleId', [userAuth.ensureAuth, md_uploadAccidentImg
 router.get('/report/:id', [userAuth.ensureAuth], accidentController.getAccidentReport);
 
 // Route pour modifier une voiture par son ID
-router.patch('/update/:id', [userAuth.ensureAuth], accidentController.updateAccidentReport);
+router.patch('/update/:accidentId', [userAuth.ensureAuth, md_uploadAccidentImg], accidentController.updateAccidentReport);
 
+router.post('/report/join', [userAuth.ensureAuth], accidentController.joinToAccidentReport);
 
 module.exports = router;
