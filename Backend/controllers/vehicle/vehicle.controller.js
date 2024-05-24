@@ -20,11 +20,12 @@ const AES_KEY = process.env.AES_KEY
 const MAINDB = process.env.MAINDB;
 const USERSCOLLECTION = process.env.USERSCOLLECTION;
 const VEHICLESCOLLECTION = process.env.VEHICLESCOLLECTION;
-
+const INSURANCES_COLLECTION = process.env.INSURANCESCOLLECTION;
 
 const mainDb = getDb(MAINDB);
 const vehicleCollection = mainDb.collection(VEHICLESCOLLECTION);
 const userCollection = mainDb.collection(USERSCOLLECTION);
+const insuranceCollection = mainDb.collection(INSURANCES_COLLECTION);
 
 
 /**
@@ -366,6 +367,7 @@ async function deleteCarById(req, res) {
  */
 async function getAllCars(req, res) {
     try {
+        // Étape 1 : Récupération du token d'autorisation
         const token = req.headers.authorization?.replace("Bearer ", "");
         if (!token) {
             console.error("Le Token n'est pas fourni");
@@ -379,17 +381,34 @@ async function getAllCars(req, res) {
 
         const ownerId = myToken.user_id;
 
+        // Étape 2 : Vérification de l'existence de l'utilisateur dans la base de données
         // Verification de l'utilisateur dans la base de donne
         const user = await userCollection.findOne({ _id: ownerId });
         if (!user) {
             return res.status(404).json({ error: "Utilisateur non trouvé" });
         }
 
+        // Étape 3 : Récupération des voitures de l'utilisateur
         // Récupérer les voitures de l'utilisateur à partir de la collection des véhicules
         const cars = await vehicleCollection.find({ owner: ownerId }).toArray();
 
-        // Retourner les voitures de l'utilisateur
-        return res.status(200).json({ cars });
+        const carIds = cars.map(car => car._id.toString());
+
+        // Étape 4 : Récupération des assurances pour les véhicules de l'utilisateur
+        const insurances = await insuranceCollection.find({ vehicle: { $in: carIds } }).toArray();
+
+        // Étape 5 : Organisation des données
+        const carsWithInsurances = cars.map(car => {
+            const insurance = insurances.find(ins => ins.vehicle === car._id.toString()) || null;
+            return {
+                car,
+                insurance
+            };
+        });
+
+        // Étape 6 : Retourner la réponse
+        return res.status(200).json({ carsWithInsurances });
+
     } catch (error) {
         console.error("Erreur lors de la récupération des voitures de l'utilisateur :", error);
         return res.status(500).json({ error: "Erreur interne du serveur" });

@@ -20,17 +20,33 @@ const X_HMAC_SIGNATURE = process.env.X_HMAC_SIGNATURE;
 const VERIFF_BASE_URL = process.env.VERIFF_BASE_URL;
 
 
-
-
-
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
 
-async function deleteSession(sessionId) {
+async function deleteSession01(sessionId) {
     try {
+        
         const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}`;
+        //const url = `https://api.veriff.me/v1/sessions/${sessionId}`;
+
         const payload = sessionId;
+
+      
+
+        const timeStamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+        const baseURL = 'https://api.veriff.me/v1/sessions';
+
+        const payloadImageFront = JSON.stringify({
+            image: {
+                context: 'document-front', // Contexte pour l'image de la face du document
+                content: frontBase64, // Contenu de l'image en Base64
+                timestamp: timeStamp, // Horodatage actuel
+                inflowFeedback: true // Retour de flux
+            }
+        });
+
+
         const signature = generateHMACSignature(payload, X_HMAC_SIGNATURE);
 
         // Debug 
@@ -63,6 +79,42 @@ async function deleteSession(sessionId) {
         throw error;
     }
 }
+
+async function deleteSession(sessionId) {
+    try {
+
+        const apiKey = VERIF_API_PUBLIC_KEY;
+        const privateApiKey = X_HMAC_SIGNATURE;
+
+        const baseURL = 'https://api.veriff.me/v1/sessions';
+        const url = `${baseURL}/${sessionId}`;
+
+        // Payload para la solicitud DELETE
+        const payload = JSON.stringify({});
+
+        // Generar la firma HMAC
+        const signature = generateHMACSignature(sessionId, privateApiKey);
+
+        // Configurar los encabezados
+        const headers = {
+            'X-AUTH-CLIENT': apiKey,
+            'X-HMAC-SIGNATURE': signature,
+            'Content-Type': 'application/json'
+        };
+
+        // Realizar la solicitud DELETE
+        const response = await axios.delete(url, { headers });
+
+        return response.data;
+
+    }
+    catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
+
+
 
 async function getPersonInfo(sessionId, apiKey) {
     try {
@@ -197,6 +249,7 @@ async function getWatchlistScreening(sessionId, apiKey) {
     }
 }
 
+// OK
 async function getSessionDecision(sessionId) {
     try {
 
@@ -239,19 +292,14 @@ async function getSessionDecision(sessionId) {
     }
 }
 
+// OK
 function generateHMACSignature(message, sharedSecretKey) {
     const hmac = crypto.createHmac('sha256', sharedSecretKey);
     hmac.update(message);
     return hmac.digest('hex');
 }
 
-function generateHMACSignature02(message, sharedSecretKey) {
-    return crypto.createHmac('sha256', sharedSecretKey)
-                 .update(message)
-                 .digest('hex')
-                 .toLowerCase();
-}
-
+// OK
 function isSignatureValid({ signature, shared_secret_key, payload }) {
     try {
         if (!signature || !shared_secret_key || !payload) {
@@ -353,6 +401,7 @@ async function modifAndGetUserVeriffAttributes(verificationId, status, verifStat
     }
 }
 
+// OK
 async function instanceVeriffSession(userData) {
     try {
         // const userData = req.body;
@@ -434,7 +483,7 @@ async function instanceVeriffSession(userData) {
     }
 }
 
-
+// OK
 async function uploadAllImagesToVeriff(sessionId, frontBase64, backBase64, selfieBase64, user) {
     try {
 
@@ -498,9 +547,21 @@ async function uploadAllImagesToVeriff(sessionId, frontBase64, backBase64, selfi
         });
 
         // Envoyer les requêtes pour télécharger chaque image
-        await axios.post(`${urlMedia}/media`, payloadImageFront, { headers: headers(signatureFront) });
-        await axios.post(`${urlMedia}/media`, payloadImageBack, { headers: headers(signatureBack) });
-        await axios.post(`${urlMedia}/media`, payloadImageFace, { headers: headers(signatureFace) });
+       const resRecto = await axios.post(`${urlMedia}/media`, payloadImageFront, { headers: headers(signatureFront) });
+    //    console.log("************************");
+    //    console.log("resRecto");
+    //    console.log(resRecto);
+
+       const resVerso =  await axios.post(`${urlMedia}/media`, payloadImageBack, { headers: headers(signatureBack) });
+    //    console.log("************************");
+    //    console.log("resRecto");
+    //    console.log(resVerso);
+
+       const resSelfie =  await axios.post(`${urlMedia}/media`, payloadImageFace, { headers: headers(signatureFace) });
+    //    console.log("************************");
+    //    console.log("resSelfie");
+    //    console.log(resSelfie);
+    //    console.log("************************");
 
         // Envoyer une requête pour compléter le téléchargement des images
         const response = await axios.patch(urlMedia, payloadUploadCompleted, { headers: headers(signatureCompleted) });
