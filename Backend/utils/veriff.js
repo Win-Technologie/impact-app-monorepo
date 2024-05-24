@@ -19,6 +19,10 @@ const VERIFF_FULL_API_PATH = process.env.VERIFF_FULL_API_PATH;
 const X_HMAC_SIGNATURE = process.env.X_HMAC_SIGNATURE;
 const VERIFF_BASE_URL = process.env.VERIFF_BASE_URL;
 
+
+
+
+
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
@@ -31,14 +35,14 @@ async function deleteSession(sessionId) {
 
         // Debug 
         console.log("SESSION ID : ");
-        console.log(sessionId); 
+        console.log(sessionId);
 
         const headers = {
             'Content-Type': 'application/json',
             'X-HMAC-SIGNATURE': signature,
             'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY
         };
-        
+
         const options = {
             headers: headers,
             method: 'DELETE',
@@ -46,7 +50,7 @@ async function deleteSession(sessionId) {
         };
         try {
             const response = await got(url, options);
-            console.log(" REPONSE : ",response);
+            console.log(" REPONSE : ", response);
             return ({ headers: response.headers, body: response.body });
         }
         catch (error) {
@@ -209,7 +213,7 @@ async function getSessionDecision(sessionId) {
             'Content-Type': 'application/json',
             'X-HMAC-SIGNATURE': signature,
             'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY
-           
+
         };
 
         // Configurer les options de l'application
@@ -239,6 +243,13 @@ function generateHMACSignature(message, sharedSecretKey) {
     const hmac = crypto.createHmac('sha256', sharedSecretKey);
     hmac.update(message);
     return hmac.digest('hex');
+}
+
+function generateHMACSignature02(message, sharedSecretKey) {
+    return crypto.createHmac('sha256', sharedSecretKey)
+                 .update(message)
+                 .digest('hex')
+                 .toLowerCase();
 }
 
 function isSignatureValid({ signature, shared_secret_key, payload }) {
@@ -342,17 +353,177 @@ async function modifAndGetUserVeriffAttributes(verificationId, status, verifStat
     }
 }
 
+async function instanceVeriffSession(userData) {
+    try {
+        // const userData = req.body;
 
-module.exports={
+        if (!userData) {
+            return res.status(403).json({ msg: "Bad request" });
+        }
+
+        if (userData.country === 'Canada' || userData.country === 'CAN' || userData.country === 'CAD' || userData.country === 'canada' || userData.country === 'CANADA' || userData.country === 'Canadá') {
+            userData.country = 'CA';
+        }
+
+        const requestBody = {
+            verification: {
+                callback: `${BASE_VERIFF_HTTPS}`,
+                person: {
+                    firstName: userData.name,
+                    lastName: userData.lastName,
+                    idNumber: userData.idNumber
+                },
+                document: {
+                    number: userData.number,
+                    type: userData.docType,
+                    country: userData.country
+                },
+                vendorData: 'Impact_Tecnhologie'
+            }
+        };
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY
+            },
+            responseType: 'json'
+        };
+
+        const response = await got.post(VERIFF_FULL_API_PATH, {
+            ...config,
+            json: requestBody
+        });
+        // console.log(response.body);
+
+        // const myResponse = response;
+        const headers = response.headers;
+        const body = response.body;
+
+        // console.log('*********HEADERS********')
+        // console.log(headers)
+        // console.log('*****************')
+        // // console.log('*****************')
+        // // console.log('*********BODY********')
+        // // console.log(body)
+
+        let veriffResp = false;
+
+        if (body.status == 'success') {
+            veriffResp = true
+            return { veriffResp, body }
+        }
+
+        console.log("FROM VERIFF CONTROLLER");
+        console.log(veriffResp);
+        console.log(body);
+
+        return { veriffResp, body }
+        // res.status(200).json({
+        //     msg: 'Hello from New Veriff Session',
+        //     id: body.verification.id,
+        //     status: body.verification.status,
+        //     url: body.verification.url,
+        //     sessionToken: body.verification.sessionToken
+
+        // });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: 'Internal server error: ', error });
+    }
+}
+
+
+async function uploadAllImagesToVeriff(sessionId, frontBase64, backBase64, selfieBase64, user) {
+    try {
+
+        // Clés de l'API nécessaires pour l'authentification
+        const apiKey = VERIF_API_PUBLIC_KEY;
+        const privateApiKey = X_HMAC_SIGNATURE;
+// Obtenir la date et l'heure actuelles au format ISO, en supprimant les millisecondes
+        const timeStamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+        const baseURL = 'https://api.veriff.me/v1/sessions';
+
+        // Construire l'URL de la session spécifique
+        const urlMedia = `${baseURL}/${sessionId}`;
+
+        // Créer les payloads (charges utiles) pour chaque image en format JSON
+        const payloadImageFront = JSON.stringify({
+            image: {
+                context: 'document-front', // Contexte pour l'image de la face du document
+                content: frontBase64, // Contenu de l'image en Base64
+                timestamp: timeStamp, // Horodatage actuel
+                inflowFeedback: true // Retour de flux
+            }
+        });
+
+        const payloadImageBack = JSON.stringify({
+            image: {
+                context: 'document-back',  // Contexte pour l'image du verso du document
+                content: backBase64, // Contenu de l'image en Base64
+                timestamp: timeStamp, // Horodatage actuel
+                inflowFeedback: true// Retour de flux
+            }
+        });
+
+        const payloadImageFace = JSON.stringify({
+            image: {
+                context: 'face', // Contexte pour l'image du visage
+                content: selfieBase64, // Contenu de l'image en Base64
+                timestamp: timeStamp, // Horodatage actuel
+                inflowFeedback: true // Retour de flux
+            }
+        });
+
+          // Payload pour indiquer que la vérification est terminée
+        const payloadUploadCompleted = JSON.stringify({
+            verification: {
+                status: 'submitted', // Statut de la vérification
+                timestamp: timeStamp // Horodatage actuel
+            }
+        });
+
+        // Générer les signatures HMAC pour chaque payload
+        const signatureFront = generateHMACSignature(payloadImageFront, privateApiKey);
+        const signatureBack = generateHMACSignature(payloadImageBack, privateApiKey);
+        const signatureFace = generateHMACSignature(payloadImageFace, privateApiKey);
+        const signatureCompleted = generateHMACSignature(payloadUploadCompleted, privateApiKey);
+
+        // Fonction pour configurer les en-têtes des requêtes
+        const headers = (signature) => ({
+            'X-AUTH-CLIENT': apiKey, // Clé publique de l'API
+            'X-HMAC-SIGNATURE': signature, // Signature HMAC générée
+            'Content-Type': 'application/json' // Type de contenu
+        });
+
+        // Envoyer les requêtes pour télécharger chaque image
+        await axios.post(`${urlMedia}/media`, payloadImageFront, { headers: headers(signatureFront) });
+        await axios.post(`${urlMedia}/media`, payloadImageBack, { headers: headers(signatureBack) });
+        await axios.post(`${urlMedia}/media`, payloadImageFace, { headers: headers(signatureFace) });
+
+        // Envoyer une requête pour compléter le téléchargement des images
+        const response = await axios.patch(urlMedia, payloadUploadCompleted, { headers: headers(signatureCompleted) });
+
+        // Retourner les données de la réponse
+        return response.data;
+
+    } catch (error) {
+        console.error('Error:', error.response ? error.response.data : error.message);
+        throw error;
+    }
+}
+
+module.exports = {
     getSessionDecision,
     generateHMACSignature,
     isSignatureValid,
-  
- 
+    instanceVeriffSession,
     // modifUserVeriffAttributes,
     modifAndGetUserVeriffAttributes,
     deleteSession,
     getPersonInfo,
     uploadCollectedData,
-    getMedia
+    getMedia,
+    uploadAllImagesToVeriff
 }

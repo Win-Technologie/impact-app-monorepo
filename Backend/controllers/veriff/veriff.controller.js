@@ -187,109 +187,7 @@ async function NewVeriffSession(req, res) {
     }
 }
 
-async function instanceVeriffSession(userData) {
-    try {
-        // const userData = req.body;
 
-        if (!userData) {
-            return res.status(403).json({ msg: "Bad request" });
-        }
-
-        // Récupérer le jeton du header de la requête
-        // const token = req.headers.authorization?.replace("Bearer ", "");
-        // // Vérifier si le jeton est présent
-        // if (!token) {
-        //     console.error('Le Token n\'est pas fourni');
-        //     return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-        // }
-        // // Décoder le token pour obtenir les informations de l'utilisateur
-        // const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
-        // if (!myToken) {
-        //     return res.status(400).json({ msg: "Token invalide" });
-        // }
-
-        if (userData.country === 'Canada' || userData.country === 'CAN' || userData.country === 'CAD' || userData.country === 'canada' || userData.country === 'CANADA' || userData.country === 'Canadá') {
-            userData.country = 'CA';
-        }
-
-        // const userExist = await userCollection.findOne({ _id: myToken.user_id });
-
-        // if (!userExist) {
-        //     return res.status(400).json({ msg: "l'utilisateur n'existe pas" });
-        // }
-
-        // if (userData.country === 'Canada' || userData.country === 'CAN' || userData.country === 'CAD') {
-        //     userData.country = 'CA';
-        // }
-
-        const requestBody = {
-            verification: {
-                callback: `${BASE_VERIFF_HTTPS}`,
-                person: {
-                    firstName: userData.name,
-                    lastName: userData.lastName,
-                    idNumber: userData.idNumber
-                },
-                document: {
-                    number: userData.number,
-                    type: userData.docType,
-                    country: userData.country
-                },
-                vendorData: 'Impact_Tecnhologie'
-            }
-        };
-
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY
-            },
-            responseType: 'json'
-        };
-
-        const response = await got.post(VERIFF_FULL_API_PATH, {
-            ...config,
-            json: requestBody
-        });
-        // console.log(response.body);
-
-        // const myResponse = response;
-        const headers = response.headers;
-        const body = response.body;
-
-        // console.log('*********HEADERS********')
-        // console.log(headers)
-        // console.log('*****************')
-        // // console.log('*****************')
-        // // console.log('*********BODY********')
-        // // console.log(body)
-
-        let veriffResp = false;
-
-        if (body.status == 'success') {
-            veriffResp = true
-            return { veriffResp, body }
-        }
-
-        console.log("FROM VERIFF CONTROLLER");
-        console.log(veriffResp);
-        console.log(body);
-
-        return { veriffResp, body }
-        // res.status(200).json({
-        //     msg: 'Hello from New Veriff Session',
-        //     id: body.verification.id,
-        //     status: body.verification.status,
-        //     url: body.verification.url,
-        //     sessionToken: body.verification.sessionToken
-         
-        // });
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ msg: 'Internal server error: ', error });
-    }
-}
 
 
 async function uploadDocumentToVeriffSession(req, res) {
@@ -637,6 +535,6 @@ module.exports = {
     checkDecision,
     deleteVeriffSession,
     getVeriffPersonInfo,
-    instanceVeriffSession
+    // instanceVeriffSession
 };
 

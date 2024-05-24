@@ -881,10 +881,10 @@ async function generateQRCode(req, res) {
         const userName = user.name;
         const userLastNAme = user.lastName;
 
-        // Obtener las dos primeras letras de cada cadena
+        //  Obtenir les deux premières lettres de chaque chaîne
         const initials = `${replaceSpecialCharacters(userName.slice(0, 2))}${replaceSpecialCharacters(userLastNAme.slice(0, 2))}`;
 
-        const alphaNum = generateAlphanumericCode(4);
+        const alphaNum = generateAlphanumericCode(6);
 
         const AlphNumCode = `${initials}${alphaNum}`;
 
@@ -939,6 +939,7 @@ async function generateQRCode(req, res) {
         // return res.status(200).json({ cleanQRBase64 });
 
 
+        console.log(qrData);
         /* LAMINE */
         // Renvoyer le code QR en tant que réponse avec le type de contenu approprié
         res.setHeader('Content-Type', 'text/plain');
@@ -988,11 +989,10 @@ async function readAndSendUserInfo(req, res) {
     try {
 
         const { id, iv, alphaNum } = req.body;
-        const decryptedDataId = decryptDataAES(id, iv);
+       
 
         if (alphaNum) {
-            // userCollection
-            // KyMZXoQ7
+
             const user = await userCollection.findOne({ alphaNumCode: alphaNum });
 
             if (!user) {
@@ -1029,6 +1029,8 @@ async function readAndSendUserInfo(req, res) {
             if (!id || !iv) {
                 return res.status(400).json({ msg: "Veuillez compléter tous les champs pertinents" });
             }
+
+            const decryptedDataId = decryptDataAES(id, iv);
 
             const { userId, vehicleId } = extractIds(decryptedDataId);
 

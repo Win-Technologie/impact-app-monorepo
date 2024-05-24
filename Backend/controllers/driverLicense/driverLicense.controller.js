@@ -24,7 +24,8 @@ const { myCache, encryptData, decryptData } = require("../../utils/cache");
 const { encryptDataAES, decryptDataAES } = require('../../utils/encryptdata');
 
 
-const { instanceVeriffSession } = require('../../controllers/veriff/veriff.controller')
+// const { instanceVeriffSession } = require('../../controllers/veriff/veriff.controller');
+const { instanceVeriffSession,  uploadAllImagesToVeriff } = require('../../utils/veriff');
 
 // QR Code Generator
 const qr = require('qrcode');
@@ -147,7 +148,7 @@ async function UploadDriverLicense(req, res) {
             return res.status(402).json({ msg: "Cet utilisateur n'existe pas" });
         }
 
-        // restriction, do not allow double licenses
+       // restriction, do not allow double licenses
         if (myUser.driverLicense != 'pending') {
             // deleteUploadedFiles(req.files);
             return res.status(402).json({ msg: "l'utilisateur possède déjà un permis de conduire enregistré" });
@@ -157,14 +158,6 @@ async function UploadDriverLicense(req, res) {
             // deleteUploadedFiles(req.files);
             return res.status(402).json({ msg: "Veuillez saisir d'abord le nom et le prénom de l'utilisateur" });
         }
-
-        // if (!documentFile) {
-        //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
-        // }
-
-        // if (!req.files) {
-        //     return res.status(400).json({ msg: "Vous devez présenter un permis de conduire valide et une photo" });
-        // }
 
         const { number, name, lastName, birthdate, address, appartment, province,
             postalCode, licenseClass, sex, rest, mention, referenceNumber, height,
@@ -177,32 +170,7 @@ async function UploadDriverLicense(req, res) {
             return res.status(400).json({ msg: "La licence existe déjà" });
         }
 
-        let photoPath;
 
-        /*
-        if (req.files && Object.keys(req.files).length > 0) {
-            // Vérifier que les fichiers respectent la taille maximale autorisée.
-            const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
-
-            // Vérifier que le nombre de fichiers ne dépasse pas la limite autorisée.
-            const maxFileQuantity = 1; // Définit le nombre maximum de fichiers autorisés.
-            const { isValid: isQuantityValid } = checkFileQuantity(req.files, maxFileQuantity);
-
-            // Si la taille des fichiers n'est pas valide
-            if (!isSizeValid) {
-                // Supprimer tous les fichiers téléchargés dans le système de fichiers
-                deleteUploadedFiles(req.files);
-                return res.status(400).json({ msg: `La taille du fichier ${oversizedFileName} doit être inférieure à 500KB` });
-            }
-            // Si la quantité de fichiers n'est pas valide
-            if (!isQuantityValid) {
-                // Supprimer tous les fichiers téléchargés dans le système de fichiers
-                deleteUploadedFiles(req.files);
-                return res.status(400).json({ msg: `Le nombre de fichiers ne peut pas dépasser ${maxFileQuantity}` });
-            }
-            photoPath = getFileName(req.files[`photo`]);
-        }
-        */
 
         let myBirthdate
         // Recuperer les dates de delivrance et d'expiration et les transformer en objets Date
@@ -268,13 +236,16 @@ async function UploadDriverLicense(req, res) {
         if (!insertResult || !updateUser) {
             return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
         }
+ 
+        //Télécharger des photos d'identité dans le profil veriff de l'utilisateur à des fins d'authentification.
+        // const resultUploadeImages = await uploadAllImagesToVeriff(body.verification.id, photoRecto, photoVerso, photoSelfie, myUser);
+        // console.log('resultUploadeImages : ', resultUploadeImages);
+
 
         const cacheKeyDriverL = newDriverLicense._id;
         myCache.set(cacheKeyDriverL, newDriverLicense);
 
-       
-
-
+    
 
         res.status(201).json({
             msg: 'Nouvelle licence ajoutée avec succès',
