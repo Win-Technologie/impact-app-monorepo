@@ -1205,6 +1205,163 @@ async function encryptMyData (req,res){
 }
 
 
+
+async function validateInscription(req, res) {
+    try {
+        const { id } = req.params;
+        const token = req.headers.authorization?.replace("Bearer ", "");
+
+        if (!token) {
+            console.error("Le Token n'est pas fourni");
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const myUser = await userCollection.findOne({ _id: id });
+
+        if (!myUser) {
+            return res.status(400).json({ msg: "User doesn't exist" });
+        }
+
+        const fieldsToCheck = [
+            "active", "name", "lastName", "email", "phone", "password",
+            "address", "postalCode", "city", "province", "country",
+            "gender", "typeAccount", "allConditionsAccepted", "loginAttempts",
+            "verificationAttempts", "birthdate", "sessionId", "verifAproved",
+            "verifCheckDecision", "verifStatus", "verifLink", "vehicles", "accidentReports"
+        ];
+
+        const missingFields = fieldsToCheck.filter(field => {
+            if (Array.isArray(myUser[field])) {
+                return !myUser[field] || myUser[field].length === 0;
+            }
+            return myUser[field] == null || myUser[field] === '';
+        });
+
+        if (missingFields.length > 0) {
+            return res.status(400).json({ msg: "Missing required fields", missingFields });
+        }
+
+        // Recuperar los IDs de los vehículos
+        const vehicleIds = myUser.vehicles.map(id => id);
+
+        // Buscar los vehículos en la colección
+        const vehicles = await vehicleCollection.find({ _id: { $in: vehicleIds } }).toArray();
+
+        // Verificar los campos requeridos en cada vehículo
+        const vehicleFieldsToCheck = [
+            "brand", "model", "year", "color", "plate", "serialNumber",
+            "owner", "isActive", "dateAdded",
+            "immatriculation.numeroCertificatImmatriculation",
+            "immatriculation.dateDelivrance",
+            "immatriculation.dateExpiration",
+            "immatriculation.numeroEssieux",
+            "immatriculation.masseNette",
+            "immatriculation.cylindree",
+            "immatriculation.numeroDossier",
+            "immatriculation.categorieUsage"
+        ];
+
+        const vehiclesWithMissingFields = vehicles.map(vehicle => {
+            const missingFields = vehicleFieldsToCheck.filter(field => {
+                const fieldParts = field.split('.');
+                let value = vehicle;
+                for (const part of fieldParts) {
+                    value = value[part];
+                    if (value == null || value === '') {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            return { vehicleId: vehicle._id, missingFields };
+        }).filter(v => v.missingFields.length > 0);
+
+        if (vehiclesWithMissingFields.length > 0) {
+            return res.status(400).json({ msg: "Missing required fields in vehicles", vehiclesWithMissingFields });
+        }
+
+        // Buscar pólizas de seguro asociadas a los vehículos
+        const insurances = await insuranceCollection.find({ vehicle: { $in: vehicleIds.map(id => id.toString()) } }).toArray();
+
+        // Verificar los campos requeridos en cada póliza de seguro
+        const insuranceFieldsToCheck = [
+            "policyNumber", "insuranceCompany", "subscriber", "vehicle",
+            "vehicleRegistrationNumber", "vehicleBrand", "vehicleModel",
+            "vehicleYear", "expirationDate", "isActive", "dateAdded"
+        ];
+
+        const insurancesWithMissingFields = insurances.map(insurance => {
+            const missingFields = insuranceFieldsToCheck.filter(field => {
+                const value = insurance[field];
+                return value == null || value === '';
+            });
+            return { insuranceId: insurance._id, missingFields };
+        }).filter(i => i.missingFields.length > 0);
+
+        if (insurancesWithMissingFields.length > 0) {
+            return res.status(400).json({ msg: "Missing required fields in insurances", insurancesWithMissingFields });
+        }
+
+        // Asociar vehículos con sus pólizas de seguro
+        const vehiclesWithInsurance = vehicles.map(vehicle => {
+            const insurance = insurances.find(insurance => insurance.vehicle === vehicle._id.toString());
+            return { vehicle, insurance };
+        });
+
+
+        // Buscar la licencia de conducir del usuario
+        const drivingLicense = await drivingLicensesCollection.findOne({ user: id });
+
+        if (!drivingLicense) {
+            return res.status(400).json({ msg: "Driving license doesn't exist" });
+        }
+
+        // Verificar los campos requeridos en la licencia de conducir
+        // const drivingLicenseFieldsToCheck = [
+        //     "number", "name", "lastName", "birthdate", "address",
+        //     "appartment", "country", "province", "postalCode",
+        //     "licenseClass", "sex", "rest", "mention", "height",
+        //     "weight", "issued", "expires", "city", "photoRecto",
+        //     "photoVerso", "photoSelfie"
+        // ];
+
+        const drivingLicenseFieldsToCheck = [
+            "number", "name", "lastName", "birthdate", "address",
+            "appartment", "country", "province", "postalCode",
+            "licenseClass", "sex", "rest", "mention", "height",
+            "weight", "issued", "expires", "city"
+        ];
+
+        const missingLicenseFields = drivingLicenseFieldsToCheck.filter(field => {
+            const fieldParts = field.split('.');
+            let value = drivingLicense;
+            for (const part of fieldParts) {
+                value = value[part];
+                if (value == null || value === '') {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        if (missingLicenseFields.length > 0) {
+            return res.status(400).json({ msg: "Missing required fields in driving license", missingLicenseFields });
+        }
+
+        res.status(200).json({ myUser,drivingLicense  ,vehiclesWithInsurance });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur de serveur interne", error: error });
+    }
+}
+
+
 module.exports = {
     RegisterUser,
     Login,
@@ -1222,7 +1379,8 @@ module.exports = {
     readAndSendUserInfo,
     encryptMyData,
     getMyAutoFullInfo,
-    getUserInfo
+    getUserInfo,
+    validateInscription
 };
 
 

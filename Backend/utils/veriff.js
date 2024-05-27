@@ -558,10 +558,10 @@ async function uploadAllImagesToVeriff(sessionId, frontBase64, backBase64, selfi
     //    console.log(resVerso);
 
        const resSelfie =  await axios.post(`${urlMedia}/media`, payloadImageFace, { headers: headers(signatureFace) });
-    //    console.log("************************");
-    //    console.log("resSelfie");
-    //    console.log(resSelfie);
-    //    console.log("************************");
+       console.log("************************");
+       console.log("resSelfie");
+       console.log(resSelfie);
+       console.log("************************");
 
         // Envoyer une requête pour compléter le téléchargement des images
         const response = await axios.patch(urlMedia, payloadUploadCompleted, { headers: headers(signatureCompleted) });
