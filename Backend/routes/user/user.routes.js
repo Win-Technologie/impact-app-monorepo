@@ -7,17 +7,18 @@ const userController = require('../../controllers/user/user.controller.js');
 const driverLicenseController = require('../../controllers/driverLicense/driverLicense.controller.js');
 // VARIABLES
 const USER_ROUTER_IMG_PATH = process.env.USER_ROUTER_IMG_PATH;
-const DOCS_ROUTER_IMG_PATH = process.env.DOCS_ROUTER_DOC_PATH;
+// const DOCS_ROUTER_IMG_PATH = process.env.DOCS_ROUTER_DOC_PATH;
 // ADMIN FILES AND IMAGES
 const multiparty = require('connect-multiparty');
 // IMAGES PATH
 const md_uploadUserImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_PATH}` });
-const md_uploadUserDocs = multiparty({uploadDir: `${DOCS_ROUTER_IMG_PATH}`});
+// const md_uploadUserDocs = multiparty({uploadDir: `${DOCS_ROUTER_IMG_PATH}`});
 
 // To register new users.
 router.post('/user/register', userController.RegisterUser);
 // For users to log in.
 router.post('/user/login', userController.Login);
+// router.post('/user/login', [userAuth.isCompletedUser], userController.Login);
 //  For users to log out.
 router.post('/user/logout', [userAuth.ensureAuth], userController.Logout);
 // For users to refresh them session (new token).

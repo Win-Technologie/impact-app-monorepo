@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
     },
     active: {
         type: Boolean,
-        default: false,
+        default: true,
         index: true
     },
     name: {
