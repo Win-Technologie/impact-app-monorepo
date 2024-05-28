@@ -1471,6 +1471,18 @@ async function validateInscription(req, res) {
 
         /* INSURANCE */
 
+        // Filtrer les véhicules sans enregistrement d'assurance
+        const vehiclesWithoutInsurance = vehicles.filter(vehicle =>
+            !insurances.some(insurance => insurance.vehicle === vehicle._id)
+        );
+
+        // // Vérifier si des véhicules n'ont pas de certificat d'assurance
+        if (vehiclesWithoutInsurance.length > 0) {
+            // Si hay vehículos sin registros de seguro, retornar un error 400
+            return res.status(400).json({ msg: `Véhicules sans assurance : (${vehiclesWithoutInsurance.length})`, vehiclesWithoutInsurance });
+        }
+
+
         // Définir les champs à vérifier pour les assurances
         const insuranceFieldsToCheck = [
             "policyNumber", "insuranceCompany", "subscriber", "vehicle",
