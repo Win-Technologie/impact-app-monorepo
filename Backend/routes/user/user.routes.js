@@ -66,7 +66,7 @@ router.get('/user/vehicle/info/:vehicleId', [userAuth.ensureAuth, userAuth.isAct
     userController.getMyAutoFullInfo
 );
 
-router.post('/user/validate/:id', [userAuth.ensureAuth, userAuth.isActiveSession],
+router.post('/user/validate/:id?', [userAuth.ensureAuth, userAuth.isActiveSession],
     userController.validateInscription
 );
 

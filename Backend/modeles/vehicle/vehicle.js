@@ -167,9 +167,9 @@ const vehicleSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  documents: {
-    type: Array
-  },
+  // documents: {
+  //   type: Array
+  // },
   isActive: {
     type: Boolean,
     required: true,

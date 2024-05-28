@@ -193,6 +193,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "non",
         index: true,
+    },
+    allFieldsComplete: {
+        type: Boolean,
+        default: false,
+        index: true,
     }
 });
 

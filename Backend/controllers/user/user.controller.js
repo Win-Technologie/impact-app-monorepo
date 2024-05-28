@@ -1205,10 +1205,8 @@ async function encryptMyData (req,res){
 }
 
 
-
 async function validateInscription(req, res) {
     try {
-        const { id } = req.params;
         const token = req.headers.authorization?.replace("Bearer ", "");
 
         if (!token) {
@@ -1220,6 +1218,9 @@ async function validateInscription(req, res) {
         if (!myToken) {
             return res.status(400).json({ msg: "Token invalide" });
         }
+        
+
+        const id = req.params.id || myToken.user_id;
 
         const myUser = await userCollection.findOne({ _id: id });
 
@@ -1228,31 +1229,28 @@ async function validateInscription(req, res) {
         }
 
         const fieldsToCheck = [
-            "active", "name", "lastName", "email", "phone", "password",
+            "name", "lastName", "email", "phone", "password",
             "address", "postalCode", "city", "province", "country",
-            "gender", "typeAccount", "allConditionsAccepted", "loginAttempts",
-            "verificationAttempts", "birthdate", "sessionId", "verifAproved",
-            "verifCheckDecision", "verifStatus", "verifLink", "vehicles", "accidentReports"
+            "gender", "typeAccount", "allConditionsAccepted",
+            "birthdate", "sessionId", "vehicles",
+
+             // "verifAproved", "verifCheckDecision", "verifStatus", "verifLink"
         ];
 
         const missingFields = fieldsToCheck.filter(field => {
             if (Array.isArray(myUser[field])) {
                 return !myUser[field] || myUser[field].length === 0;
             }
-            return myUser[field] == null || myUser[field] === '';
+            return myUser[field] == null || myUser[field] === '' || myUser[field] === 'pending';
         });
 
         if (missingFields.length > 0) {
-            return res.status(400).json({ msg: "Missing required fields", missingFields });
+            return res.status(400).json({ msg: "User: Les champs suivants sont manquants", name: myUser.name, missingFields });
         }
 
-        // Recuperar los IDs de los vehículos
-        const vehicleIds = myUser.vehicles.map(id => id);
-
-        // Buscar los vehículos en la colección
+        const vehicleIds = myUser.vehicles;
         const vehicles = await vehicleCollection.find({ _id: { $in: vehicleIds } }).toArray();
 
-        // Verificar los campos requeridos en cada vehículo
         const vehicleFieldsToCheck = [
             "brand", "model", "year", "color", "plate", "serialNumber",
             "owner", "isActive", "dateAdded",
@@ -1271,12 +1269,10 @@ async function validateInscription(req, res) {
                 const fieldParts = field.split('.');
                 let value = vehicle;
                 for (const part of fieldParts) {
+                    if (value === undefined) break;
                     value = value[part];
-                    if (value == null || value === '') {
-                        return true;
-                    }
                 }
-                return false;
+                return value == null || value === '' || value === 'pending';
             });
             return { vehicleId: vehicle._id, missingFields };
         }).filter(v => v.missingFields.length > 0);
@@ -1285,79 +1281,77 @@ async function validateInscription(req, res) {
             return res.status(400).json({ msg: "Missing required fields in vehicles", vehiclesWithMissingFields });
         }
 
-        // Buscar pólizas de seguro asociadas a los vehículos
-        const insurances = await insuranceCollection.find({ vehicle: { $in: vehicleIds.map(id => id.toString()) } }).toArray();
+        const insurances = await insuranceCollection.find({ vehicle: { $in: vehicleIds } }).toArray();
 
-        // Verificar los campos requeridos en cada póliza de seguro
-        const insuranceFieldsToCheck = [
-            "policyNumber", "insuranceCompany", "subscriber", "vehicle",
-            "vehicleRegistrationNumber", "vehicleBrand", "vehicleModel",
-            "vehicleYear", "expirationDate", "isActive", "dateAdded"
-        ];
+        const invalidInsurances = insurances.filter(insurance => {
+            const insuranceFieldsToCheck = [
+                "policyNumber", "insuranceCompany", "subscriber", "vehicle",
+                "vehicleRegistrationNumber", "vehicleBrand", "vehicleModel",
+                "vehicleYear", "expirationDate"
+            ];
 
-        const insurancesWithMissingFields = insurances.map(insurance => {
-            const missingFields = insuranceFieldsToCheck.filter(field => {
-                const value = insurance[field];
-                return value == null || value === '';
+            return insuranceFieldsToCheck.some(field => {
+                const fieldParts = field.split('.');
+                let value = insurance;
+                for (const part of fieldParts) {
+                    if (value === undefined) break;
+                    value = value[part];
+                }
+                return value == null || value === '' || value === 'pending';
             });
-            return { insuranceId: insurance._id, missingFields };
-        }).filter(i => i.missingFields.length > 0);
-
-        if (insurancesWithMissingFields.length > 0) {
-            return res.status(400).json({ msg: "Missing required fields in insurances", insurancesWithMissingFields });
-        }
-
-        // Asociar vehículos con sus pólizas de seguro
-        const vehiclesWithInsurance = vehicles.map(vehicle => {
-            const insurance = insurances.find(insurance => insurance.vehicle === vehicle._id.toString());
-            return { vehicle, insurance };
         });
 
+        if (invalidInsurances.length > 0) {
+            return res.status(400).json({ msg: "Les champs suivants manquent dans l'assurance", invalidInsurances });
+        }
 
-        // Buscar la licencia de conducir del usuario
         const drivingLicense = await drivingLicensesCollection.findOne({ user: id });
 
         if (!drivingLicense) {
-            return res.status(400).json({ msg: "Driving license doesn't exist" });
+            return res.status(400).json({ msg: "Permis de conduire introuvable" });
         }
 
-        // Verificar los campos requeridos en la licencia de conducir
-        // const drivingLicenseFieldsToCheck = [
-        //     "number", "name", "lastName", "birthdate", "address",
-        //     "appartment", "country", "province", "postalCode",
-        //     "licenseClass", "sex", "rest", "mention", "height",
-        //     "weight", "issued", "expires", "city", "photoRecto",
-        //     "photoVerso", "photoSelfie"
-        // ];
-
         const drivingLicenseFieldsToCheck = [
-            "number", "name", "lastName", "birthdate", "address",
-            "appartment", "country", "province", "postalCode",
-            "licenseClass", "sex", "rest", "mention", "height",
-            "weight", "issued", "expires", "city"
+            "number", "name", "lastName", "birthdate", "address", "appartment",
+            "country", "province", "postalCode", "licenseClass", "sex", "rest",
+            "mention", "height", "weight", "issued", "expires", "city",
+            // "photoRecto", "photoVerso", "photoSelfie"
         ];
 
-        const missingLicenseFields = drivingLicenseFieldsToCheck.filter(field => {
+        const missingDrivingLicenseFields = drivingLicenseFieldsToCheck.filter(field => {
             const fieldParts = field.split('.');
             let value = drivingLicense;
             for (const part of fieldParts) {
+                if (value === undefined) break;
                 value = value[part];
-                if (value == null || value === '') {
-                    return true;
-                }
             }
-            return false;
+            return value == null || value === '' || value === 'pending';
         });
 
-        if (missingLicenseFields.length > 0) {
-            return res.status(400).json({ msg: "Missing required fields in driving license", missingLicenseFields });
+        if (missingDrivingLicenseFields.length > 0) {
+            return res.status(400).json({ msg: "Il manque les champs suivants sur le permis de conduire", missingDrivingLicenseFields });
         }
 
-        res.status(200).json({ myUser,drivingLicense  ,vehiclesWithInsurance });
+        // Actualizar el campo allFieldsComplete a true
+        await userCollection.updateOne({ _id: id }, { $set: { allFieldsComplete: true } });
+
+        const response = {
+            user: myUser,
+            vehicles: vehicles.map(vehicle => {
+                const vehicleInsurance = insurances.find(insurance => insurance.vehicle === vehicle._id.toString());
+                return {
+                    vehicle,
+                    insurance: vehicleInsurance || null
+                };
+            }),
+            drivingLicense
+        };
+
+        res.status(200).json(response);
 
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ msg: "Erreur de serveur interne", error: error });
+        return res.status(500).json({ msg: "Erreur de serveur interne", error: error.message });
     }
 }
 
