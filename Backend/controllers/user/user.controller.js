@@ -550,9 +550,9 @@ async function EditUser(req, res) {
 
         let myBirthdate;
 
-        if(userData.birthdate){
-                myBirthdate = new Date(userData.birthdate);
-                userData.birthdate = myBirthdate;
+        if (userData.birthdate) {
+            myBirthdate = new Date(userData.birthdate);
+            userData.birthdate = myBirthdate;
         }
 
 
@@ -852,7 +852,7 @@ async function generateQRCode(req, res) {
         const userId = myToken.user_id;
         const { vehicleId } = req.body;
 
-        if(!vehicleId){
+        if (!vehicleId) {
             return res.status(400).json({ msg: "Veuillez indiquer un véhicule." });
         }
 
@@ -902,11 +902,11 @@ async function generateQRCode(req, res) {
         // my code 
 
         // console.log(qrData);
-        
+
         // // Obtener id e iv
         // const id = myIdhashed.ed;
         // const iv = myIdhashed.iv;
-        
+
         // // Generar el código corto
         // const codigoCortoGenerado = generarCodigoCorto(id, iv);
         // console.log("Código corto generado:", codigoCortoGenerado);
@@ -944,7 +944,7 @@ async function generateQRCode(req, res) {
         // Renvoyer le code QR en tant que réponse avec le type de contenu approprié
         res.setHeader('Content-Type', 'text/plain');
         // RESPONSE
-        res.status(200).json({qrImage,AlphNumCode});
+        res.status(200).json({ qrImage, AlphNumCode });
 
 
     } catch (error) {
@@ -989,7 +989,7 @@ async function readAndSendUserInfo(req, res) {
     try {
 
         const { id, iv, alphaNum } = req.body;
-       
+
 
         if (alphaNum) {
 
@@ -1138,7 +1138,7 @@ async function getMyAutoFullInfo(req, res) {
 }
 
 
-async function encryptMyData (req,res){
+async function encryptMyData(req, res) {
 
 
     /** BACKEND */
@@ -1169,7 +1169,7 @@ async function encryptMyData (req,res){
     console.log('*********************');
     console.log('*********************');
     console.log('*********************');
-   
+
 
     const decryptedDataFull = decryptDataAES(encryptedDataFull.ed, encryptedDataFull.iv);
 
@@ -1197,7 +1197,7 @@ async function encryptMyData (req,res){
     // console.log('*********************');
 
 
-    res.status(200).json({ encryptedData,  encryptedDataFull});
+    res.status(200).json({ encryptedData, encryptedDataFull });
 
 
 
@@ -1207,50 +1207,55 @@ async function encryptMyData (req,res){
 
 async function validateInscription(req, res) {
     try {
+        // Récupère le jeton d'autorisation de l'en-tête de la requête
         const token = req.headers.authorization?.replace("Bearer ", "");
-
+        // Vérifie si le jeton n'est pas fourni
         if (!token) {
             console.error("Le Token n'est pas fourni");
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
         }
-
+        // Décode le jeton pour obtenir les informations de l'utilisateur
         const myToken = jwt.decoded(token);
+        // Vérifie si le jeton est invalide
         if (!myToken) {
             return res.status(400).json({ msg: "Token invalide" });
         }
-        
 
+        // Récupère l'identifiant de l'utilisateur à partir des paramètres de la requête ou du jeton décodé
         const id = req.params.id || myToken.user_id;
-
+        // Cherche l'utilisateur dans la collection userCollection en utilisant l'identifiant
         const myUser = await userCollection.findOne({ _id: id });
-
+        // Vérifie si l'utilisateur n'existe pas
         if (!myUser) {
             return res.status(400).json({ msg: "User doesn't exist" });
         }
-
+        // Définir les champs à vérifier pour l'utilisateur
         const fieldsToCheck = [
             "name", "lastName", "email", "phone", "password",
             "address", "postalCode", "city", "province", "country",
             "gender", "typeAccount", "allConditionsAccepted",
             "birthdate", "sessionId", "vehicles",
 
-             // "verifAproved", "verifCheckDecision", "verifStatus", "verifLink"
+            // "verifAproved", "verifCheckDecision", "verifStatus", "verifLink"
         ];
-
+        // Filtrer les champs manquants, vides ou égaux à "pending" pour l'utilisateur
         const missingFields = fieldsToCheck.filter(field => {
+            // Si le champ est un tableau, vérifie s'il est vide ou inexistant
             if (Array.isArray(myUser[field])) {
                 return !myUser[field] || myUser[field].length === 0;
             }
+            // Vérifie si le champ est null, vide ou égal à "pending"
             return myUser[field] == null || myUser[field] === '' || myUser[field] === 'pending';
         });
-
+        // Si des champs manquent, renvoie une réponse d'erreur
         if (missingFields.length > 0) {
             return res.status(400).json({ msg: "User: Les champs suivants sont manquants", name: myUser.name, missingFields });
         }
-
+        // Récupère les identifiants des véhicules de l'utilisateur
         const vehicleIds = myUser.vehicles;
+        // Cherche les véhicules dans la collection vehicleCollection en utilisant les identifiants des véhicules
         const vehicles = await vehicleCollection.find({ _id: { $in: vehicleIds } }).toArray();
-
+        // Définir les champs à vérifier pour chaque véhicule
         const vehicleFieldsToCheck = [
             "brand", "model", "year", "color", "plate", "serialNumber",
             "owner", "isActive", "dateAdded",
@@ -1263,81 +1268,96 @@ async function validateInscription(req, res) {
             "immatriculation.numeroDossier",
             "immatriculation.categorieUsage"
         ];
-
+        // Vérifie les champs manquants, vides ou égaux à "pending" pour chaque véhicule
         const vehiclesWithMissingFields = vehicles.map(vehicle => {
+            // Pour chaque véhicule, filtre les champs manquants
             const missingFields = vehicleFieldsToCheck.filter(field => {
+                // Divise le champ par les points pour accéder aux sous-champs
                 const fieldParts = field.split('.');
                 let value = vehicle;
+                // Parcourt les parties du champ pour accéder à la valeur finale
                 for (const part of fieldParts) {
                     if (value === undefined) break;
                     value = value[part];
                 }
+                // Vérifie si la valeur est null, vide ou égale à "pending"
                 return value == null || value === '' || value === 'pending';
             });
+            // Retourne l'identifiant du véhicule et les champs manquants
             return { vehicleId: vehicle._id, missingFields };
+            // Filtre les véhicules qui ont des champs manquants
         }).filter(v => v.missingFields.length > 0);
 
+        // Si des véhicules ont des champs manquants, renvoie une réponse d'erreur
         if (vehiclesWithMissingFields.length > 0) {
             return res.status(400).json({ msg: "Missing required fields in vehicles", vehiclesWithMissingFields });
         }
-
+        // Cherche les assurances dans la collection insuranceCollection en utilisant les identifiants des véhicules
         const insurances = await insuranceCollection.find({ vehicle: { $in: vehicleIds } }).toArray();
-
+        // Définir les champs à vérifier pour chaque assurance
         const invalidInsurances = insurances.filter(insurance => {
             const insuranceFieldsToCheck = [
                 "policyNumber", "insuranceCompany", "subscriber", "vehicle",
                 "vehicleRegistrationNumber", "vehicleBrand", "vehicleModel",
                 "vehicleYear", "expirationDate"
             ];
-
+            // Vérifie les champs manquants, vides ou égaux à "pending" pour chaque assurance
             return insuranceFieldsToCheck.some(field => {
+                // Vérifie si un champ de l'assurance est manquant
                 const fieldParts = field.split('.');
+                // Divise le champ par les points pour accéder aux sous-champs
                 let value = insurance;
+                // Parcourt les parties du champ pour accéder à la valeur finale
                 for (const part of fieldParts) {
                     if (value === undefined) break;
                     value = value[part];
                 }
+                // Vérifie si la valeur est null, vide ou égale à "pending"
                 return value == null || value === '' || value === 'pending';
             });
         });
-
+        // Si des assurances ont des champs manquants, renvoie une réponse d'erreur
         if (invalidInsurances.length > 0) {
             return res.status(400).json({ msg: "Les champs suivants manquent dans l'assurance", invalidInsurances });
         }
-
+        // Cherche le permis de conduire dans la collection drivingLicensesCollection en utilisant l'identifiant de l'utilisateur
         const drivingLicense = await drivingLicensesCollection.findOne({ user: id });
-
+        // Vérifie si le permis de conduire n'existe pas
         if (!drivingLicense) {
             return res.status(400).json({ msg: "Permis de conduire introuvable" });
         }
-
+        // Définir les champs à vérifier pour le permis de conduire
         const drivingLicenseFieldsToCheck = [
             "number", "name", "lastName", "birthdate", "address", "appartment",
             "country", "province", "postalCode", "licenseClass", "sex", "rest",
             "mention", "height", "weight", "issued", "expires", "city",
             // "photoRecto", "photoVerso", "photoSelfie"
         ];
-
+        // Vérifie les champs manquants, vides ou égaux à "pending" pour le permis de conduire
         const missingDrivingLicenseFields = drivingLicenseFieldsToCheck.filter(field => {
+            // Divise le champ par les points pour accéder aux sous-champs
             const fieldParts = field.split('.');
+            // Parcourt les parties du champ pour accéder à la valeur finale
             let value = drivingLicense;
             for (const part of fieldParts) {
                 if (value === undefined) break;
                 value = value[part];
             }
+            // Vérifie si la valeur est null, vide ou égale à "pending"
             return value == null || value === '' || value === 'pending';
         });
-
+        // Si des champs manquent pour le permis de conduire, renvoie une réponse d'erreur
         if (missingDrivingLicenseFields.length > 0) {
             return res.status(400).json({ msg: "Il manque les champs suivants sur le permis de conduire", missingDrivingLicenseFields });
         }
 
-    
+        // Met à jour le champ allFieldsComplete de l'utilisateur à true
         await userCollection.updateOne({ _id: id }, { $set: { allFieldsComplete: true } });
-
+        // Prépare la réponse avec l'utilisateur, les véhicules et leurs assurances, et le permis de conduire
         const response = {
             user: myUser,
             vehicles: vehicles.map(vehicle => {
+                // Trouve l'assurance correspondant au véhicule
                 const vehicleInsurance = insurances.find(insurance => insurance.vehicle === vehicle._id.toString());
                 return {
                     vehicle,
@@ -1368,7 +1388,7 @@ module.exports = {
     verifyAndChangePassword,
     DeleteUser,
     UploadDocument,
-   // UploadDriverLicense,
+    // UploadDriverLicense,
     generateQRCode,
     readAndSendUserInfo,
     encryptMyData,
