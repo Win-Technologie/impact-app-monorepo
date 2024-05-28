@@ -1332,7 +1332,7 @@ async function validateInscription(req, res) {
             return res.status(400).json({ msg: "Il manque les champs suivants sur le permis de conduire", missingDrivingLicenseFields });
         }
 
-        // Actualizar el campo allFieldsComplete a true
+    
         await userCollection.updateOne({ _id: id }, { $set: { allFieldsComplete: true } });
 
         const response = {
