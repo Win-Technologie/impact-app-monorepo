@@ -16,6 +16,11 @@ const md_uploadUserImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_PATH}` });
 
 // To register new users.
 router.post('/user/register', userController.RegisterUser);
+
+router.post('/user/register/code', userController.RegisterUserSendCode);
+// To verify verification code of register.
+router.post('/user/register/verify', userController.RegisterUserVerifyCode);
+
 // For users to log in.
 router.post('/user/login', userController.Login);
 // router.post('/user/login', [userAuth.isCompletedUser], userController.Login);

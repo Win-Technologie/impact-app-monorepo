@@ -288,6 +288,164 @@ async function RegisterUser(req, res) {
     }
 }
 
+
+async function RegisterUserSendCode(req, res) {
+    try {
+        // Extraction des données de la requête
+        const { email, password } = req.body;
+
+        const emailLowerCase = email.toLowerCase();
+
+        // Validation des champs
+        await validateRegisterUserFields(req);
+        const validationErrors = validationResult(req);
+
+        if (!validationErrors.isEmpty()) {
+            return res.status(400).json({ errors: validationErrors.array() });
+        }
+
+        // Vérification si l'utilisateur existe déjà
+        const userExisting = await userCollection.findOne({ email: emailLowerCase });
+        if (userExisting) {
+            return res.status(400).json({ msg: "Cet utilisateur existe déjà" });
+        }
+
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Création de l'objet Utilisateur
+        const newUser = new User({
+            active: true,
+            driverLicense: "pending",
+            email: emailLowerCase,
+            emailVerified:false,
+            name: "pending",
+            lastName:  "pending",
+            password: hashedPassword,
+            phone: "pending",
+            address: "pending",
+            postalCode: "pending",
+            province: "pending",
+            city: "pending",
+            country: "pending",
+            gender: "pending",
+            birthdate:  "pending",
+            typeAccount: "free",
+       
+        });
+
+        newUser.set('documents', undefined);
+        newUser.set('verificationCodeExpiration', undefined);
+        newUser.set('verificationAttempts', undefined);
+        newUser.set('verificationCode', undefined);
+        newUser.set('accidentReports', undefined);
+
+        // Enregistrer le nouvel utilisateur dans la collection « users ».
+        const insertResult = await userCollection.insertOne(newUser);
+
+
+        if (!insertResult.acknowledged) {
+            return res.status(500).json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
+        }
+
+        // Générer le code de vérification
+        const verificationCode = generateVerificationCode();
+
+        // Mettre à jour l'utilisateur avec le code de vérification
+        await userCollection.updateOne(
+            { _id: newUser._id },
+            {
+                $set: {
+                    verificationCode,
+                    verificationCodeExpiration: new Date(new Date().getTime() + 15 * 60000) // délai d'expiration de 15 minutes
+                }
+            }
+        );
+
+        // Envoyer le code de vérification par courrier électronique
+        await sendVerificationEmail(newUser.email, verificationCode);
+
+        res.status(201).json({ msg: "Code envoyé avec succès"});
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error.message });
+    }
+}
+
+
+
+async function RegisterUserVerifyCode(req, res) {
+    try {
+        const { email, verificationCode } = req.body;
+
+        // Recherche de l'utilisateur par son adresse électronique
+        const user = await userCollection.findOne({ email: email.toLowerCase() });
+
+        if (!user) {
+            return res.status(404).json({ msg: "Utilisateur non trouvé" });
+        }
+
+        // Vérifier que le code de vérification est correct et qu'il n'a pas expiré
+        const currentTime = new Date().getTime();
+        const codeExpirationTime = new Date(user.verificationCodeExpiration).getTime();
+
+        if (user.verificationCode !== verificationCode || currentTime > codeExpirationTime) {
+            // Incrémenter le compteur de tentatives de vérification
+            await userCollection.updateOne(
+                { _id: user._id },
+                {
+                    $set: { verificationAttempts: user.verificationAttempts + 1 }
+                }
+            );
+
+             // Vérifier si les tentatives de vérification ont été réussies
+            if (user.verificationAttempts > 3) {
+                // Bloquer le compte de l'utilisateur si les tentatives ont été dépassées.
+                await userCollection.updateOne(
+                    { _id: user._id },
+                    { $set: { active: false } }
+                );
+                return res.status(429).json({ msg: "Accès protégé, contacter un administrateur" });
+            }
+
+            return res.status(400).json({ msg: "Code de vérification invalide ou expiré. Veuillez réessayer." });
+        }
+
+        // Mise à jour du statut de l'utilisateur pour indiquer que l'adresse électronique de l'utilisateur a été vérifiée
+        await userCollection.updateOne(
+            { _id: user._id },
+            {
+                $set: { emailVerified: true },
+                $unset: { verificationCode: "", verificationCodeExpiration: "", verificationAttempts: "" }
+            }
+        );
+
+        //// Générer un tpoken d'accès temporaire
+        const temporalToken = jwt.createTemporalToken(user);
+
+
+        return res.status(201).json({
+            msg: "Le code de vérification a été validé avec succès",
+            user: user._id,
+            TA7: temporalToken
+        });
+
+    } catch (error) {
+        console.error(`Erreur lors de la vérification du code : ${error.message}`);
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error.message });
+    }
+}
+
+
+
+
+
+
+
+
 //CACHE :
 async function Login(req, res) {
     try {
@@ -701,6 +859,8 @@ async function SendVerificationCode(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
+
+
 // CACHE
 async function verifyAndChangePassword(req, res) {
     try {
@@ -771,6 +931,7 @@ async function verifyAndChangePassword(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
+
 //CACHE
 async function DeleteUser(req, res) {
     try {
@@ -1220,176 +1381,6 @@ async function encryptMyData(req, res) {
 }
 
 
-// async function validateInscription(req, res) {
-//     try {
-//         // Récupère le jeton d'autorisation de l'en-tête de la requête
-//         const token = req.headers.authorization?.replace("Bearer ", "");
-//         // Vérifie si le jeton n'est pas fourni
-//         if (!token) {
-//             console.error("Le Token n'est pas fourni");
-//             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-//         }
-//         // Décode le jeton pour obtenir les informations de l'utilisateur
-//         const myToken = jwt.decoded(token);
-//         // Vérifie si le jeton est invalide
-//         if (!myToken) {
-//             return res.status(400).json({ msg: "Token invalide" });
-//         }
-
-//         // Récupère l'identifiant de l'utilisateur à partir des paramètres de la requête ou du jeton décodé
-//         const id = req.params.id || myToken.user_id;
-//         // Cherche l'utilisateur dans la collection userCollection en utilisant l'identifiant
-//         const myUser = await userCollection.findOne({ _id: id });
-//         // Vérifie si l'utilisateur n'existe pas
-//         if (!myUser) {
-//             return res.status(400).json({ msg: "User doesn't exist" });
-//         }
-//         // Définir les champs à vérifier pour l'utilisateur
-//         const fieldsToCheck = [
-//             "name", "lastName", "email", "phone", "password",
-//             "address", "postalCode", "city", "province", "country",
-//             "gender", "typeAccount", "allConditionsAccepted",
-//             "birthdate", "sessionId", "vehicles",
-
-//             // "verifAproved", "verifCheckDecision", "verifStatus", "verifLink"
-//         ];
-//         // Filtrer les champs manquants, vides ou égaux à "pending" pour l'utilisateur
-//         const missingFields = fieldsToCheck.filter(field => {
-//             // Si le champ est un tableau, vérifie s'il est vide ou inexistant
-//             if (Array.isArray(myUser[field])) {
-//                 return !myUser[field] || myUser[field].length === 0;
-//             }
-//             // Vérifie si le champ est null, vide ou égal à "pending"
-//             return myUser[field] == null || myUser[field] === '' || myUser[field] === 'pending';
-//         });
-//         // Si des champs manquent, renvoie une réponse d'erreur
-//         if (missingFields.length > 0) {
-//             return res.status(400).json({ msg: "User: Les champs suivants sont manquants", name: myUser.name, missingFields });
-//         }
-//         // Récupère les identifiants des véhicules de l'utilisateur
-//         const vehicleIds = myUser.vehicles;
-//         // Cherche les véhicules dans la collection vehicleCollection en utilisant les identifiants des véhicules
-//         const vehicles = await vehicleCollection.find({ _id: { $in: vehicleIds } }).toArray();
-//         // Définir les champs à vérifier pour chaque véhicule
-//         const vehicleFieldsToCheck = [
-//             "brand", "model", "year", "color", "plate", "serialNumber",
-//             "owner", "isActive", "dateAdded",
-//             "immatriculation.numeroCertificatImmatriculation",
-//             "immatriculation.dateDelivrance",
-//             "immatriculation.dateExpiration",
-//             "immatriculation.numeroEssieux",
-//             "immatriculation.masseNette",
-//             "immatriculation.cylindree",
-//             "immatriculation.numeroDossier",
-//             "immatriculation.categorieUsage"
-//         ];
-//         // Vérifie les champs manquants, vides ou égaux à "pending" pour chaque véhicule
-//         const vehiclesWithMissingFields = vehicles.map(vehicle => {
-//             // Pour chaque véhicule, filtre les champs manquants
-//             const missingFields = vehicleFieldsToCheck.filter(field => {
-//                 // Divise le champ par les points pour accéder aux sous-champs
-//                 const fieldParts = field.split('.');
-//                 let value = vehicle;
-//                 // Parcourt les parties du champ pour accéder à la valeur finale
-//                 for (const part of fieldParts) {
-//                     if (value === undefined) break;
-//                     value = value[part];
-//                 }
-//                 // Vérifie si la valeur est null, vide ou égale à "pending"
-//                 return value == null || value === '' || value === 'pending';
-//             });
-//             // Retourne l'identifiant du véhicule et les champs manquants
-//             return { vehicleId: vehicle._id, missingFields };
-//             // Filtre les véhicules qui ont des champs manquants
-//         }).filter(v => v.missingFields.length > 0);
-
-//         // Si des véhicules ont des champs manquants, renvoie une réponse d'erreur
-//         if (vehiclesWithMissingFields.length > 0) {
-//             return res.status(400).json({ msg: "Missing required fields in vehicles", vehiclesWithMissingFields });
-//         }
-//         // Cherche les assurances dans la collection insuranceCollection en utilisant les identifiants des véhicules
-//         const insurances = await insuranceCollection.find({ vehicle: { $in: vehicleIds } }).toArray();
-//         // Définir les champs à vérifier pour chaque assurance
-//         const invalidInsurances = insurances.filter(insurance => {
-//             const insuranceFieldsToCheck = [
-//                 "policyNumber", "insuranceCompany", "subscriber", "vehicle",
-//                 "vehicleRegistrationNumber", "vehicleBrand", "vehicleModel",
-//                 "vehicleYear", "expirationDate"
-//             ];
-//             // Vérifie les champs manquants, vides ou égaux à "pending" pour chaque assurance
-//             return insuranceFieldsToCheck.some(field => {
-//                 // Vérifie si un champ de l'assurance est manquant
-//                 const fieldParts = field.split('.');
-//                 // Divise le champ par les points pour accéder aux sous-champs
-//                 let value = insurance;
-//                 // Parcourt les parties du champ pour accéder à la valeur finale
-//                 for (const part of fieldParts) {
-//                     if (value === undefined) break;
-//                     value = value[part];
-//                 }
-//                 // Vérifie si la valeur est null, vide ou égale à "pending"
-//                 return value == null || value === '' || value === 'pending';
-//             });
-//         });
-//         // Si des assurances ont des champs manquants, renvoie une réponse d'erreur
-//         if (invalidInsurances.length > 0) {
-//             return res.status(400).json({ msg: "Les champs suivants manquent dans l'assurance", invalidInsurances });
-//         }
-//         // Cherche le permis de conduire dans la collection drivingLicensesCollection en utilisant l'identifiant de l'utilisateur
-//         const drivingLicense = await drivingLicensesCollection.findOne({ user: id });
-//         // Vérifie si le permis de conduire n'existe pas
-//         if (!drivingLicense) {
-//             return res.status(400).json({ msg: "Permis de conduire introuvable" });
-//         }
-//         // Définir les champs à vérifier pour le permis de conduire
-//         const drivingLicenseFieldsToCheck = [
-//             "number", "name", "lastName", "birthdate", "address", "appartment",
-//             "country", "province", "postalCode", "licenseClass", "sex", "rest",
-//             "mention", "height", "weight", "issued", "expires", "city",
-//             // "photoRecto", "photoVerso", "photoSelfie"
-//         ];
-//         // Vérifie les champs manquants, vides ou égaux à "pending" pour le permis de conduire
-//         const missingDrivingLicenseFields = drivingLicenseFieldsToCheck.filter(field => {
-//             // Divise le champ par les points pour accéder aux sous-champs
-//             const fieldParts = field.split('.');
-//             // Parcourt les parties du champ pour accéder à la valeur finale
-//             let value = drivingLicense;
-//             for (const part of fieldParts) {
-//                 if (value === undefined) break;
-//                 value = value[part];
-//             }
-//             // Vérifie si la valeur est null, vide ou égale à "pending"
-//             return value == null || value === '' || value === 'pending';
-//         });
-//         // Si des champs manquent pour le permis de conduire, renvoie une réponse d'erreur
-//         if (missingDrivingLicenseFields.length > 0) {
-//             return res.status(400).json({ msg: "Il manque les champs suivants sur le permis de conduire", missingDrivingLicenseFields });
-//         }
-
-//         // Met à jour le champ allFieldsComplete de l'utilisateur à true
-//         await userCollection.updateOne({ _id: id }, { $set: { allFieldsComplete: true } });
-//         // Prépare la réponse avec l'utilisateur, les véhicules et leurs assurances, et le permis de conduire
-//         const response = {
-//             user: myUser,
-//             vehicles: vehicles.map(vehicle => {
-//                 // Trouve l'assurance correspondant au véhicule
-//                 const vehicleInsurance = insurances.find(insurance => insurance.vehicle === vehicle._id.toString());
-//                 return {
-//                     vehicle,
-//                     insurance: vehicleInsurance || null
-//                 };
-//             }),
-//             drivingLicense
-//         };
-
-//         res.status(200).json(response);
-
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).json({ msg: "Erreur de serveur interne", error: error.message });
-//     }
-// }
-
 // Fonction principale pour valider l'inscription
 async function validateInscription(req, res) {
     try {
@@ -1607,7 +1598,9 @@ module.exports = {
     encryptMyData,
     getMyAutoFullInfo,
     getUserInfo,
-    validateInscription
+    validateInscription,
+    RegisterUserSendCode,
+    RegisterUserVerifyCode
 };
 
 
