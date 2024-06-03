@@ -273,6 +273,7 @@ async function newAccidentReport(req, res) {
     }
 }
 
+
 async function joinToAccidentReport(req, res) {
 
     const token = req.headers.authorization?.replace("Bearer ", "");
@@ -324,8 +325,10 @@ async function joinToAccidentReport(req, res) {
         { $push: { accidentReports: findAccidentReport._id } }
     );
 
+    // return res.status(statusCode).json({msg: "Connection to accident report OK", No: "v02" });
     return res.status(statusCode).json({msg: "Connection to accident report OK", No: "v02" });
 }
+
 
 function instanceVehicleData(owner, vehicle, insurance, driverLicense,user_id) {
 
@@ -380,6 +383,7 @@ function instanceVehicleData(owner, vehicle, insurance, driverLicense,user_id) {
 
     return vehicleData;
 }
+
 
 async function updateAccidentReport(req, res) {
     try {
