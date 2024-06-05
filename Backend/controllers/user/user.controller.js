@@ -944,13 +944,28 @@ async function DeleteUser(req, res) {
             console.error('Le Token n\'est pas fourni');
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
         }
+
+        const email = req.body.email ?? "";
+
+        // Vérifier si l'un des paramètres est présent (id ou email)
+        if (!id && !email) {
+            return res.status(400).json({ msg: "Aucun paramètre fourni" });
+        }
+
+
+        if (id && email) {
+            return res.status(400).json({ msg: "Double paramètre" });
+        }
+
         // Décoder le token pour obtenir les informations de l'utilisateur
         const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
         if (!myToken) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
-        const userToDelete = await userCollection.findOne({ _id: id });
+        // Trouver l'utilisateur à supprimer par ID ou par email
+        const query = id ? { _id: id } : { email: email };
+        const userToDelete = await userCollection.findOne(query);
 
         if (!userToDelete) {
             return res.status(404).json({ msg: "Profil introuvable" });

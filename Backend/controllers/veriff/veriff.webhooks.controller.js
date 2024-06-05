@@ -60,9 +60,25 @@ async function webhookDecisions(req, res) {
                 console.log('Verification approved :', verification.id);
                 // myResponse = await ActivateUser(verification.id);
                 myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'approved', 'verified', true);
+
+                modifAndGetUserVeriffAttributes
+
                 if (myResponse.success) {
                     htmlMessage = `<p>Hello ${myResponse.name}, welcome to the Impact family, your application has been approved, please go to the application to enjoy all the benefits</p>`;
                     subject = 'Approved verification';
+
+
+                    // await userCollection.findOneAndUpdate({ sessionId: verification.id }){
+
+                    // }
+                    // const user = await userCollection.findOne({ sessionId: verification.id });
+
+                    // if (!user) {
+                    //     return res.status(404).json({ msg: "not found" });
+                    // }
+
+                    // return res.status(200).json(user);
+
                 }
 
                 break;
@@ -71,6 +87,7 @@ async function webhookDecisions(req, res) {
                 console.log('Verification rejected:', verification.id);
                 // myResponse = await DeactivateUser(verification.id,'declined');
                 myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'declined', 'verified', false);
+             
                 htmlMessage = `<p>Hello ${myResponse.name}, We regret to inform you that your application has been denied, please contact technical support at ${contactNumber01} for more information</p>`;
                 subject = 'Declined verification';
 
@@ -78,7 +95,9 @@ async function webhookDecisions(req, res) {
 
             case 'resubmission_required': // Actions en cas de demande de resoumission
                 console.log('A new submission is requested:', verification.id);
+             
                 myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'resubmission_required', 'verified', false);
+             
                 htmlMessage = `<p>Please click the button below to resubmit your information:</p>
                                 <a href=${myResponse.url} target="_blank">
                                 <button style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 5px;">Verify me</button>
@@ -91,7 +110,9 @@ async function webhookDecisions(req, res) {
             case 'expired':
                 // Actions en cas de soumission expired
                 console.log('Verification expired', verification.id);
+              
                 myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'expired', 'verified', false);
+              
                 htmlMessage = `<p>Hello ${myResponse.name}, We regret to inform you that your application has been expired, please contact technical support at ${contactNumber01} for more information</p>`;
                 subject = 'Verification expired';
                 break;
@@ -99,7 +120,9 @@ async function webhookDecisions(req, res) {
             case 'abandoned':
                 // Actions en cas de soumission abandoned
                 console.log('Verification abandoned', verification.id);
+            
                 myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'abandoned', 'verified', false);
+              
                 htmlMessage = `<p>Hello ${myResponse.name}, We regret to inform you that your application has been abandoned, please contact technical support at ${contactNumber01} for more information</p>`;
                 subject = 'Verification abandoned';
                 break;
@@ -107,7 +130,9 @@ async function webhookDecisions(req, res) {
             case 'review':
                 // Actions en cas de soumission review
                 console.log('Verification review', verification.id);
+             
                 myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'review', 'verified', false);
+              
                 htmlMessage = `<p>Hello ${myResponse.name}, We inform you that your application is under review, we will keep you informed of any changes in the status of your account.</p>`;
                 subject = 'Verification review';
                 break;
@@ -160,7 +185,9 @@ async function webHookEvents(req,res){
             case 7001 :  // Actions en cas d'approbation de la vérification
 
                 console.log('Action started :', id);
+              
                 myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'no-action', 'started', true);
+             
                 if (myResponse.success) {
                     htmlMessage = `<p>Hello ${myResponse.name}, Your verification process has begun, we will be in touch as soon as there is a change in your account status.</p>`;
                     subject = 'Verification started';
@@ -170,7 +197,9 @@ async function webHookEvents(req,res){
 
             case 7002: // Actions en cas de rejet de la vérification
                 console.log('Action submited ', id);
+              
                 myResponse = await modifAndGetUserVeriffAttributes(verification.id, 'no-action', 'submited', false);
+             
                 htmlMessage = `<p>Hello ${myResponse.name}, Your documents have been sent for review, we will be in touch as soon as there is a change in the status of your account</p>`;
                 subject = 'Verification submited';
 
