@@ -210,32 +210,35 @@ async function UploadDriverLicense(req, res) {
             photoSelfie: photoSelfie
         });
 
+        // console.log(newDriverLicense);
+
         const { veriffResp, body } = await instanceVeriffSession(newDriverLicense);
+        // console.log(veriffResp);
 
         if (!veriffResp) {
             return res.status(400).json({ msg: "Erreur lors de la création d'une session utilisateur veriff" })
         }
 
-        // const [updateUser, insertResult] = await Promise.all([
-        //     userCollection.updateOne(
-        //         { _id: myToken.user_id },
-        //         {
-        //             $set: {
-        //                 driverLicense: newDriverLicense._id,
-        //                 sessionId: body.verification.id,
-        //                 verifLink: body.verification.url,
-        //                 verifStatus: body.verification.status,
-        //             }
-        //         }
-        //     ),
+        const [updateUser, insertResult] = await Promise.all([
+            userCollection.updateOne(
+                { _id: myToken.user_id },
+                {
+                    $set: {
+                        driverLicense: newDriverLicense._id,
+                        sessionId: body.verification.id,
+                        verifLink: body.verification.url,
+                        verifStatus: body.verification.status,
+                    }
+                }
+            ),
 
-        //     drivingLicensesCollection.insertOne(newDriverLicense)
+            drivingLicensesCollection.insertOne(newDriverLicense)
 
-        // ]);
+        ]);
 
-        // if (!insertResult || !updateUser) {
-        //     return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
-        // }
+        if (!insertResult || !updateUser) {
+            return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
+        }
  
         //Télécharger des photos d'identité dans le profil veriff de l'utilisateur à des fins d'authentification.
         const resultUploadeImages = await uploadAllImagesToVeriff(body.verification.id, photoRecto, photoVerso, photoSelfie, myUser);

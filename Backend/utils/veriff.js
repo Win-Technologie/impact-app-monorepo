@@ -114,8 +114,6 @@ async function deleteSession(sessionId) {
     }
 }
 
-
-
 async function getPersonInfo(sessionId, apiKey) {
     try {
         const url = `${VERIFF_BASE_URL}/v1/sessions/${sessionId}/person`;
@@ -402,9 +400,18 @@ async function modifAndGetUserVeriffAttributes(verificationId, status, verifStat
 }
 
 // OK
+/*
 async function instanceVeriffSession(userData) {
     try {
-        // const userData = req.body;
+        //  const userData = req.body;
+
+        console.log("creating veriff session" );
+        console.log("creating veriff session" );
+        console.log("creating veriff session" );
+        console.log("creating veriff session" );
+        console.log("creating veriff session" );
+
+        // console.log(userData);
 
         if (!userData) {
             return res.status(403).json({ msg: "Bad request" });
@@ -439,11 +446,15 @@ async function instanceVeriffSession(userData) {
             responseType: 'json'
         };
 
+        //https://stationapi.veriff.com
+
+        console.log("antes antes antes");
         const response = await got.post(VERIFF_FULL_API_PATH, {
             ...config,
             json: requestBody
         });
-        // console.log(response.body);
+        // console.log("despues despues despues");
+        console.log(response.body);
 
         // const myResponse = response;
         const headers = response.headers;
@@ -467,6 +478,8 @@ async function instanceVeriffSession(userData) {
         console.log(veriffResp);
         console.log(body);
 
+
+
         return { veriffResp, body }
         // res.status(200).json({
         //     msg: 'Hello from New Veriff Session',
@@ -479,9 +492,77 @@ async function instanceVeriffSession(userData) {
 
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ msg: 'Internal server error: ', error });
+        // return res.status(500).json({ msg: 'Internal server error: ', error });
     }
 }
+*/
+async function instanceVeriffSession(userData) {
+    try {
+        console.log("Creating Veriff session");
+
+        if (!userData) {
+            throw new Error("Bad request: userData is required");
+        }
+
+        // Normalize the country code for Canada
+        const validCanadaCodes = ['Canada', 'CAN', 'CAD', 'canada', 'CANADA', 'Canadá'];
+        if (validCanadaCodes.includes(userData.country)) {
+            userData.country = 'CA';
+        }
+
+        userData.number = userData.number.replace(/-/g, '');
+
+        const requestBody = {
+            verification: {
+                callback: `${BASE_VERIFF_HTTPS}`,
+                person: {
+                    firstName: userData.name,
+                    lastName: userData.lastName,
+                    idNumber: userData.idNumber,
+                    dateOfBirth: userData.dateOfBirth, // Asegúrate de que este campo esté presente y formateado correctamente
+                },
+                document: {
+                    number: userData.number,
+                    type: userData.docType,
+                    country: userData.country
+                },
+                vendorData: 'Impact_Technologie'
+            }
+        };
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY
+            },
+            responseType: 'json'
+        };
+
+        console.log("Sending request to Veriff API");
+
+        const response = await got.post(VERIFF_FULL_API_PATH, {
+            ...config,
+            json: requestBody
+        });
+
+        const body = response.body;
+
+        if (body.status === 'success') {
+            return { veriffResp: true, body };
+        } else {
+            console.log("Veriff response indicates failure:", body);
+            return { veriffResp: false, body };
+        }
+    } catch (error) {
+        if (error.response) {
+            console.error("Error in instanceVeriffSession:", error.response.body);
+        } else {
+            console.error("Error in instanceVeriffSession:", error);
+        }
+        throw new Error(`Internal server error: ${error}`);
+    }
+}
+
 
 // OK
 async function uploadAllImagesToVeriff(sessionId, frontBase64, backBase64, selfieBase64, user) {
