@@ -121,6 +121,7 @@ async function validateAccidentReport(req) {
 }
 
 
+/*
 async function newAccidentReport(req, res) {
     try {
 
@@ -272,8 +273,126 @@ async function newAccidentReport(req, res) {
         return res.status(500).json({ msg: "New Accident : Erreur de serveur interne", error: error });
     }
 }
+*/
+async function newAccidentReport(req, res) {
+    try {
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
 
 
+        const { owner, vehicle, insurance, driverLicense, accidentLocation } = req.body;
+
+        const now = new Date();
+        // Crear una constante para la fecha actual
+        const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        // Crear una constante para la hora actual
+        const currentTime = new Date(1970, 0, 1, now.getHours(), now.getMinutes(), now.getSeconds());
+        const issuedDateFormat = new Date(driverLicense.issued);
+        const expiresDateFormat = new Date(driverLicense.expires);
+        const dateDelivranceFormat = new Date(vehicle.immatriculation.dateDelivrance);
+        const dateStartInsuranceFormat = new Date(insurance.startDate);
+
+        const newAccidentReport = new Accident({
+            accidentDate: currentDate,
+            hourAccident: currentTime,
+            accidentLocation: accidentLocation,
+
+            vehicles: [
+                {
+                    user: myToken.user_id,
+                    personalDetails: {
+                        name: owner.name,
+                        lastName: owner.lastName,
+                        address: owner.address,
+                        phone: owner.phone,
+                        postalCode: owner.postalCode,
+                        email: owner.email,
+                        city: owner.city,
+                        province: owner.province,
+                        country: owner.country
+                    },
+                    drivingLicense: {
+                        number: driverLicense.number,
+                        issuanceDate: issuedDateFormat,
+                        licenseClass: driverLicense.licenseClass,
+                        expirationDate: expiresDateFormat,
+                        driverLicenseId: driverLicense._id
+                    },
+                    vehicleDetails: {
+                        registrationCertificate: {
+                            fileNumber: vehicle.immatriculation.numeroDossier,
+                            // owner: true,
+                            // ownerName: 'Alice Johnson',
+                            // address: '123 Pine St, Anytown, USA',
+                            // city: 'Anytown',
+                            // postalCode: '12345',
+                            // phone: '555-555-6789',
+                            vehicleBrand: vehicle.brand,
+                            year: vehicle.year,
+                            vehicleSerialNumber: vehicle.immatriculation.serialNumber,
+                            licensePlateNumber: vehicle.plate,
+                            issuanceDate: dateDelivranceFormat,
+                            vehicleId: vehicle._id
+                        },
+                        insuranceCertification: {
+                            insuranceCompany: insurance.insuranceCompany,
+                            policyNumber: insurance.insuranceNumber,
+                            effectiveDate: dateStartInsuranceFormat,
+                            insuredName: owner.name,
+                            insuredLastName: owner.lastName,
+                            // insuredAddress: '123 Pine St, Anytown, USA',
+                            // insuredCity: 'Anytown',
+                            // insuredPhone: '555-555-6789',
+                            assuranceId: insurance._id
+                        }
+                    },
+                    // vehicleDamage: true,
+                    // vehicleDamageDescription: '',
+                    // injured: false,
+                    // injuredDescription: '',
+                    // damageComments: '',
+                    // towed: false,
+                    // driverSignature: ''
+                }
+            ],
+            accidentSketch: 'URL to sketch image'
+        });
+
+        newAccidentReport.set('witnesses', undefined);
+
+
+        // Save the accident report to the database
+        const result = await accidentReportCollection.insertOne(newAccidentReport);
+        // console.log(result);
+        await userCollection.updateOne(
+            { "_id": myToken.user_id },
+            { $push: { accidentReports: newAccidentReport._id } }
+        );
+
+        // if (result.insertedCount !== 1) {
+        //     throw new Error("Failed to create accident report");
+        // }
+
+
+        // // Return a success message
+        return res.status(201).json({ msg: "New accident report created successfully", accidentId: newAccidentReport._id, newAccidentReport });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "New Accident : Erreur de serveur interne", error: error });
+    }
+}
+
+/*
 async function joinToAccidentReport(req, res) {
 
     const token = req.headers.authorization?.replace("Bearer ", "");
@@ -328,8 +447,72 @@ async function joinToAccidentReport(req, res) {
     // return res.status(statusCode).json({msg: "Connection to accident report OK", No: "v02" });
     return res.status(statusCode).json({msg: "Connection to accident report OK", No: "v02" });
 }
+*/
 
 
+async function joinToAccidentReport(req, res) {
+
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    // Vérifier si le jeton est présent
+    if (!token) {
+        console.error('Le Token n\'est pas fourni');
+        return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+    }
+    // Décoder le token pour obtenir les informations de l'utilisateur
+    const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+    if (!myToken) {
+        return res.status(400).json({ msg: "Token invalide" });
+    }
+
+    // "subscriber": "65fc4565e55d51baf95cc907",
+    // "vehicle": "663a42e0f730983f95848238",
+
+    const { vehicleId, userId, accidentReportId } = req.body;
+
+    const findAccidentReport = await accidentReportCollection.findOne({ _id: accidentReportId });
+
+    if (!findAccidentReport) {
+        return res.status(404).json({ msg: "accident report not found" });
+    }
+
+
+    // const { response, statusCode, msg } = await getUserInfo(myToken.user_id, vehicleId);
+
+    const { response, statusCode, msg } = await getUserInfo(userId, vehicleId);
+
+    if (!response) {
+        return res.status(statusCode).json({ msg });
+    }
+
+    const { owner, vehicle, insurance, driverLicense } = response;
+
+    // const vehicleData = instanceVehicleData(owner, vehicle, insurance, driverLicense, myToken.user_id);
+    const vehicleData = instanceVehicleData(owner, vehicle, insurance, driverLicense, userId);
+
+    // console.log(vehicleData);
+
+    // await accidentReportCollection.updateOne(
+    //     { "_id": accidentReportId },
+    //     { $set: { vehicleB: vehicleData } }
+    // );
+    await accidentReportCollection.updateOne(
+        { "_id": accidentReportId },
+        { $push: { vehicles: vehicleData } }
+    );
+
+    // await userCollection.updateOne(
+    //     { "_id": userId },
+    //     { $push: { accidentReports: findAccidentReport._id } }
+    // );
+
+    // return res.status(statusCode).json({msg: "Connection to accident report OK", No: "v02" });
+    return res.status(statusCode).json({ msg: "Connection to accident report OK" });
+}
+
+
+
+
+/*
 function instanceVehicleData(owner, vehicle, insurance, driverLicense,user_id) {
 
     const now = new Date();
@@ -379,6 +562,61 @@ function instanceVehicleData(owner, vehicle, insurance, driverLicense,user_id) {
             insuredPhone: owner.phone,
             assuranceId: insurance._id,
         }
+    };
+
+    return vehicleData;
+}
+*/
+
+function instanceVehicleData(owner, vehicle, insurance, driverLicense, user_id) {
+
+    const now = new Date();
+
+    const issuedDateFormat = new Date(driverLicense.issued);
+    const expiresDateFormat = new Date(driverLicense.expires);
+    const dateDelivranceFormat = new Date(vehicle.immatriculation.dateDelivrance);
+    const dateStartInsuranceFormat = new Date(insurance.startDate);
+
+    const vehicleData = {
+        user: user_id,
+        personalDetails: {
+            name: owner.name,
+            lastName: owner.lastName,
+            address: owner.address,
+            phone: owner.phone,
+            postalCode: owner.postalCode,
+            email: owner.email,
+            city: owner.city,
+            province: owner.province,
+            country: owner.country
+        },
+        drivingLicense: {
+            number: driverLicense.number,
+            issuanceDate: issuedDateFormat,
+            licenseClass: driverLicense.licenseClass,
+            expirationDate: expiresDateFormat,
+            driverLicenseId: driverLicense._id
+        },
+        vehicleDetails: {
+            registrationCertificate: {
+                fileNumber: vehicle.immatriculation.numeroDossier,
+                vehicleBrand: vehicle.brand,
+                year: vehicle.year,
+                vehicleSerialNumber: vehicle.immatriculation.serialNumber,
+                licensePlateNumber: vehicle.plate,
+                issuanceDate: dateDelivranceFormat,
+                vehicleId: vehicle._id
+            },
+            insuranceCertification: {
+                insuranceCompany: insurance.insuranceCompany,
+                policyNumber: insurance.insuranceNumber,
+                effectiveDate: dateStartInsuranceFormat,
+                insuredName: owner.name,
+                insuredLastName: owner.lastName,
+                assuranceId: insurance._id
+            }
+        },
+
     };
 
     return vehicleData;

@@ -105,8 +105,10 @@ async function deleteSession(sessionId) {
         // Realizar la solicitud DELETE
         const response = await axios.delete(url, { headers });
 
-        return response.data;
+        console.log(response);
 
+        return response.data;
+//1f700e2d-2b13-4d00-acd2-ac827bde4deb
     }
     catch (error) {
         console.error('Error:', error);
@@ -523,12 +525,15 @@ async function instanceVeriffSession(userData) {
                 },
                 document: {
                     number: userData.number,
-                    type: userData.docType,
+                    // type: userData.docType,
+                    type: 'DRIVERS_LICENSE',
                     country: userData.country
                 },
                 vendorData: 'Impact_Technologie'
             }
         };
+
+        console.log(requestBody);
 
         const config = {
             headers: {
