@@ -277,20 +277,25 @@ const AccidentSchema = new Schema({
         required: true,
         index: true
     },
+
+    accitendType: String,
     accidentDate: Date,
-    hourAccident: Date,
+    hourAccident: String,
     accidentLocation: String,
     witnesses: [WitnessSchema],
     vehicles: [VehicleReportSchema],  // Tableau permettant de gérer plusieurs véhicules
     accidentSketch: String,
 
-    vehicleDamage: Boolean,
+    // vehicleDamage: Boolean,
     vehicleDamageDescription: String,
     injured: Boolean,
     injuredDescription: String,
     damageComments: String,
     towed: Boolean,
-    driverSignature: String
+    driverSignature: String,
+    photos: [{
+        type: String
+    }]
 
 });
 

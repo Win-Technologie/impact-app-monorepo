@@ -409,11 +409,33 @@ async function newAccidentReport(req, res) {
 
         const accidentDataArray = req.body; // On s'attend maintenant à un tableau de données d'accidents
 
-        const now = new Date();
-        const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const currentTime = new Date(1970, 0, 1, now.getHours(), now.getMinutes(), now.getSeconds());
+        const { accidentDate, accidentHour } = accidentDataArray[0];
+
+        // Transformación de accidentDate y accidentHour
+        const currentDate = new Date(accidentDate); // Transformar accidentDate en Date
+        const [hour, minute] = accidentHour.split('h'); // Dividir accidentHour en hora y minutos
+        // const currentTime = new Date(1970, 0, 1, hour, minute);
+        const currentTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+
+        // console.log(currentTime);
+
+
+        // const now = new Date();
+        // const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        // const currentTime = new Date(1970, 0, 1, now.getHours(), now.getMinutes(), now.getSeconds());
 
         let myAccidentLocation = accidentDataArray[0].accidentLocation;
+
+        let _accidentSketch = accidentDataArray[0].accidentSketch || "not provided";
+        let _accitendType = accidentDataArray[0].accitendType || "not provided";
+        let _vehicleDamageDescription = accidentDataArray[0].vehicleDamageDescription || "not provided";
+        let _photos = accidentDataArray[0].photos || undefined;
+
+
+        if (_photos && (_photos.length < 3 || _photos.length > 6)) {
+            return res.status(400).json({ msg: "Photo limit: min 3 and max 6." });
+        }
+
 
         const vehicleReports = accidentDataArray.map(accidentData => {
             const { owner, vehicle, insurance, driverLicense } = accidentData;
@@ -470,7 +492,11 @@ async function newAccidentReport(req, res) {
             hourAccident: currentTime,
             accidentLocation: myAccidentLocation,
             vehicles: vehicleReports,
-            accidentSketch: 'URL to sketch image'
+            accidentSketch: _accidentSketch,
+            accitendType: _accitendType,
+            vehicleDamageDescription: _vehicleDamageDescription,
+            accitendType: _accitendType,
+            photos: _photos
         });
 
         // console.log(newAccidentReport);
