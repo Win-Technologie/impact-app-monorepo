@@ -14,7 +14,8 @@ const md_uploadAccidentImg = multiparty({ uploadDir: `${ACCIDENT_IMG_PATH}` });
 
 
 // Route pour ajouter une voiture
-router.post('/report/new/:vehicleId', [userAuth.ensureAuth, md_uploadAccidentImg], accidentController.newAccidentReport);
+// router.post('/report/new/:vehicleId', [userAuth.ensureAuth, md_uploadAccidentImg], accidentController.newAccidentReport);
+router.post('/report/new', [userAuth.ensureAuth, md_uploadAccidentImg], accidentController.newAccidentReport);
 
 // Route pour obtenir une voiture par son ID
 router.get('/report/:id', [userAuth.ensureAuth], accidentController.getAccidentReport);
