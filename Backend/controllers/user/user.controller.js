@@ -1593,6 +1593,61 @@ async function getUserSystemInfo(user) {
 }
 
 
+async function resendVerificationCode(req,body){
+    try {
+
+        const { email } = req.body;
+
+        // Vérifier si l'utilisateur existe
+        const user = await userCollection.findOne({ email });
+        // Si l'utilisateur n'existe pas ou s'il n'est pas actif, renvoyer une erreur 404
+        if (!user || !user.active) {
+            return res.status(404).json({ msg: "Impossible d'exécuter cette action" });
+        }
+
+        // Générer le code de vérification
+        const verificationCode = generateVerificationCode();
+        // Récupérer le nombre actuel de tentatives de vérification de l'utilisateur
+        let currentVerificationAttempts = user.verificationAttempts;
+        // console.log(currentVerificationAttempts);
+
+        // Vérifier si le nombre de tentatives de vérification est supérieur ou égal à 3
+        if (currentVerificationAttempts > 3) {
+            // Si le nombre de tentatives dépasse 3, bloquer le compte utilisateur
+            await userCollection.updateOne(
+                { _id: user._id },
+                {
+                    $set: { active: false }
+                });
+            // Renvoyer un code d'erreur 429 (Trop de requêtes) pour indiquer que la limite de tentatives de vérification a été dépassée
+            return res.status(429).json({ msg: "Accès protégé, contacter un administrateur" });
+        }
+
+        // Mettre à jour l'utilisateur dans la base de données avec le nouveau code de vérification et d'autres champs
+        await userCollection.updateOne(
+            { $and: [{ _id: user._id }, { email: user.email }] }, // Filtre pour trouver l'utilisateur par son ID et  adresse e-mail
+            {
+                $set: {
+                    verificationCode,
+                    verificationAttempts: currentVerificationAttempts + 1,
+                    verificationCodeExpiration: new Date(new Date().getTime() + 15 * 60000) // 15 minutes d'expiration
+                }
+            }
+        );
+
+        // Envoyer le code de vérification par e-mail à l'utilisateur
+        await sendVerificationEmail(user.email, verificationCode);
+
+        return res.status(200).json({ msg: "Un code de vérification a été envoyé à votre adresse électronique.", code: verificationCode });
+
+        
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur de serveur interne", error: error.message });
+    }
+}
+
+
 
 
 module.exports = {
@@ -1615,7 +1670,8 @@ module.exports = {
     getUserInfo,
     validateInscription,
     RegisterUserSendCode,
-    RegisterUserVerifyCode
+    RegisterUserVerifyCode,
+    resendVerificationCode
 };
 
 

@@ -533,7 +533,7 @@ async function instanceVeriffSession(userData) {
             }
         };
 
-        console.log(requestBody);
+        // console.log(requestBody);
 
         const config = {
             headers: {
@@ -576,7 +576,7 @@ async function uploadAllImagesToVeriff(sessionId, frontBase64, backBase64, selfi
         // Clés de l'API nécessaires pour l'authentification
         const apiKey = VERIF_API_PUBLIC_KEY;
         const privateApiKey = X_HMAC_SIGNATURE;
-// Obtenir la date et l'heure actuelles au format ISO, en supprimant les millisecondes
+        // Obtenir la date et l'heure actuelles au format ISO, en supprimant les millisecondes
         const timeStamp = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
         const baseURL = 'https://api.veriff.me/v1/sessions';
 
@@ -644,6 +644,7 @@ async function uploadAllImagesToVeriff(sessionId, frontBase64, backBase64, selfi
     //    console.log(resVerso);
 
        const resSelfie =  await axios.post(`${urlMedia}/media`, payloadImageFace, { headers: headers(signatureFace) });
+       
        console.log("************************");
        console.log("resSelfie");
        console.log(resSelfie);

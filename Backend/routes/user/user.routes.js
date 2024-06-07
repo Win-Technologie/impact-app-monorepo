@@ -60,6 +60,12 @@ router.post('/code/read', [userAuth.ensureAuth, userAuth.isActiveSession],
     userController.readAndSendUserInfo
 );
 
+// Resend a code
+router.post('/code/resend', [userAuth.ensureAuth, userAuth.isActiveSession],
+    userController.resendVerificationCode
+);
+
+
 /* ENCRYPT DATA TESTING ENDPOINTS */
 
 //test security encrypted data

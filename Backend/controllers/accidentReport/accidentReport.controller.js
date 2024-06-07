@@ -274,7 +274,8 @@ async function newAccidentReport(req, res) {
     }
 }
 */
-async function newAccidentReport(req, res) {
+
+async function newAccidentReport01(req, res) {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");
         // Vérifier si le jeton est présent
@@ -391,6 +392,106 @@ async function newAccidentReport(req, res) {
         return res.status(500).json({ msg: "New Accident : Erreur de serveur interne", error: error });
     }
 }
+
+async function newAccidentReport(req, res) {
+    try {
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error('Le Token n\'est pas fourni');
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const accidentDataArray = req.body; // On s'attend maintenant à un tableau de données d'accidents
+
+        const now = new Date();
+        const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const currentTime = new Date(1970, 0, 1, now.getHours(), now.getMinutes(), now.getSeconds());
+
+        let myAccidentLocation = accidentDataArray[0].accidentLocation;
+
+        const vehicleReports = accidentDataArray.map(accidentData => {
+            const { owner, vehicle, insurance, driverLicense } = accidentData;
+
+            const issuedDateFormat = new Date(driverLicense.issued);
+            const expiresDateFormat = new Date(driverLicense.expires);
+            const dateDelivranceFormat = new Date(vehicle.immatriculation.dateDelivrance);
+            const dateStartInsuranceFormat = new Date(insurance.startDate);
+
+            return {
+                user: myToken.user_id,
+                personalDetails: {
+                    name: owner.name,
+                    lastName: owner.lastName,
+                    address: owner.address,
+                    phone: owner.phone,
+                    postalCode: owner.postalCode,
+                    email: owner.email,
+                    city: owner.city,
+                    province: owner.province,
+                    country: owner.country
+                },
+                drivingLicense: {
+                    number: driverLicense.number,
+                    issuanceDate: issuedDateFormat,
+                    licenseClass: driverLicense.licenseClass,
+                    expirationDate: expiresDateFormat,
+                    driverLicenseId: driverLicense._id
+                },
+                vehicleDetails: {
+                    registrationCertificate: {
+                        fileNumber: vehicle.immatriculation.numeroDossier,
+                        vehicleBrand: vehicle.brand,
+                        year: vehicle.year,
+                        vehicleSerialNumber: vehicle.immatriculation.serialNumber,
+                        licensePlateNumber: vehicle.plate,
+                        issuanceDate: dateDelivranceFormat,
+                        vehicleId: vehicle._id
+                    },
+                    insuranceCertification: {
+                        insuranceCompany: insurance.insuranceCompany,
+                        policyNumber: insurance.insuranceNumber,
+                        effectiveDate: dateStartInsuranceFormat,
+                        insuredName: owner.name,
+                        insuredLastName: owner.lastName,
+                        assuranceId: insurance._id
+                    }
+                }
+            };
+        });
+
+        const newAccidentReport = new Accident({
+            accidentDate: currentDate,
+            hourAccident: currentTime,
+            accidentLocation: myAccidentLocation,
+            vehicles: vehicleReports,
+            accidentSketch: 'URL to sketch image'
+        });
+
+        // console.log(newAccidentReport);
+
+        // // Save the accident report to the database
+        await accidentReportCollection.insertOne(newAccidentReport);
+        
+        await userCollection.updateOne(
+            { "_id": myToken.user_id },
+            { $push: { accidentReports: newAccidentReport._id } }
+        );
+
+        // Return a success message
+        return res.status(201).json({ msg: "New accident report created successfully", accidentId: newAccidentReport._id, newAccidentReport });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "New Accident: Internal server error", error: error });
+    }
+}
+
 
 /*
 async function joinToAccidentReport(req, res) {
