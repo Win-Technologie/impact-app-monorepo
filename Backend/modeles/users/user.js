@@ -77,6 +77,9 @@ const userSchema = new mongoose.Schema({
     birthdate: {
         type: Date
     },
+    profileImagePath: {
+        type: String
+    },
     selfie: {
         type: String
     },

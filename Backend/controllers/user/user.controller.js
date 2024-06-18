@@ -444,23 +444,34 @@ async function RegisterUserVerifyCode(req, res) {
 }
 
 
-//CACHE :
+/**
+ * Fonction pour authentifier un utilisateur et lui renvoyer un token d'accès.
+ * 
+ * Cette fonction traite la requête de connexion d'un utilisateur. Elle vérifie si l'adresse e-mail et le mot de passe sont valides,
+ * authentifie l'utilisateur, génère un token d'accès et renvoie les informations de l'utilisateur, y compris le chemin de son image de profil.
+ * 
+ * @param {*} req - La requête HTTP contenant les champs 'email' et 'password'.
+ * @param {*} res - La réponse HTTP pour renvoyer le résultat de l'authentification.
+ * @returns Renvoie une réponse JSON avec le statut de l'opération et les informations de l'utilisateur.
+ */
 async function Login(req, res) {
     try {
-
         const { email, password } = req.body;
+
         // Validation des champs de la requête
         await body('email').isEmail().withMessage("L'adresse e-mail est invalide").notEmpty().withMessage("L'adresse e-mail est requise").run(req);
         await body('password').notEmpty().withMessage('Le mot de passe est requis').run(req);
+
         // Vérification des erreurs de validation
         const validationErrors = validationResult(req);
-
         if (!validationErrors.isEmpty()) {
             return res.status(400).json({ errors: validationErrors.array() });
         }
+
         // On convertit l'adresse e-mail en minuscules pour assurer une recherche insensible à la casse
         const emailLowerCase = email.toLowerCase();
 
+        // Rechercher l'utilisateur dans la base de données
         const loggedInUser = await userCollection.findOne({ "email": emailLowerCase });
 
         if (!loggedInUser) {
@@ -468,29 +479,29 @@ async function Login(req, res) {
         }
 
         if (loggedInUser.active) {
-
+            // Vérifier si le mot de passe correspond
             const passwordMatch = await bcrypt.compare(password, loggedInUser.password);
             if (passwordMatch) {
-
-
                 if (!loggedInUser.allFieldsComplete) {
-
                     return res.status(403).send({ msg: "L'utilisateur n'a pas complété toute son inscription." });
                 }
 
+                // Générer un token d'accès
+                const token = jwt.createAccessToken(loggedInUser);
 
-                token = jwt.createAccessToken(loggedInUser);
                 // Réinitialiser le nombre de tentatives si la connexion est réussie
                 await userCollection.updateOne({ "_id": loggedInUser._id }, { $set: { loginAttempts: 0 } });
-               
 
+                // Récupérer les informations système de l'utilisateur
                 const userInfo = await getUserSystemInfo(loggedInUser);
-               
-                // return res.status(200).json({ msg: "Utilisateur authentifié avec succès", A7: token, user: loggedInUser._id });
-                return res.status(200).json({ msg: "Utilisateur authentifié avec succès", A7: token, user: userInfo });
 
+                // Inclure l'image de profil dans la réponse
+                return res.status(200).json({ 
+                    msg: "Utilisateur authentifié avec succès", 
+                    A7: token, 
+                    user: { ...userInfo } 
+                });
             } else {
-
                 // Augmenter le nombre de tentatives si le mot de passe est erroné
                 const updatedUser = await userCollection.findOneAndUpdate(
                     { "_id": loggedInUser._id },
@@ -510,12 +521,12 @@ async function Login(req, res) {
         } else {
             res.status(401).json({ msg: "Compte inactif, contactez l'administrateur." });
         }
-
     } catch (error) {
         console.error(error);
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
+
 
 
 /**
@@ -1726,12 +1737,13 @@ async function UploadUserProfileImage(req, res) {
         }
 
         // Décoder le token JWT pour obtenir l'ID de l'utilisateur
-        const myToken = jwt.decoded(token);
+        const myToken = jwt.decoded(token); // Assurez-vous d'utiliser jwt.decode() correctement
         if (!myToken || !myToken.user_id) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
         const loggedInUserId = myToken.user_id;
+
         // Récupérez le fichier téléchargé à partir de req.files.image
         const uploadedImage = req.files.image;
 
@@ -1756,14 +1768,17 @@ async function UploadUserProfileImage(req, res) {
         // Déplacez le fichier temporaire vers le répertoire de destination
         fs.renameSync(uploadedImage.path, destinationPath);
 
+        // Mettre à jour le chemin de l'image de profil dans la base de données
+        await userCollection.updateOne({ "_id": loggedInUserId }, { $set: { profileImagePath: destinationPath } });
+
         // Retournez une réponse JSON réussie avec le chemin relatif de l'image enregistrée
         return res.status(200).json({ msg: "Image de profil téléchargée avec succès", imagePath: destinationPath });
-
     } catch (error) {
         console.error("Erreur lors du téléchargement de l'image de profil:", error);
         return res.status(500).json({ msg: "Erreur lors du téléchargement de l'image de profil", error: error.message });
     }
 }
+
 
 
 module.exports = {
