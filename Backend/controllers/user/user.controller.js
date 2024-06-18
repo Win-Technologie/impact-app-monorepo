@@ -482,9 +482,7 @@ async function Login(req, res) {
             // Vérifier si le mot de passe correspond
             const passwordMatch = await bcrypt.compare(password, loggedInUser.password);
             if (passwordMatch) {
-                if (!loggedInUser.allFieldsComplete) {
-                    return res.status(403).send({ msg: "L'utilisateur n'a pas complété toute son inscription." });
-                }
+
 
                 // Générer un token d'accès
                 const token = jwt.createAccessToken(loggedInUser);
@@ -1779,12 +1777,72 @@ async function UploadUserProfileImage(req, res) {
     }
 }
 
+
+/**
+ * Fonction pour supprimer l'image de profil de l'utilisateur.
+ * 
+ * Cette fonction traite la requête de suppression de l'image de profil d'un utilisateur. Elle vérifie le token JWT pour identifier l'utilisateur,
+ * supprime le fichier d'image de profil du système de fichiers, et met à jour le champ `profileImagePath` de l'utilisateur dans la base de données.
+ * 
+ * @param {*} req - La requête HTTP contenant le token JWT dans les en-têtes Authorization.
+ * @param {*} res - La réponse HTTP pour renvoyer le résultat de la suppression.
+ * @returns Renvoie une réponse JSON avec le statut de l'opération.
+ */
+async function DeleteUserProfileImage(req, res) {
+    try {
+        // Vérifie si le token est fourni dans les en-têtes Authorization
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            console.error("Le Token n'est pas fourni");
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        // Décoder le token JWT pour obtenir l'ID de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous d'utiliser jwt.decode() correctement
+        if (!myToken || !myToken.user_id) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const loggedInUserId = myToken.user_id;
+
+        // Rechercher l'utilisateur dans la base de données
+        const loggedInUser = await userCollection.findOne({ "_id": loggedInUserId });
+        if (!loggedInUser) {
+            return res.status(403).json({ msg: "Utilisateur non trouvé" });
+        }
+
+        // Chemin de l'image de profil actuelle
+        const profileImagePath = loggedInUser.profileImagePath;
+        if (!profileImagePath || profileImagePath === '') {
+            return res.status(400).json({ msg: "Aucune image de profil à supprimer" });
+        }
+
+        // Supprimer le fichier d'image de profil du système de fichiers
+        fs.unlink(profileImagePath, (err) => {
+            if (err) {
+                console.error("Erreur lors de la suppression de l'image de profil:", err);
+                return res.status(500).json({ msg: "Erreur lors de la suppression de l'image de profil", error: err.message });
+            }
+        });
+
+        // Mettre à jour le champ profileImagePath de l'utilisateur dans la base de données
+        await userCollection.updateOne({ "_id": loggedInUserId }, { $set: { profileImagePath: '' } });
+
+        // Retourner une réponse JSON réussie
+        return res.status(200).json({ msg: "Image de profil supprimée avec succès" });
+    } catch (error) {
+        console.error("Erreur lors de la suppression de l'image de profil:", error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error.message });
+    }
+}
+
+
 module.exports = {
     RegisterUser,
     Login,
     LoginWithToken,
     UploadUserProfileImage,
-    //DeleteUserProfileImage,
+    DeleteUserProfileImage,
     Logout,
     RefresLogin,
     GetUserById,
