@@ -14,6 +14,10 @@ const multiparty = require('connect-multiparty');
 const md_uploadUserImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_PATH}` });
 // const md_uploadUserDocs = multiparty({uploadDir: `${DOCS_ROUTER_IMG_PATH}`});
 
+
+// Route to authenticate a user using a JWT token
+router.post('/user/login/token', userAuth.ensureAuth, userController.LoginWithToken);
+
 // To register new users.
 router.post('/user/register', userController.RegisterUser);
 

@@ -440,12 +440,6 @@ async function RegisterUserVerifyCode(req, res) {
 }
 
 
-
-
-
-
-
-
 //CACHE :
 async function Login(req, res) {
     try {
@@ -518,6 +512,64 @@ async function Login(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
+
+
+/**
+ * Authentifie un utilisateur en utilisant un token JWT.
+ * Cette fonction extrait le token JWT de l'en-tête de la requête,
+ * vérifie et décrypte le token, puis renvoie les informations de l'utilisateur
+ * si le token est valide et que l'utilisateur est actif.
+ * 
+ * @param {*} req - L'objet de requête Express, contenant les en-têtes et les données de la requête.
+ * @param {*} res - L'objet de réponse Express, utilisé pour envoyer la réponse au client.
+ * @returns {Object} - Renvoie un objet JSON contenant le message et les informations de l'utilisateur en cas de succès,
+ *                     ou un message d'erreur en cas d'échec.
+ */
+async function LoginWithToken(req, res) {
+    try {
+        // Extraire le token de l'en-tête Authorization
+        const token = req.headers.authorization?.replace("Bearer ", "");
+
+        // Vérifier si le token est fourni
+        if (!token) {
+            console.error("Le Token n'est pas fourni");
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const ownerId = myToken.user_id; 
+        const loggedInUser = await userCollection.findOne({ "_id": ownerId });
+
+        // Vérifier si l'utilisateur existe
+        if (!loggedInUser) {
+            return res.status(403).json({ msg: "Utilisateur non trouvé" });
+        }
+
+        // Vérifier si le compte de l'utilisateur est actif
+        if (loggedInUser.active) {
+            // Vérifier si l'utilisateur a complété toutes les informations requises
+            if (!loggedInUser.allFieldsComplete) {
+                return res.status(403).send({ msg: "L'utilisateur n'a pas complété toute son inscription." });
+            }
+
+            // Obtenir les informations de l'utilisateur à partir d'une fonction utilitaire
+            const userInfo = await getUserSystemInfo(loggedInUser);
+
+            return res.status(200).json({ msg: "Utilisateur authentifié avec succès", user: userInfo });
+        } else {
+            return res.status(401).json({ msg: "Compte inactif, contactez l'administrateur." });
+        }
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error.message });
+    }
+}
+
 
 //CACHE:
 async function Logout(req, res) {
@@ -1649,10 +1701,10 @@ async function resendVerificationCode(req,body){
 
 
 
-
 module.exports = {
     RegisterUser,
     Login,
+    LoginWithToken,
     Logout,
     RefresLogin,
     GetUserById,

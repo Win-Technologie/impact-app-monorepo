@@ -13,9 +13,7 @@ const { deleteUploadedFiles, checkFileSize,
 const { generateVerificationCode } = require('../../utils/generatorcodes');
 // NODE MAILER
 const { sendVerificationEmail } = require('../../utils/nodemailer');
-// ONFIDO
-// const { createApplicant, verifyDocuments } = require('../onfido/onfido.controller');
-const { createApplicant, verifyDrivingLicense } = require('../onfido/onfido.controller');
+
 
 // CACHE
 const { myCache, encryptData, decryptData } = require("../../utils/cache");

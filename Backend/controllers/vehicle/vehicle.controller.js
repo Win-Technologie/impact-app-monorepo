@@ -709,7 +709,7 @@ async function updateImmatriculation(req, res) {
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
         }
 
-        const myToken = jwt.decode(token);
+        const myToken = jwt.decoded(token);
         if (!myToken) {
             return res.status(400).json({ msg: "Token invalide" });
         }
