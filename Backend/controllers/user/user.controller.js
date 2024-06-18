@@ -1779,8 +1779,6 @@ async function UploadUserProfileImage(req, res) {
     }
 }
 
-
-
 module.exports = {
     RegisterUser,
     Login,
