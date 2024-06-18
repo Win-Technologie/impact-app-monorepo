@@ -37,8 +37,12 @@ const USERSCOLLECTION = process.env.USERSCOLLECTION;
 const DRIVERLICENSECOLLECTION = process.env.DRIVERSLICENSECOLLECTION;
 const VEHICLES_COLLECTION = process.env.VEHICLESCOLLECTION;
 const INSURANCES_COLLECTION = process.env.INSURANCESCOLLECTION;
+const USER_ROUTER_IMG_PATH = process.env.USER_ROUTER_IMG_PATH;
 
 const SECRETKEY_IDQR = process.env.SECRETKEY_IDQR;
+
+const path = require('path');
+const fs = require('fs');
 
 
 // GLOBAL CONNECTIONS
@@ -1700,11 +1704,74 @@ async function resendVerificationCode(req,body){
 }
 
 
+/**
+ * Fonction pour télécharger et enregistrer l'image de profil de l'utilisateur.
+ * 
+ * @param {*} req Requête HTTP contenant le fichier image à télécharger.
+ * @param {*} res Réponse HTTP pour renvoyer le résultat du téléchargement.
+ * @returns Renvoie un message JSON avec le statut de l'opération.
+ */
+async function UploadUserProfileImage(req, res) {
+    try {
+        // Vérifie si le fichier a été correctement téléchargé
+        if (!req.files || !req.files.image) {
+            return res.status(400).json({ msg: "Aucun fichier n'a été téléchargé." });
+        }
+
+        // Vérifie si le token est fourni dans les en-têtes Authorization
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            console.error("Le Token n'est pas fourni");
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        // Décoder le token JWT pour obtenir l'ID de l'utilisateur
+        const myToken = jwt.decoded(token);
+        if (!myToken || !myToken.user_id) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const loggedInUserId = myToken.user_id;
+        // Récupérez le fichier téléchargé à partir de req.files.image
+        const uploadedImage = req.files.image;
+
+        // Vérifie si uploadedImage est défini et contient un chemin temporaire
+        if (!uploadedImage || !uploadedImage.path) {
+            return res.status(400).json({ msg: "Le fichier téléchargé est invalide." });
+        }
+
+        // Vérifiez le type de fichier en fonction de l'extension
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+        const fileExtension = path.extname(uploadedImage.name).toLowerCase();
+        if (!allowedExtensions.includes(fileExtension)) {
+            return res.status(400).json({ msg: "Le fichier téléchargé n'est pas une image valide." });
+        }
+
+        // Générez un nom de fichier unique pour éviter les collisions
+        const uniqueFilename = `${loggedInUserId}_${Date.now()}${fileExtension}`;
+
+        // Déplacez le fichier téléchargé vers le répertoire de destination
+        const destinationPath = path.join(USER_ROUTER_IMG_PATH, uniqueFilename);
+
+        // Déplacez le fichier temporaire vers le répertoire de destination
+        fs.renameSync(uploadedImage.path, destinationPath);
+
+        // Retournez une réponse JSON réussie avec le chemin relatif de l'image enregistrée
+        return res.status(200).json({ msg: "Image de profil téléchargée avec succès", imagePath: destinationPath });
+
+    } catch (error) {
+        console.error("Erreur lors du téléchargement de l'image de profil:", error);
+        return res.status(500).json({ msg: "Erreur lors du téléchargement de l'image de profil", error: error.message });
+    }
+}
+
 
 module.exports = {
     RegisterUser,
     Login,
     LoginWithToken,
+    UploadUserProfileImage,
+    //DeleteUserProfileImage,
     Logout,
     RefresLogin,
     GetUserById,

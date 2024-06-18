@@ -15,6 +15,12 @@ const md_uploadUserImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_PATH}` });
 // const md_uploadUserDocs = multiparty({uploadDir: `${DOCS_ROUTER_IMG_PATH}`});
 
 
+// Route to upload and save the user's profile image
+router.patch('/user/upload-profile-image', [userAuth.ensureAuth, md_uploadUserImg], userController.UploadUserProfileImage);
+
+// Route to delete the user's profile image
+//router.delete('/user/delete-profile-image', userAuth.ensureAuth, userController.DeleteUserProfileImage);
+
 // Route to authenticate a user using a JWT token
 router.post('/user/login/token', userAuth.ensureAuth, userController.LoginWithToken);
 
