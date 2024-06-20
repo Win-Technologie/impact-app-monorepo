@@ -1,0 +1,593 @@
+{
+
+  "french": "Français",
+  "english": "Anglais",
+  "signin": "Connexion",
+  "signup": "Inscription",
+  "pleasewait": "Veuillez patienter",
+  "language": "Langue",
+  "error": "Erreur",
+  "back": "Retour",
+
+
+  "signUpPage": {
+    "emailerrormessage": "L'email doit être au format **@**.**",
+    "emailplaceholder": "Entrez votre courriel",
+    "emailrequired": "Email requis",
+    "welcome": "Bienvenue sur l'application mobile",
+    "minpasswordchar": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordrequired": "Mot de passe requis",
+    "passwordcharrequired": "Le mot de passe doit contenir une majuscule et un caractère spécial",
+    "passwordplaceholder": "Entrez votre mot de passe",
+    "nomatchpassword": "Les mots de passe ne correspondent pas",
+    "confirmpasswordplacehorder": "Confirmez votre mot de passe",
+    "termofuse": "condition d'utilisation",
+    "iaccept": "J'accepte les ",
+    "mustacceptterm": "Vous devez accepter les termes",
+    "continue": "Continuer",
+    "alreadyuseEmail": "Adresse email dejà utilisé",
+    "youmusthavecompletedalltheinformationcollectionsteps": "Vous devez avoir complété toutes les étapes de collecte d'informations",
+    "mustscanyourlicence": "Vous devez avoir complété toutes les étapes de collectes d'informations et faire vérifier votre permis de conduire"
+
+  },
+
+
+
+  "signInPage": {
+    "emailrequired": "Email requis",
+    "passwordrequired": "Le mot de passe est obligatoire",
+    "emailerrormessage": "L'adresse email doit etre de type **@**.*",
+    "welcome": "Bon retour sur l'application mobile",
+    "passwordplaceholder": "Entrez votre mot de passe",
+    "passwordforget": "Mot de passe oublié",
+    "emailplaceholder": "Entrez votre courriel",
+    "signin": "Me connecter",
+    "invalidemailorpassword": "Mot de passe ou email invalide",
+    "alreadyuseEmail": "Adresse email dejà utilisée"
+  },
+
+
+
+  "account": {
+    "modifyyourprofil": "Modifier votre profil",
+    "settings": "Paramètres",
+    "subscription": "Abonnement",
+    "vehicles": "Véhicules",
+    "language": "Langue",
+    "notification": "Notifications",
+    "informationandother": "Informations et autres",
+    "helpandfaq": "Aide et  FAQ",
+    "about": "À propos",
+    "conditionandregulation": "Conditions and règlements",
+    "updateandreinstallation": "Mise à jour et installations",
+    "Login": "Me déconnecter"
+  },
+
+
+  "mainScreen": {
+    "complicatedSituationTitle": "À chaque situation compliquée, sa solution simple",
+    "complicatedSituationDescription": "Nous savons qu'un accident n'est pas un évènement facile. C'est pour cette raison que l'application Impact vous aidera en vous guidant dans la démarche à suivre suite à un accident.",
+    "quickResolutionTitle": "Régler un accident tout aussi rapidement qu'il est arrivé",
+    "quickResolutionDescription": "Remplir un constat à l'amiable peut etre long et fastidieux. Nous vous proposons de rassembler l'ensemble des informations nécéssaires au même endroit pour accélérer le processus",
+    "dataSecurityTitle": "La sécurité des données est une valeur que nous prônons",
+    "dataSecurityDescription": "L'échange d'informations personnelles demande un haut niveau de cybersécurité. Votre confiance étant notre priorité, nous vous assurons donc une totale sécurité"
+  },
+
+
+  "homeScreen": {
+    "welcome": "Bienvenue",
+    "subscriptionOffer": "Profitez d'une réduction de 50% grâce à un abonnement annuel",
+    "monthlySubscription": "Abonnement mensuel également disponible",
+    "emergency": "Urgence",
+    "emergencyDescription": "S'il y a des blessés contactez directement les urgences",
+    "call": "Appeler",
+    "insurance": "Assurance",
+    "contactInsurance": "Contactez votre assurance dès maintenant",
+    "towing": "Remorquage",
+    "contactTowing": "Contactez un remorqueur près de votre position",
+    "declareIncident": "Déclarer un incident"
+  },
+
+
+  "forgottenPasswordScreen": {
+    "back": "Retour",
+    "header": "Mot de passe oublié?",
+    "instruction": "Entrez votre adresse courriel et nous vous enverrons un lien de réinitialisation",
+    "emailRequired": "L'adresse courriel est requise",
+    "emailFormatError": "Le format du courriel doit être **@**.*",
+    "emailPlaceholder": "Adresse courriel",
+    "continue": "Continuer",
+    "checkYourEmail": "Vérifiez votre messagerie",
+    "emailSuccessMessage": "Si l'adresse e-mail que vous avez saisie est associée à un compte, nous vous avons envoyé un e-mail avec un code de vérification.",
+    "emailErrorMessage": "L'adresse courriel n'a pas été trouvée.",
+    "genericErrorMessage": "Une erreur est survenue."
+  },
+
+
+  "nameAndGenderScreen": {
+    "pageTitle": "Quel est votre nom complet ?",
+    "firstNamePlaceholder": "Prénom",
+    "firstNameRequired": "Le prénom est requis",
+    "lastNamePlaceholder": "Nom",
+    "lastNameRequired": "Le nom est requis",
+    "genderQuestion": "Quel est votre genre?",
+    "genderRequired": "Le genre est requis",
+    "male": "Homme",
+    "female": "Femme",
+    "nonBinary": "Je ne préfère pas répondre",
+    "continue": "Continuer",
+    "back": "Retour"
+  },
+
+
+  "insuranceScreen": {
+    "pageTitle": "Veuillez fournir votre permis de conduire",
+    "licenseNumberPlaceholder": "Numéro de permis",
+    "licenseNumberRequired": "Numéro de permis requis",
+    "dateOfIssueLabel": "Date de délivrance",
+    "dateOfIssueRequired": "La date de délivrance est requise",
+    "dateOfExpiryLabel": "Date d'expiration",
+    "dateOfExpiryRequired": "La date d'expiration est requise",
+    "licenseCategoryPlaceholder": "Catégorie",
+    "licenseCategoryRequired": "La catégorie du permis est requise",
+    "licenseMentionPlaceholder": "Mention",
+    "licenseMentionRequired": "La mention du permis est requise",
+    "continue": "Continuer",
+    "back": "Retour",
+    "useDifferentAddress": "Utiliser une adresse différente?"
+  },
+
+  "licenseDetails": {
+    "issueDateLabel": "Date de délivrance",
+    "expiryDateLabel": "Date d'expiration",
+    "licenseCategoryRequired": "La catégorie du permis est requise",
+    "licenseCategoryPlaceholder": "Catégorie du permis",
+    "licenseMentionRequired": "La mention du permis est requise",
+    "licenseMentionPlaceholder": "Mention du permis",
+    "addressPlaceholder": "Adresse alternative",
+    "cityPlaceholder": "Ville alternative",
+    "postalCodePlaceholder": "Code postal alternatif",
+    "countryPlaceholder": "Pays alternatif",
+    "provincePlaceholder": "Province alternative",
+    "expiryDateRequired": "La date d'expiration est requise",
+    "issueDateRequired": "La date de délivrance est requise",
+    "invalidFormat": "Format de date invalide"
+  },
+
+  "phoneAndAddress": {
+    "phoneTitle": "Quel est votre numéro de téléphone principal ?",
+    "phoneRequired": "Numéro de téléphone requis",
+    "phonePlaceholder": "514-500-4000",
+    "addressTitle": "Quelle est votre adresse de domicile ?",
+    "addressRequired": "Adresse requise",
+    "addressPlaceholder": "Votre adresse",
+    "cityTitle": "Ville",
+    "cityRequired": "Ville requise",
+    "cityPlaceholder": "Ville",
+    "postalCodeTitle": "Code Postal",
+    "postalCodeRequired": "Code postal requis",
+    "postalCodePlaceholder": "Code postal",
+    "countryTitle": "Pays",
+    "countryRequired": "Pays requis",
+    "countryPlaceholder": "Sélectionnez un pays",
+    "provinceTitle": "Province",
+    "provinceRequired": "Province requise",
+    "provincePlaceholder": "Sélectionnez une province",
+    "phoneonlynumber": "Valeur numérique uniquement accepté",
+    "fourcarminimum": "4 charatère au  minimum"
+  },
+
+
+  "passwordResetVerification": {
+    "header": "Réinitialisation du mot de passe",
+    "verificationCodePlaceholder": "Code de vérification",
+    "verificationCodeRequired": "Le code de vérification est requis",
+    "newPasswordPlaceholder": "Nouveau mot de passe",
+    "newPasswordRequired": "Le nouveau mot de passe est requis",
+    "confirmNewPasswordPlaceholder": "Confirmez le mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "confirmButton": "Confirmer",
+    "passwordsDontMatchError": "Les mots de passe ne correspondent pas.",
+    "passwordResetSuccess": "Votre mot de passe a été réinitialisé avec succès.",
+    "passwordResetError": "Erreur lors de la réinitialisation du mot de passe"
+  },
+
+
+
+
+  "dobScreen": {
+    "title": "Date de naissance",
+    "dateOfBirthRequired": "La date de naissance est requise",
+    "dateFormatError": "Le format de la date doit être AAAA-MM-JJ"
+  },
+
+  "signUpLandingPage": {
+    "headerTitle": "Récolte des informations d'inscription",
+    "documentScanTitle": "Scanner vos documents",
+    "driverLicense": "Permis de conduire",
+    "scanDriverLicense": "Scanner votre permis de conduire",
+    "insurancePapers": "Papiers d'assurances",
+    "time4Minutes": "4 minutes",
+    "time8Minutes": "8 minutes",
+    "scanInsurancePapers": "Scanner votre preuve d'assurance",
+    "scanButton": "Scanner",
+    "cancelButton": "Annuler",
+    "registerButton": "M'inscrire",
+    "personalInformation": "Information personnelles",
+    "vehicleInformation": "Information du vehicules",
+    "insuranceInformation": "Informations d'assurances",
+    "addInsuranceInfo": "Vous devez d'abords ajouter les information de l'assurance du précédant véhicule",
+    "addVehicleFirst": "Vous devez au préalable ajouter un véhicule",
+    "noOptionSelected": "Aucune option",
+    "okButton": "Ok",
+    "drivenlicencesave": "Votre permis de conduite a été vérifié et enregistré.",
+    "end": "Terminer"
+  },
+
+
+  "vehicleDetails": {
+    "pageTitle": "Détails du véhicule",
+    "modelTitle": "Quel est le modèle du véhicule ?",
+    "brandRequired": "La marque est requise",
+    "brandPlaceholder": "Marque",
+    "modelRequired": "Le modèle est requis",
+    "modelPlaceholder": "Modèle",
+    "yearTitle": "Année du véhicule",
+    "yearRequired": "L'année est requise",
+    "yearPlaceholder": "Année",
+    "colorTitle": "Quelle est la couleur de votre véhicule ?",
+    "colorRequired": "La couleur est requise",
+    "colorPlaceholder": "Couleur",
+    "serialNumberTitle": "Quel est le numéro de série de votre voiture ?",
+    "serialNumberRequired": "Le numéro de série est requis",
+    "serialNumberPlaceholder": "Numéro de série",
+    "serialNumberMinLength": "5 caratères au minimum",
+    "nextButton": "Suivant",
+    "backButton": "Retour"
+  },
+
+  "vehicleOwnership": {
+    "ownerTitle": "Qui est le propriétaire du véhicule ?",
+    "ownerOption1": "Je suis le propriétaire du véhicule",
+    "ownerOption2": "Je ne suis pas le propriétaire du véhicule",
+    "ownerInfoTitle": "Les informations du propriétaire du véhicule",
+    "firstNameRequired": "Le prénom est requis",
+    "firstNamePlaceholder": "Entrez votre prénom",
+    "lastNameRequired": "Le nom est requis",
+    "lastNamePlaceholder": "Entrez votre nom",
+    "phoneRequired": "Le numéro de téléphone est requis",
+    "phonePlaceholder": "Entrez le numéro de téléphone",
+    "addressRequired": "L'adresse est requise",
+    "addressPlaceholder": "Entrez l'adresse",
+    "cityRequired": "La ville est requise",
+    "cityPlaceholder": "Entrez la ville",
+    "postalCodeRequired": "Le code postal est requis",
+    "postalCodePlaceholder": "Entrez le code postal",
+    "countryRequired": "Le pays est requis",
+    "countryPlaceholder": "Sélectionnez le pays",
+    "provinceRequired": "La province est requise",
+    "provincePlaceholder": "Sélectionnez la province",
+    "acarwiththislicenseplatealreadyexists": "Une voiture avec cette plaque d'immatriculation existe déjà."
+  },
+
+  "vehicleRegistration": {
+    "plateNumberTitle": "Quel est le numéro de plaque du véhicule ?",
+    "plateNumberRequired": "Le champ plaque est requis",
+    "plateNumberMaxLength": "Le numéro de plaque doit contenir au maximum 7 caractères",
+    "plateNumberExactLength": "Le numéro de plaque doit contenir 7 caractères exactement",
+    "plateNumberPlaceholder": "Numéro de plaque",
+    "certificateInfoTitle": "Les informations de votre certificat d'immatriculation",
+    "certificateRequired": "Le champ certificat est requis",
+    "certificateMaxLength": "Le numéro du certificat doit contenir au maximum 13 caractères",
+    "certificateExactLength": "Le numéro du certificat doit contenir 13 caractères exactement",
+    "certificatePlaceholder": "Numéro du certificat",
+    "dossierNumberRequired": "Le champ numéro de dossier est requis",
+    "dossierNumberMaxLength": "Le numéro de dossier doit contenir au maximum 20 caractères",
+    "dossierNumberPlaceholder": "Numéro de dossier",
+    "deliveryDateRequired": "La date de délivrance est requise",
+    "dateFormat": "La date doit être au format YYYY-MM-DD",
+    "deliveryDatePlaceholder": "Date de délivrance",
+    "expirationDateRequired": "La date d'expiration est requise",
+    "expirationDatePlaceholder": "Date d'expiration",
+    "netWeightRequired": "Le champ masse nette est requis",
+    "netWeightNumber": "La masse nette doit être un nombre",
+    "netWeightPlaceholder": "Masse nette (kg)",
+    "cylinderRequired": "Le champ cylindre est requis",
+    "cylinderNumber": "Le cylindre doit être un nombre",
+    "cylinderPlaceholder": "Cylindre (cc)",
+    "usageCategoryRequired": "La catégorie d'usage est requise",
+    "usageCategoryPlaceholder": "Catégorie d'usage",
+    "axleNumberRequired": "Le nombre d'essieux est requis",
+    "axleNumberNumeric": "Le numéro des essieux doit être numérique",
+    "axleNumberPlaceholder": "Numéro essieux",
+    "next": "Suivant"
+  },
+
+  "insurance": {
+    "selectVehicle": "Sélectionnez votre véhicule",
+    "chooseVehicle": "Choisir une véhicule",
+    "vehicleRequired": "Vous devez choisir un véhicule",
+    "policyTitle": "Quel est votre police d'assurance ?",
+    "policyNumberRequired": "Le numéro d'assurance est requis",
+    "policyNumberNumeric": "Le numéro d'assurance doit etre numrique",
+    "policyNumberPlaceholder": "Numéro d'assurance",
+    "expirationDateRequired": "La date d'expiration requise",
+    "dateFormat": "La date doit être au format YYYY-MM-DD",
+    "expirationDatePlaceholder": "Date d'expiration",
+    "next": "Suivant",
+    "ownerTitle": "Qui est le souscripteur de l’assurance ?",
+    "ownerOption": "Je suis le propriétaire du véhicule",
+    "notOwnerOption": "Je ne suis pas le propriétaire du véhicule",
+    "subscriberInfo": "Les informations du souscripteur de l'assurance",
+    "firstNameRequired": "Le prénom est requis",
+    "firstNamePlaceholder": "Prénom",
+    "lastNameRequired": "Le nom est requis",
+    "lastNamePlaceholder": "Nom",
+    "phoneRequired": "Le numéro de téléphone est requis",
+    "phonePlaceholder": "Téléphone",
+    "addressRequired": "L'adresse est requise",
+    "addressPlaceholder": "Adresse",
+    "cityRequired": "La ville est requise",
+    "cityPlaceholder": "Ville",
+    "postalCodeRequired": "Le code postal est requis",
+    "postalCodePlaceholder": "Code Postal",
+    "countryRequired": "Le pays est requis",
+    "countryPlaceholder": "Pays",
+    "provinceRequired": "La province est requise",
+    "provincePlaceholder": "Province"
+  },
+
+  "insuranceFirm": {
+    "firmTitle": "Quel est le nom de votre société d’assurance ?",
+    "firmNameRequired": "Le nom de la société est requis",
+    "firmNamePlaceholder": "Nom de la société",
+    "firmAddressTitle": "Quelle est l’adresse de votre société d’assurance ?",
+    "firmAddressRequired": "L'adresse est requise",
+    "firmAddressPlaceholder": "Adresse",
+    "firmCityRequired": "La ville est requise",
+    "firmCityPlaceholder": "Ville",
+    "firmPostalCodeRequired": "Le code postal est requis",
+    "firmPostalCodePlaceholder": "Code Postal",
+    "firmCountryRequired": "Le pays est requis",
+    "firmCountryPlaceholder": "Pays",
+    "firmProvinceRequired": "La province est requise",
+    "firmProvincePlaceholder": "Province",
+    "nextButton": "Suivant"
+  },
+
+  "accidentTypes": {
+    "title": "De quel type d'accident s'agit-il?",
+    "vehicleCollisionWithEmptyVehicle": "Accrochage avec un véhicule vide",
+    "publicItemCollisionWithDamage": "Accrochage d'un item public avec dommage",
+    "publicItemCollisionWithoutDamage": "Accrochage d'un item public sans dommage",
+    "privateItemCollision": "Accrochage d'un item privé",
+    "other": "Autre",
+    "vehicleInfo": "Information sur le véhicule touché",
+    "plateNumber": "Numéro de plaque",
+    "accidentTypeInfo": "Informations sur le type d'accident",
+    "accidentType": "Type d'accident"
+  },
+
+  "buttons": {
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "continue": "Continuer"
+  },
+
+  "home": {
+    "welcome": "Bienvenue",
+    "promotion": "Profitez d'une réduction de 50% grâce à un abonnement annuel",
+    "monthlySubscription": "Abonnement mensuel également disponible",
+    "emergency": "Urgence",
+    "emergencyDescription": "S'il y a des blessés, contactez directement les urgences",
+    "call": "Appeler",
+    "insurance": "Assurance",
+    "insuranceDescription": "Contactez votre assurance dès maintenant",
+    "towing": "Remorquage",
+    "towingDescription": "Contactez un remorqueur près de votre position",
+    "declareIncident": "Déclarer un incident"
+  },
+
+  "tabs": {
+    "home": "Accueil",
+    "declare": "Déclarer",
+    "history": "Historique",
+    "account": "Compte"
+  },
+
+  "yourComponent": {
+    "collectingInfo": "Nous récoltons vos informations pour vous aider",
+    "accidentSteps": "Que vous soyez seul ou plusieurs à être impliqué, il y a des démarches à suivre lors d'un accident de voiture",
+    "alone": "Je suis le seul individu impliqué",
+    "multiple": "Nous sommes plusieurs individus impliqués",
+    "numberOfIndividuals": "Nombre d'individus impliqués"
+  },
+
+  "historyPage": {
+    "title": "Historique",
+    "accidents": "accidents"
+  },
+
+
+
+  "common": {
+    "save": "Enregistrer",
+    "back": "Retour",
+    "error": "Erreur",
+    "noToken": "Aucun jeton trouvé",
+    "networkError": "Erreur réseau",
+    "unknownError": "Une erreur inconnue s'est produite",
+    "success": "Succès"
+  },
+
+  "vehicleList": {
+    "title": "Gestion des véhicules",
+    "myVehicles": "Mes véhicules",
+    "remove": "Retirer",
+    "selected": "Sélectionné",
+    "vehicleInfo": "Informations du véhicule",
+    "vehicleInfoSubtitle": "Modèle, année, numéro de plaque ...",
+    "insuranceInfo": "Informations d'assurances",
+    "insuranceInfoSubtitle": "Nom de la société, numéro d'assurance ...",
+    "addVehicle": "Ajouter un véhicule",
+    "deleteAlertTitle": "Supprimer",
+    "deleteAlertMessage": "Êtes-vous sûr de vouloir supprimer ce véhicule?",
+    "deleteAlertCancel": "Annuler",
+    "deleteAlertConfirm": "Supprimer"
+  },
+
+  "vehicleInfo": {
+    "title": "Informations sur le véhicule",
+    "brand": "Marque de voiture",
+    "model": "Modèle du véhicule",
+    "year": "Année",
+    "color": "Couleur du véhicule",
+    "plate": "Numéro de plaque",
+    "serialNumber": "Numéro du certificat d'immatriculation",
+    "ownerInfo": "Propriétaire du véhicule",
+    "ownerFirstName": "Prénom",
+    "ownerLastName": "Nom",
+    "ownerPhone": "Numéro de téléphone",
+    "ownerAddress": "Numéro et rue de l'adresse",
+    "ownerCity": "Ville",
+    "ownerPostalCode": "Code postal",
+    "ownerCountry": "Pays",
+    "ownerProvince": "Province"
+  },
+
+  "insuranceInfo": {
+    "title": "Informations sur l'assurance",
+    "companyName": "Nom de la compagnie",
+    "ownerInfo": "Propriétaire du véhicule",
+    "policyNumber": "Numéro de police",
+    "expirationDate": "Date d'expiration",
+    "ownerFirstName": "Prénom du propriétaire",
+    "ownerLastName": "Nom du propriétaire",
+    "ownerEmail": "Email du propriétaire",
+    "ownerPhone": "Téléphone du propriétaire",
+    "ownerAddress": "Adresse du propriétaire",
+    "ownerCity": "Ville du propriétaire",
+    "ownerPostalCode": "Code postal ",
+    "ownerCountry": "Pays du propriétaire",
+    "ownerProvince": "Province du propriétaire"
+  },
+
+
+  "about": {
+    "title": "À propos d'",
+    "text1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.",
+    "text2": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.",
+    "text3": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.",
+    "accessFaq": "Accéder à la FAQ"
+  },
+
+
+  "faq": {
+    "title": "Foire aux questions",
+    "signupAndLogin": "Inscription et connexion",
+    "accidentReport": "Déclaration d'un accident",
+    "subscription": "Abonnement",
+    "question1": "Puis-je accéder à l'application en étant hors ligne ?",
+    "answer1": "Oui, vous pouvez accéder à l'application hors ligne avec des fonctionnalités limitées.",
+    "question2": "Comment réinitialiser mon mot de passe ?",
+    "answer2": "Vous pouvez réinitialiser votre mot de passe en allant dans les paramètres.",
+    "question3": "Comment m'inscrire ?",
+    "answer3": "Vous pouvez vous inscrire en cliquant sur le bouton d'inscription.",
+    "question4": "Comment me connecter ?",
+    "answer4": "Vous pouvez vous connecter en entrant votre nom d'utilisateur et votre mot de passe.",
+    "question5": "Comment déclarer un accident ?",
+    "answer5": "Vous pouvez déclarer un accident en cliquant sur le bouton de déclaration.",
+    "question6": "Quelles informations dois-je fournir ?",
+    "answer6": "Vous devez fournir votre nom, vos coordonnées et les détails de l'accident.",
+    "question7": "Puis-je modifier mon rapport ?",
+    "answer7": "Oui, vous pouvez modifier votre rapport avant de le soumettre.",
+    "question8": "Quels sont les plans d'abonnement ?",
+    "answer8": "Nous proposons des plans d'abonnement mensuels et annuels.",
+    "question9": "Comment annuler mon abonnement ?",
+    "answer9": "Vous pouvez annuler votre abonnement en allant dans les paramètres d'abonnement.",
+    "question10": "Offrez-vous un essai gratuit ?",
+    "answer10": "Oui, nous offrons un essai gratuit de 7 jours."
+  },
+
+  "termsAndConditions": {
+    "title": "Conditions et règlements",
+    "serviceTermsTitle": "Conditions de services",
+    "serviceTermsSubtitle": "Conditions que vous acceptez en utilisant Impact.",
+    "privacyPolicyTitle": "Politique de confidentialité",
+    "privacyPolicySubtitle": "Informations que nous recevons et ce que nous en faisons.",
+    "learnMoreButton": "En savoir plus sur Impact"
+  },
+
+
+
+  "addVehicle": {
+    "title": "Ajout d'un véhicule",
+    "vehicleInformation": "Informations sur le véhicule",
+    "vehicleModel": "Modèle du véhicule",
+    "vehicleModelRequired": "Le modèle du véhicule est requis",
+    "vehicleYear": "Année",
+    "vehicleYearRequired": "L'année est requise",
+    "vehicleYearInvalid": "Année invalide",
+    "vehicleColor": "Couleur du véhicule",
+    "vehicleColorRequired": "La couleur du véhicule est requise",
+    "vehiclePlateNumber": "Numéro de plaque",
+    "vehiclePlateNumberRequired": "Le numéro de plaque est requis",
+    "vehiclePlateNumberInvalid": "Doit contenir 7 caractères",
+    "vehicleSerialNumber": "Numéro du certificat d'immatriculation",
+    "vehicleSerialNumberRequired": "Le numéro du certificat d'immatriculation est requis",
+    "vehicleSerialNumberInvalid": "Doit contenir 13 caractères",
+    "vehicleDossierNumber": "Numéro de dossier",
+    "vehicleDossierNumberRequired": "Le numéro de dossier est requis",
+    "vehiclecategorieUsage": "Catégorie d'usage",
+    "vehiclecategorieUsageRequired": "La catégorie d'usage est requise",
+    "vehiclenumeroEssieux": "Numéro d'essieux",
+    "vehiclenumeroEssieuxRequired": "Le numéro d'essieux est requis",
+    "vehicleNetWeight": "Poids net",
+    "vehicleNetWeightRequired": "Le poids net est requis",
+    "vehicleCylinder": "Cylindrée",
+    "vehicleCylinderRequired": "La cylindrée est requise",
+    "vehicleNumeroCertificat": "Numéro de certificat",
+    "vehicleNumeroCertificatRequired": "Le numéro de certificat est requis",
+    "vehicleCerticateDeliveryDate": "Date de délivrance du certificat",
+    "vehicleCerticateExpirationDate": "Date d'expiration du certificat",
+    "vehicleOwner": "Propriétaire du véhicule",
+    "ownerYes": "Je suis le propriétaire du véhicule",
+    "ownerNo": "Je ne suis pas le propriétaire du véhicule",
+    "vehicleOwnerFirstname": "Prénom",
+    "vehicleOwnerFirstnameRequired": "Le prénom est requis",
+    "vehicleOwnerName": "Nom",
+    "vehicleOwnerNameRequired": "Le nom est requis",
+    "vehicleOwnerPhone": "Numéro de téléphone",
+    "vehicleOwnerPhoneRequired": "Le numéro de téléphone est requis",
+    "vehicleOwnerAddress": "Adresse",
+    "vehicleOwnerAddressRequired": "L'adresse est requise",
+    "vehicleOwnerCity": "Ville",
+    "vehicleOwnerCityRequired": "La ville est requise",
+    "vehicleOwnerPostalCode": "Code postal",
+    "vehicleOwnerPostalCodeRequired": "Le code postal est requis",
+    "country": "Pays",
+    "province": "Province",
+    "vehicleBrand": "Marque du véhicule"
+  },
+
+
+  "verified": {
+    "verifyyouremail": "Validation de votre adresse email",
+    "validationmessage": "Nous vous avons envoyé un code temporaire à votre adresse email. Veuillez entrer ce code afin de valider votre adresse email",
+    "validationcode": "Code de validation",
+    "coderequired": "Code de validation requis",
+    "resendanewvalidationcode": "Renvoyez un nouveau code validation"
+  },
+
+
+  "addInsurance": {
+    "title": "Ajouter une assurance",
+    "companyName": "Nom de la compagnie d'assurance",
+    "policyNumber": "Numéro de la police",
+    "expirationDate": "Date d'expiration",
+    "submit": "Soumettre",
+    "successMessage": "Assurance ajoutée avec succès!"
+  }
+
+
+}
