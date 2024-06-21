@@ -248,6 +248,11 @@ async function DeleteDrivingLicense(req, res) {
 
 /**
  * Crée un nouveau permis de conduire pour l'utilisateur authentifié.
+ * Cette fonction traite une requête HTTP pour créer un permis de conduire en utilisant les informations fournies dans le corps de la requête. 
+ * Elle commence par extraire les données nécessaires, vérifie l'authentification de l'utilisateur à l'aide d'un jeton JWT, puis récupère les informations de l'utilisateur 
+ * depuis la base de données. Ensuite, elle crée une nouvelle instance de permis de conduire avec les données fournies et les informations de l'utilisateur, 
+ * avant de sauvegarder cette instance dans la base de données. Enfin, elle renvoie une réponse JSON indiquant le succès ou l'échec de l'opération.
+ * 
  * @param {*} req Requête HTTP contenant les données du permis de conduire dans req.body.
  * @param {*} res Réponse HTTP pour renvoyer le résultat de l'opération.
  * @returns Réponse JSON indiquant le succès ou l'échec de la création du permis de conduire.

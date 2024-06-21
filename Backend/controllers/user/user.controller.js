@@ -189,7 +189,18 @@ async function validateLicenseData(req) {
     ]);
 }
 
-//CACHE : 
+/**
+ * Enregistre un nouvel utilisateur non complet dans la base de données.
+ * 
+ * Cette fonction traite la requête d'inscription d'un nouvel utilisateur. Elle extrait et valide les données de la requête,
+ * vérifie si l'utilisateur existe déjà dans la base de données, hache le mot de passe fourni, crée un nouvel objet utilisateur
+ * avec les données validées et hachées, puis l'insère dans la collection 'users' de la base de données. En cas de succès, elle
+ * génère un jeton temporaire pour l'utilisateur et renvoie une réponse JSON avec le statut de l'opération et l'ID du nouvel utilisateur.
+ * 
+ * @param {*} req Requête HTTP contenant les données de l'utilisateur à enregistrer dans req.body.
+ * @param {*} res Réponse HTTP pour renvoyer le résultat de l'opération.
+ * @returns Renvoie une réponse JSON avec le statut de l'opération et l'ID du nouvel utilisateur en cas de succès, ou une erreur en cas d'échec.
+ */
 async function RegisterUser(req, res) {
     try {
         // Extraction des données de la requête
@@ -215,24 +226,6 @@ async function RegisterUser(req, res) {
         // Hachage du mot de passe
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Création de l'objet User
-        const newUser01 = new User({
-            email: emailLowerCase,
-            name: name,
-            lastName: lastName,
-            password: hashedPassword,
-            phone: phone,
-            address: address,
-            postalCode: postalCode,
-            companyName: companyName,
-            province: province,
-            city: city,
-            country: country,
-            gender: gender,
-            birthdate: birthdate,
-            typeAccount: "free",
-        });
 
         const newUser = new User({
             active: true,
@@ -650,16 +643,6 @@ async function GetUserById(req, res) {
 
         if (ownerId !== userId) {
             return res.status(400).json({ msg: "Impossible d'afficher cette utilisateur" });
-        }
-
-        // Vérification si les données du locataire sont en cache
-        const cacheKey = `${ownerId}`;
-        const cachedData = myCache.get(cacheKey);
-        if (cachedData) {
-            // Si les données sont en cache, les renvoyer directement
-            console.log("Données trouvées dans le cache. Retour du cache...");
-            const decryptedData = decryptData(cachedData, AES_KEY);
-            return res.status(200).json({ vehicle: decryptedData });
         }
 
         const userProfile = await userCollection.findOne({ _id: userId });
@@ -1642,11 +1625,14 @@ async function resendVerificationCode(req,body){
 
 
 /**
- * Fonction pour télécharger et enregistrer l'image de profil de l'utilisateur.
+ * Télécharge et enregistre l'image de profil de l'utilisateur à partir de la requête HTTP.
+ * Cette fonction vérifie si un fichier image a été correctement téléchargé, vérifie l'authentification de l'utilisateur via un token JWT,
+ * puis déplace le fichier téléchargé vers un répertoire de destination spécifié. Elle met également à jour le chemin de l'image de profil
+ * dans la base de données utilisateur. En cas de succès, elle renvoie un message JSON avec le chemin relatif de l'image enregistrée.
  * 
- * @param {*} req Requête HTTP contenant le fichier image à télécharger.
+ * @param {*} req Requête HTTP contenant le fichier image à télécharger dans req.files.image.
  * @param {*} res Réponse HTTP pour renvoyer le résultat du téléchargement.
- * @returns Renvoie un message JSON avec le statut de l'opération.
+ * @returns Renvoie une réponse JSON avec le statut de l'opération et le chemin relatif de l'image enregistrée.
  */
 async function UploadUserProfileImage(req, res) {
     try {
@@ -1707,13 +1693,14 @@ async function UploadUserProfileImage(req, res) {
 
 
 /**
- * Fonction pour supprimer l'image de profil de l'utilisateur.
+ * Supprime l'image de profil de l'utilisateur.
  * 
- * Cette fonction traite la requête de suppression de l'image de profil d'un utilisateur. Elle vérifie le token JWT pour identifier l'utilisateur,
- * supprime le fichier d'image de profil du système de fichiers, et met à jour le champ `profileImagePath` de l'utilisateur dans la base de données.
+ * Cette fonction traite la requête de suppression de l'image de profil d'un utilisateur. Elle vérifie l'authentification de l'utilisateur via un token JWT,
+ * récupère l'ID de l'utilisateur à partir du token décodé, vérifie si l'utilisateur existe dans la base de données, et procède à la suppression du fichier
+ * d'image de profil du système de fichiers. Ensuite, elle met à jour le champ `profileImagePath` de l'utilisateur dans la base de données en le vidant.
  * 
- * @param {*} req - La requête HTTP contenant le token JWT dans les en-têtes Authorization.
- * @param {*} res - La réponse HTTP pour renvoyer le résultat de la suppression.
+ * @param {*} req Requête HTTP contenant le token JWT dans les en-têtes Authorization.
+ * @param {*} res Réponse HTTP pour renvoyer le résultat de la suppression.
  * @returns Renvoie une réponse JSON avec le statut de l'opération.
  */
 async function DeleteUserProfileImage(req, res) {
@@ -1793,31 +1780,6 @@ module.exports = {
 };
 
 
-/*
-
-                const newDriverLicense = new DriverLicense({
-            user: myToken.user_id,
-            number: number,
-            name: myUser.name,
-            lastName: myUser.lastName,
-            birthdate: myUser.birthDay,
-            address: address,
-            appartment: appartment,
-            province: province,
-            postalCode: postalCode,
-            licenseClass: licenseClass,
-            sex: sex,
-            rest: rest,
-            mention: mention,
-            height: height,
-            weight: weight,
-            issued: formattedIssuedDate,
-            expires: formattedExpiresDate,
-            city: city,
-            country: country,
-            photo: photoPath,
-        });
-*/
 
 
 

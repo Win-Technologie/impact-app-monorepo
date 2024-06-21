@@ -456,7 +456,26 @@ async function toggleCarActivation(req, res) {
 }
 
 
-
+/**
+ * Ajoute des informations d'immatriculation à un véhicule pour un propriétaire donné.
+ * Cette fonction vérifie d'abord si le véhicule existe dans la base de données et s'il ne possède pas déjà des informations d'immatriculation. 
+ * Si le véhicule est trouvé et n'a pas encore d'immatriculation, elle crée un objet `immatriculationData2` avec les informations fournies, 
+ * puis met à jour le véhicule dans la base de données en ajoutant ces informations d'immatriculation.
+ * 
+ * @param {string} ownerId - L'ID du propriétaire du véhicule.
+ * @param {string} carId - L'ID du véhicule à immatriculer.
+ * @param {object} immatriculationData - Les données d'immatriculation à ajouter au véhicule.
+ * @param {string} immatriculationData.certificateNumber - Le numéro de certificat de l'immatriculation.
+ * @param {Date} immatriculationData.issueDate - La date de délivrance du certificat d'immatriculation.
+ * @param {Date} immatriculationData.dateExpiration - La date d'expiration du certificat d'immatriculation.
+ * @param {number} immatriculationData.ESSIEUXNumber - Le nombre d'essieux du véhicule.
+ * @param {number} immatriculationData.netWeight - Le poids net du véhicule.
+ * @param {number} immatriculationData.cylinder - La cylindrée du véhicule.
+ * @param {string} immatriculationData.fileNumber - Le numéro de dossier associé à l'immatriculation.
+ * @param {string} immatriculationData.usageCategory - La catégorie d'utilisation du véhicule.
+ * @returns {Promise<void>} - Une promesse qui se résout lorsque les informations d'immatriculation ont été ajoutées au véhicule.
+ * @throws {Error} - Lance une erreur si le véhicule n'est pas trouvé, s'il a déjà des informations d'immatriculation ou en cas d'erreur lors de la mise à jour.
+ */
 async function addImmatriculationV2(ownerId ,carId, immatriculationData) {
     try {
         // Vérifier si le véhicule existe dans la base de données
@@ -469,11 +488,6 @@ async function addImmatriculationV2(ownerId ,carId, immatriculationData) {
         if (car.immatriculation) {
             throw new Error("Ce véhicule a déjà des informations d'immatriculation");
         }
-
-        // Recuperer les dates de delivrance et d'expiration et les transformer en objets Date
-        //const dateDelivrance2 = new Date(immatriculationData.deliveryDate);
-        //const dateExpiration2 = new Date(immatriculationData.dateExpiration);
-
        
         // Creer nouvelle de immatriculationData2
         const immatriculationData2 = {
