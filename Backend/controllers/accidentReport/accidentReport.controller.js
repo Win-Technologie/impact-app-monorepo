@@ -448,6 +448,7 @@ async function newAccidentReport(req, res) {
             return {
                 user: myToken.user_id,
                 personalDetails: {
+                    profileImagePath: owner.profileImagePath,
                     name: owner.name,
                     lastName: owner.lastName,
                     address: owner.address,
@@ -982,7 +983,7 @@ async function getAccidentReport(req, res) {
 
         const { id } = req.params;
 
-        const accidentReportCollection = mainDb.collection(VEHICLES_COLLECTION);
+        const accidentReportCollection = mainDb.collection(ACCIDENTREPORTS_COLLECTION);
 
         const accidentRFound = await accidentReportCollection.findOne({ _id: id })
 

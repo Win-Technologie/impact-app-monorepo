@@ -12,7 +12,6 @@ const multiparty = require('connect-multiparty');
 const md_uploadUserImg = multiparty({ uploadDir: `${CARS_ROUTER_IMG_PATH}` });
 
 
-
 // Route pour ajouter une voiture
 router.post('/add', [userAuth.ensureAuth], vehicleController.addCar);
 

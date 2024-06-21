@@ -114,149 +114,6 @@ async function validateUpdateLicenseData(req){
 }
 
 
-async function UploadDriverLicense(req, res) {
-    try {
-
-        // Récupérer le jeton du header de la requête
-        const token = req.headers.authorization?.replace("Bearer ", "");
-        // Vérifier si le jeton est présent
-        if (!token) {
-            console.error('Le Token n\'est pas fourni');    
-            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-        }
-        // Décoder le token pour obtenir les informations de l'utilisateur
-        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
-        if (!myToken) {
-            return res.status(400).json({ msg: "Token invalide" });
-        }
-
-        // Validation des champs de la requête
-        await validateLicenseData(req);
-        const validationErrors = validationResult(req);
-
-        if (!validationErrors.isEmpty()) {
-            // deleteUploadedFiles(req.files);
-            return res.status(400).json({ errors: validationErrors.array() });
-        }
-
-        let myUser = await userCollection.findOne({ _id: myToken.user_id });
-
-        if (!myUser) {
-            // deleteUploadedFiles(req.files);
-            return res.status(402).json({ msg: "Cet utilisateur n'existe pas" });
-        }
-
-    //    // restriction, do not allow double licenses
-    //     if (myUser.driverLicense != 'pending') {
-    //         // deleteUploadedFiles(req.files);
-    //         return res.status(402).json({ msg: "l'utilisateur possède déjà un permis de conduire enregistré" });
-    //     }
-
-        if (myUser.name === 'pending' || myUser.lastName === 'pending') {
-            // deleteUploadedFiles(req.files);
-            return res.status(402).json({ msg: "Veuillez saisir d'abord le nom et le prénom de l'utilisateur" });
-        }
-
-        const { number, name, lastName, birthdate, address, appartment, province,
-            postalCode, licenseClass, sex, rest, mention, referenceNumber, height,
-            weight, issued, expires, city, country, photoRecto, photoVerso, photoSelfie
-        } = req.body;
-
-        let licenseExisting = await drivingLicensesCollection.findOne({ number: number });
-
-        // if (licenseExisting) {
-        //     return res.status(400).json({ msg: "La licence existe déjà" });
-        // }
-
-
-
-        let myBirthdate
-        // Recuperer les dates de delivrance et d'expiration et les transformer en objets Date
-        if (birthdate) {
-            myBirthdate = new Date(birthdate);
-        }
-
-        const issuedDate = new Date(issued);
-        const expirationDate = new Date(expires);
-
-        const newDriverLicense = new DriverLicense({
-            user: myToken.user_id,
-            number: number,
-            name: myUser.name,
-            lastName: myUser.lastName,
-            // birthdate: birthdate ? formattedBirthdateDate : myUser.birthdate,
-            birthdate: birthdate ? myBirthdate : myUser.birthdate,
-            address: address,
-            appartment: appartment,
-            province: province,
-            postalCode: postalCode,
-            licenseClass: licenseClass,
-            sex: sex.toUpperCase(),
-            rest: rest,
-            mention: mention,
-            height: height,
-            weight: weight,
-            // issued: formattedIssuedDate,
-            // expires: formattedExpiresDate,
-            issued: issuedDate,
-            expires: expirationDate,
-            city: city,
-            country: country,
-            // photo: photoPath,
-            photoRecto: photoRecto,
-            photoVerso: photoVerso,
-            photoSelfie: photoSelfie
-        });
-
-        // console.log(newDriverLicense);
-
-        const { veriffResp, body } = await instanceVeriffSession(newDriverLicense);
-        // console.log(veriffResp);
-
-        if (!veriffResp) {
-            return res.status(400).json({ msg: "Erreur lors de la création d'une session utilisateur veriff" })
-        }
-
-        const [updateUser, insertResult] = await Promise.all([
-            userCollection.updateOne(
-                { _id: myToken.user_id },
-                {
-                    $set: {
-                        driverLicense: newDriverLicense._id,
-                        sessionId: body.verification.id,
-                        verifLink: body.verification.url,
-                        verifStatus: body.verification.status,
-                    }
-                }
-            ),
-
-            drivingLicensesCollection.insertOne(newDriverLicense)
-
-        ]);
-
-        if (!insertResult || !updateUser) {
-            return res.status(500).json({ msg: "Erreur d'insertion de la nouvelle licence" });
-        }
- 
-        //Télécharger des photos d'identité dans le profil veriff de l'utilisateur à des fins d'authentification.
-        const resultUploadeImages = await uploadAllImagesToVeriff(body.verification.id, photoRecto, photoVerso, photoSelfie, myUser);
-        console.log('resultUploadeImages : ', resultUploadeImages);
-
-
-        const cacheKeyDriverL = newDriverLicense._id;
-        myCache.set(cacheKeyDriverL, newDriverLicense);
-
-    
-
-        res.status(201).json({
-            msg: 'Nouvelle licence ajoutée avec succès',
-        });
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ msg: "UPLOAD DL :Erreur interne du serveur", error: error });
-    }
-}
 
 async function GetMyLicense(req,res){
     try {
@@ -389,9 +246,80 @@ async function DeleteDrivingLicense(req, res) {
 }
 
 
+/**
+ * Crée un nouveau permis de conduire pour l'utilisateur authentifié.
+ * @param {*} req Requête HTTP contenant les données du permis de conduire dans req.body.
+ * @param {*} res Réponse HTTP pour renvoyer le résultat de l'opération.
+ * @returns Réponse JSON indiquant le succès ou l'échec de la création du permis de conduire.
+ */
+const createDrivingLicence = async (req, res) => {
+    try {
+        // Récupération des données du permis de conduire depuis le corps de la requête
+        const { number, licenseClass, mention, issued, expires } = req.body;
+
+        // Extraction du jeton d'authentification depuis les en-têtes HTTP
+        const token = req.headers.authorization?.replace("Bearer ", "");
+
+        // Vérifier si le jeton est présent
+        if (!token) {
+            console.error("Le Token n'est pas fourni");
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        // Récupérer l'identifiant de l'utilisateur à partir du token JWT
+        const userId = myToken.user_id;
+
+        // Rechercher l'utilisateur dans la base de données
+        const loggedInUser = await userCollection.findOne({ "_id": userId });
+        if (!loggedInUser) {
+            return res.status(403).json({ msg: "Utilisateur non trouvé" });
+        }
+
+        // Récupérer les champs essentiels de l'utilisateur pour le permis de conduire
+        const { name, lastName, birthdate, address, postalCode, city, province, country, gender } = loggedInUser;
+
+        // Création d'une nouvelle instance de DriverLicense
+        const newDriverLicense = new DriverLicense({
+            user: userId,
+            name,
+            lastName,
+            birthdate,
+            sex: gender,
+            address,
+            postalCode,
+            city,
+            province,
+            country,
+            number,
+            licenseClass,
+            mention,
+            issued,
+            expires
+        });
+
+        // Sauvegarder le permis de conduire dans la collection spécifiée
+        await drivingLicensesCollection.insertOne(newDriverLicense);
+
+        // Répondre avec un message JSON indiquant le succès de la création du permis de conduire
+        return res.status(201).json({ msg: "Permis de conduire créé avec succès", driverLicense: newDriverLicense });
+
+    } catch (error) {
+        console.error(error);
+        // En cas d'erreur, renvoyer une réponse d'erreur interne du serveur
+        return res.status(500).json({ msg: "Erreur serveur" });
+    }
+};
+
+
 module.exports = {
 
-    UploadDriverLicense,
+    createDrivingLicence,
     GetMyLicense,
     GetDrivingLicense,
     DeleteDrivingLicense

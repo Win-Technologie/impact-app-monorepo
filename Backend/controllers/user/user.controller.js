@@ -101,22 +101,6 @@ async function validateUpdateRegisterUserFields(req) {
         await body('gender').isLength({ min: 1 }).withMessage('Le genre est requis et doit contenir au moins 1 caractères.').run(req);
     }
     if (req.body.birthdate) {
-        // Validation de date
-        // await body('birthDay').isDate().withMessage('La date est requise et doit être du type date').run(req);
-        // Validación de fecha
-        // await body('birthDay')
-        //     .custom(value => {
-        //         // Intenta crear un objeto Date a partir de la cadena
-        //         const date = new Date(value);
-        //         // Verifica si el objeto Date es válido
-        //         if (isNaN(date.getTime())) {
-        //             // Si no es válido, devuelve un mensaje de error
-        //             throw new Error('La date est requise et doit être du type date');
-        //         }
-        //         // Si es válido, devuelve true para indicar que la validación pasó
-        //         return true;
-        //     })
-        //     .run(req);
         await body('birthdate').notEmpty().withMessage('La date est requise et doit être du type date').run(req);
     }
     if (req.body.newPassword) {
@@ -734,14 +718,21 @@ async function RestorePassword(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error });
     }
 }
-// CACHE
+
+/**
+ * Cette fonction completer les informations personnelle d'un utilisateur.
+ * Elle vérifie d'abord la validité du jeton JWT pour authentifier l'utilisateur,
+ * puis elle valide les champs de la requête et s'assure que les fichiers envoyés respectent les contraintes.
+ * Si toutes les vérifications passent, elle met à jour les informations de l'utilisateur dans la base de données.
+ * 
+ * @param {*} req - La requête HTTP contenant les données de l'utilisateur à modifier.
+ * @param {*} res - La réponse HTTP retournant le résultat de l'opération.
+ * @returns {Object} - La réponse HTTP avec un message de succès ou d'erreur.
+ */
 async function EditUser(req, res) {
     try {
 
         const userData = req.body;
-        // const { id } = req.params;
-        // console.log(id);
-        // Récupérer le jeton du header de la requête
         const token = req.headers.authorization?.replace("Bearer ", "");
         // Vérifier si le jeton est présent
         if (!token) {
@@ -759,8 +750,6 @@ async function EditUser(req, res) {
         if (req.body.password) {
             return res.status(403).json({ msg: 'La modification du mot de passe n\'est pas autorisée depuis cette route' });
         }
-
-        // ..... VALIDATE FIELDS
         // Validation des champs de la requête
         await validateUpdateRegisterUserFields(req);
         // Vérification des erreurs de validation
@@ -768,7 +757,6 @@ async function EditUser(req, res) {
         if (!validationErrors.isEmpty()) {
             return res.status(400).json({ errors: validationErrors.array() });
         }
-
 
         // Utiliser Promise.all pour récupérer les données de de l'utilisateur à modifier 
         // et vérifier si le statut de la personne qui exécute l'action est actif.
@@ -781,18 +769,12 @@ async function EditUser(req, res) {
             return res.status(403).json({ msg: "Utilisateur non trouvé" });
         }
 
-        //Vérifier si l'utilisateur existe et si son compte est actif dans le système.
-        // if (!isActiveUser || isActiveUser.active === false) {
-        //     return res.status(403).json({ msg: "Utilisateur présentant des problèmes avec le compte, contactez l'administrateur" });
-        // }
-
         let myBirthdate;
 
         if (userData.birthdate) {
             myBirthdate = new Date(userData.birthdate);
             userData.birthdate = myBirthdate;
         }
-
 
         // Mettre à jour les données de la propriété avec les nouvelles données
         Object.assign(foundUser, userData);
@@ -801,60 +783,6 @@ async function EditUser(req, res) {
         if (typeof foundUser.active === 'string') {
             foundUser.active = foundUser.active.toLowerCase() === 'true';
         }
-
-        // Obtenez le nom des images et stockez-les dans le tableau s'il y en a
-        if (req.files && Object.keys(req.files).length > 0) {
-
-            // Vérifier que les fichiers respectent la taille maximale autorisée.
-            const { isValid: isSizeValid, fileName: oversizedFileName } = checkFileSize(req.files);
-
-            // Vérifier que le nombre de fichiers ne dépasse pas la limite autorisée.
-            const maxFileQuantity = 3; // Définit le nombre maximum de fichiers autorisés.
-            const { isValid: isQuantityValid } = checkFileQuantity(req.files, maxFileQuantity);
-
-            // Si la taille des fichiers n'est pas valide
-            if (!isSizeValid) {
-                // Supprimer tous les fichiers téléchargés dans le système de fichiers
-                deleteUploadedFiles(req.files);
-                return res.status(400).json({ msg: `La taille du fichier ${oversizedFileName} doit être inférieure à 500KB` });
-            }
-
-            // Si la quantité de fichiers n'est pas valide
-            if (!isQuantityValid) {
-                // Supprimer tous les fichiers téléchargés dans le système de fichiers
-                deleteUploadedFiles(req.files);
-                return res.status(400).json({ msg: `Le nombre de fichiers ne peut pas dépasser ${maxFileQuantity}` });
-            }
-
-            // Initialiser un tableau pour les photos si des fichiers sont présents dans la requête
-            let photos_ = [];
-            let selfie = '';
-            // Parcourir les photos envoyées dans la requête et les ajouter au tableau de photos
-
-            for (let i = 1; i <= maxFileQuantity; i++) {
-
-                if (req.files && req.files[`image${i}`]) {
-                    const myImagePathName = getFileName(req.files[`image${i}`]);
-                    photos_.push(myImagePathName);
-                }
-            }
-
-            selfie = getFileName(req.files['selfie']);
-
-            foundUser.selfie = selfie;
-            foundUser.photos = photos_;
-        }
-
-        // Appel de verifyDocuments pour vérifier les documents de l'utilisateur
-        // const verificationResult = await verifyDocuments(foundUser);
-
-        // // Récupération des résultats de la vérification des documents
-        // const drivingLicenseVerificationResult = verificationResult.drivingLicense;
-
-        // if (!drivingLicenseVerificationResult.success) {
-        //     // Si la vérification du permis de conduire a échoué
-        //     return res.status(400).json({ msg: "La vérification du permis de conduire a échoué", error: drivingLicenseVerificationResult.msg });
-        // }
 
         const result = await userCollection.updateOne(
             { _id: id }, // Filtre pour trouver la propriété par son ID

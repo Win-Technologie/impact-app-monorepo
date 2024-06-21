@@ -8,7 +8,7 @@ const immatriculationSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  issuanceDate: {
+  issueDate: {
     type: Date,
     required: true
   },
@@ -25,7 +25,7 @@ const immatriculationSchema = new mongoose.Schema({
   engineDisplacement: {
     type: Number
   },
-  dossierNumber: {
+  fileNumber: {
     type: String
   },
   usageCategory: {

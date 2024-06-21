@@ -15,14 +15,8 @@ const md_uploadUserImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_PATH}` });
 const md_uploadUserDocs = multiparty({uploadDir: `${DOCS_ROUTER_IMG_PATH}`});
 
 
-/* DRIVER LICENCE ENDPOINTS */
-// To upload driver licence
-// router.post('/user/license', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserDocs],
-//     driverLicenseController.UploadDriverLicense
-// );
-router.post('/user/license', [userAuth.ensureAuth, userAuth.isActiveSession],
-    driverLicenseController.UploadDriverLicense
-);
+// Route to create driving licence
+router.post('/user/license', userAuth.ensureAuth, driverLicenseController.createDrivingLicence);
 
 // GET MY DRIVING LICENSE
 router.get('/user/me', [userAuth.ensureAuth, userAuth.isActiveSession], driverLicenseController.GetMyLicense);
