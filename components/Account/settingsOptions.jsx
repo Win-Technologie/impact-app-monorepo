@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { AntDesign, MaterialIcons, FontAwesome, Ionicons,FontAwesome5,Entypo } from '@expo/vector-icons'
 import { useRouter } from 'expo-router';
@@ -12,7 +12,7 @@ export default function SettingsOptions({ currentLanguage, appVersion }) {
     const router = useRouter();
 
     const handlePressAbonnement = () => {
-      router.push('/abonnement');
+      //router.push('/abonnement');
     };
   
     const handlePressVehicules = () => {
@@ -24,7 +24,7 @@ export default function SettingsOptions({ currentLanguage, appVersion }) {
     };
   
     const handlePressNotifications = () => {
-      router.push('/notifications');
+      //router.push('/notifications');
     };
   
     const handlePressAide = () => {
@@ -40,7 +40,7 @@ export default function SettingsOptions({ currentLanguage, appVersion }) {
     };
   
     const handlePressMisesAJour = () => {
-      router.push('/misesajour');
+      //router.push('/misesajour');
     };
 
 
@@ -52,7 +52,7 @@ export default function SettingsOptions({ currentLanguage, appVersion }) {
                 </View>
                 {renderSettingOption(t('account.subscription'), "award", FontAwesome5,()=>handlePressAbonnement())}
                 {renderSettingOption(t('account.vehicles'), "car-alt", FontAwesome5,()=>handlePressVehicules())}
-                {renderSettingOptionWithDetail(t('account.language'), "language", MaterialIcons, currentLanguage,()=>handlePressLangue())}
+                {renderSettingOptionWithDetail(t('account.language'), "language", MaterialIcons, currentLanguage=='en'?'English':'Français',()=>handlePressLangue())}
                 {renderSettingOption(t('account.notification'), "notifications", Ionicons, () => handlePressNotifications())}
             </View>
 
@@ -76,7 +76,7 @@ const renderSettingOption = (title, iconName, IconComponent, onPress) => (
       <IconComponent name={iconName} size={21} style={styles.icon} />
     </View>
     <Text style={styles.optionText}>{title}</Text>
-    <Entypo name="chevron-right" size={16} style={styles.arrowIcon} />
+    <Entypo name="chevron-right" size={16} style={styles.arrowIcon}/>
   </TouchableOpacity>
 );
 

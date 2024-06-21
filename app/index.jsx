@@ -64,18 +64,20 @@ export default function MainScreen() {
            // router.push('declarations/onePersonne/placeOfAccident');
             // router.push('(tabs)');
 
-            if (user) {
+           if (user) {
                 router.navigate('(tabs)');
             }
 
             else if (token && token.length > 0) {
                 router.navigate('signup/signUpLanding');
             }
-           
+
+            //router.push('/signup/personalInfoSteps/phoneAndAddress')
             //router.navigate('signup/signUpLanding');
 
 
             // alert(token);
+
 
             if (token && token.length > 0) {
 
@@ -166,7 +168,9 @@ export default function MainScreen() {
       description: t('mainScreen.dataSecurityDescription'),
       showButton: false,
     },
-  ];
+    ];
+
+
 
   const onNextPress = () => {
     if (dataIndex < data.length - 1) {

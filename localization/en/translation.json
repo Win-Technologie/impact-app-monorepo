@@ -381,7 +381,12 @@
     "accidentSteps": "Whether you are alone or several involved, there are steps to follow in the event of a car accident",
     "alone": "I am the only individual involved",
     "multiple": "We are multiple individuals involved",
-    "numberOfIndividuals": "Number of individuals involved"
+    "numberOfIndividuals": "Number of individuals involved",
+    "numberofpersoninvoved": "You must choose the number of people involved before you can continue",
+    "onepeople": "One people",
+    "twopeoples": "Two peoplse",
+    "threepeoples": "Three peoples",
+    "fourpeoples": "four peoples"
   },
 
   "historyPage": {

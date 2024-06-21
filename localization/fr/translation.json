@@ -400,7 +400,13 @@
     "accidentSteps": "Que vous soyez seul ou plusieurs à être impliqué, il y a des démarches à suivre lors d'un accident de voiture",
     "alone": "Je suis le seul individu impliqué",
     "multiple": "Nous sommes plusieurs individus impliqués",
-    "numberOfIndividuals": "Nombre d'individus impliqués"
+    "numberOfIndividuals": "Nombre d'individus impliqués",
+    "numberofpersoninvoved": "Vous devez choisir le nombre de personnes impliqués avant de pouvoir continuer",
+    "onepeople": "Un individus",
+    "twopeoples": "Deux individus",
+    "threepeoples": "Trois individus",
+    "fourpeoples": "Quatre individus",
+    "fivepeoples": "Five individus"
   },
 
   "historyPage": {

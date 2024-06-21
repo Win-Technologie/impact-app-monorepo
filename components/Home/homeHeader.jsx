@@ -11,7 +11,7 @@ export default function HomeHeader({ children, clientName, selfie, setSelfie }) 
         <View style={styles.headerContainer}>
             <View style={styles.leftContainer}>
                 <Image
-                    source={selfie != null ? { uri: `data:image;base64,${selfie}` } : require('../../assets/avatar.jpg')}
+                    source={selfie != null ? { uri: `${selfie}` } : require('../../assets/avatar.jpg')}
                     style={styles.clientImage}
                 />
                 <View style={styles.textContainer}>

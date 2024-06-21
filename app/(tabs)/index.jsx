@@ -22,19 +22,19 @@ export default function index() {
     const [selfie, setSelfie] = useState(null);
 
     const callUrgence = () => {
-        Linking.openURL("tel:+123456789");
+        Linking.openURL("tel:911");
     };
 
 
     const callRemorcage = () => {
-        Linking.openURL("tel:+123456789");
+        Linking.openURL("https://www.google.com/search?q=remorqueur&oq=remorqueur+&gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBCDY1MjNqMGoxqAIAsAIA&sourceid=chrome&ie=UTF-8");
     };
 
     const getUser = async () => {
        
         try {
             const userData = JSON.parse(await AsyncStorage.getItem("user"));
-            console.log(userData);
+            console.log(userData.vehicles[0].vehicle);
             const token = await AsyncStorage.getItem("userToken");
             console.log(token);
             setName(userData.user.name + " " + userData.user.lastName)
@@ -61,6 +61,7 @@ export default function index() {
         });
     }, []);
 
+
     React.useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
 
@@ -73,8 +74,8 @@ export default function index() {
         return unsubscribe;
     }, [navigation])
 
-    const getSelfie = async () => {
 
+    const getSelfie = async () => {
         const s = await AsyncStorage.getItem("selfie");
         setSelfie(s);
     }
@@ -189,7 +190,7 @@ export default function index() {
           <TouchableOpacity
             style={{ flex: 1, marginLeft: 5 }}
             onPress={() => {
-              callAssurance();
+                callRemorcage();
             }}
           >
             <BoxComponent height={157} style={styles.innerBox2}>

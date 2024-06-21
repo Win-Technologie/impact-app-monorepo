@@ -1,26 +1,80 @@
 import React from 'react'
-import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView, Platform } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons"; 
 import { useTranslation } from 'react-i18next';
 import ImagePickerModal from "../ImagePickerModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { useNavigation } from 'expo-router';
 export default function HeaderBox({ name, email, selfie, setSelfie }) {
 
     const [filePath, setFilePath] = React.useState(null);
     const [visible, setVisible] = React.useState(false);
     const { t } = useTranslation();
+    const API_URL = process.env.EXPO_PUBLIC_API_URL;
+    const HOST_URL = result = API_URL.replace("api/", ""); 
+    const navigation = useNavigation();
 
+
+
+    const createFormData = (photo, body = {}) => {
+
+        let filename = photo.fileName.split('/').pop();
+        let match = /\.(\w+)$/.exec(filename);
+        let type = match ? `image/${match[1]}` : 'image';
+       
+        const data = new FormData();
+        data.append('image', {
+            name: photo.fileName,
+            type:type,
+            uri: Platform.OS === 'ios' ? photo.uri.replace('file://', '') : photo.uri,
+        });
+
+        Object.keys(body).forEach((key) => {
+            data.append(key, body[key]);
+        });
+
+        return data;
+    };
+
+    const handleUploadPhoto = async (photo) => {
+
+
+        const token = await AsyncStorage.getItem('userToken');
+
+        if (!token) {
+            console.error("No token provided");
+            return;
+        }
+
+
+        fetch(`${API_URL}users/user/upload-profile-image`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${token}`
+            },
+            body: createFormData(photo, { userId: '123' }),
+           
+        }).then((response) => response.json())
+        .then((response) => {
+            saveSelfie(`${HOST_URL}Backend/${response.imagePath}`)
+            setFilePath(`${HOST_URL}Backend/${response.imagePath}`);
+        })
+        .catch((error) => {
+            console.log('error', error);
+        });
+
+    };
     
 
     React.useEffect(() => {
 
-        if (selfie && !visible ) {
-            saveSelfie(selfie)
-            setFilePath(selfie);
+        if (selfie && !visible) {
+            handleUploadPhoto(selfie);
         }
 
-    }, [visible])
+
+    }, [visible]);
 
 
     const saveSelfie = async (selfie) => {
@@ -28,13 +82,30 @@ export default function HeaderBox({ name, email, selfie, setSelfie }) {
     }
 
 
+    const getSelfie = async () => {
+        const s = await AsyncStorage.getItem("selfie");
+        setFilePath(s);
+    }
+
+
+    React.useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+
+            getSelfie();
+        });
+
+        // Return the function to unsubscribe from the event so it gets removed on unmount
+        return unsubscribe;
+    }, [navigation])
+
+
 
     return (
         <View style={styles.headerBox}>
             
-
             <Image
-                source={selfie ? { uri: `data:image;base64,${selfie}` } : require('../../assets/avatar.jpg')}
+               // source={selfie ? { uri: `data:image;base64,${selfie}` } : require('../../assets/avatar.jpg')}
+                source={selfie ? { uri: `${filePath}` } : require('../../assets/avatar.jpg')}
                 style={styles.profileImage}
             />
 
@@ -76,6 +147,7 @@ export default function HeaderBox({ name, email, selfie, setSelfie }) {
     );
 }
 
+
 const styles = StyleSheet.create({
 
     headerBox: {
@@ -94,14 +166,13 @@ const styles = StyleSheet.create({
         borderRadius: 70, // Pour rendre l'image ronde
         borderWidth: 1,
         borderColor: "white",
-       // marginBottom: 20,
     },
 
     name: {
         color: "white",
         fontSize: 24,
         fontWeight: "bold",
-        marginTop: 15,
+
     },
 
     email: {

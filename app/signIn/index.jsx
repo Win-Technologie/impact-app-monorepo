@@ -6,7 +6,6 @@ import {
     TouchableOpacity,
     Image,
     StyleSheet,
-    //SafeAreaView,
     ScrollView,
     KeyboardAvoidingView,
     ToastAndroid,
@@ -33,6 +32,8 @@ export default function SignIn() {
     const [modalVisible, setModalVisible] = React.useState(false);
     const navigation = useNavigation();
     const endPoint = "users/user/login";
+    const API_URL = process.env.EXPO_PUBLIC_API_URL;
+    const HOST_URL = result = API_URL.replace("api/", ""); 
 
 
 
@@ -80,7 +81,6 @@ export default function SignIn() {
         setModalVisible(true);
         const response = await authenticateUser({ email, password }, endPoint);
 
-        console.log(response);
 
         if (response.data && response.status === 200) {
 
@@ -88,12 +88,18 @@ export default function SignIn() {
                 setModalVisible(false);
             }, 1000);
 
-           try {
+            try {
 
+
+                await AsyncStorage.setItem("userToken", response.data.A7);
+                await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
+
+                if (response.data.user.user.profileImagePath) {
+                    const selfieUrl = `${HOST_URL}Backend/${response.data.user.user.profileImagePath}`;
+                    await AsyncStorage.setItem("selfie", selfieUrl);
+                }
                
-               await AsyncStorage.setItem("userToken", response.data.A7);
-               await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
-               
+
                if (response.data.A7) {
                    router.push("/(tabs)");
                }
@@ -106,7 +112,7 @@ export default function SignIn() {
 
             
             if (response.status == 403 ) {
-              //  router.push("/signup/signUpLanding");
+                router.push("/signup/signUpLanding");
             }
             else {
 

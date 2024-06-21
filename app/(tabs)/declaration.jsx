@@ -1,5 +1,5 @@
 ﻿import React, { useState } from "react";
-import { Text, TouchableOpacity, StyleSheet, View, Modal} from "react-native";
+import { Text, TouchableOpacity, StyleSheet, View, Alert} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons"; // Assurez-vous d'avoir installé cette bibliothèque
 import DropDownPicker from 'react-native-dropdown-picker';
 import { router } from 'expo-router';
@@ -18,16 +18,16 @@ export default function DeclarationPage() {
     const [isAlone, setIsAlone] = useState(true);
     const [declaration, setDeclaration] = useRecoilState(DeclarationState);
 
-    console.log(declaration);
+   // console.log(declaration);
 
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState(null);
     const [items, setItems] = useState([
-        { label: '2 individus', value: '2' },
-        { label: '3 individus', value: '3' },
-        { label: '4 individus', value: '4' },
-        { label: '5 individus', value: '5' }
-    ]);
+        { label: t('yourComponent.twopeoples'), value: '2' },
+        { label: t('yourComponent.threepeoples'), value: '3' },
+        { label: t('yourComponent.fourpeoples'), value: '4' },
+        { label: t('yourComponent.fivepeoples'), value: '5' }
+    ]); 
 
     const chooseOption = (option) => {
 
@@ -45,12 +45,26 @@ export default function DeclarationPage() {
     const next = () => {
 
         if (isAlone) {
-            setDeclaration({individus:1})
+            setDeclaration({ individus: 1 })
             router.navigate("declarations/onePersonne/VehicleSelectionPage");
 
         } else {
-            setDeclaration({ individus: Number(value) })
-            router.navigate({ pathname: "declarations/twoPersonnes/infoDebase", params: { individus: value }});
+
+            if (value) {
+                setDeclaration({ individus: Number(value) })
+                router.navigate({ pathname: "declarations/twoPersonnes/infoDebase", params: { individus: value } });
+            } else {
+
+                Alert.alert('Info', t('yourComponent.numberofpersoninvoved'), [
+                    {
+                        text: 'Ok',
+                        onPress: () => console.log('Cancel Pressed'),
+                        style: 'cancel',
+                    },
+                   
+                ]);
+            }
+            
            
         }
 
@@ -120,7 +134,7 @@ export default function DeclarationPage() {
                         style={styles.dropdown}
                         dropDownContainerStyle={styles.dropdownContainer}
                         onChangeValue={(value) => {
-                            console.log("Value selected:", value);
+                           // console.log("Value selected:", value);
                             setOpen(false); // Fermer le DropDown après une sélection
                         }}
                     />
@@ -263,7 +277,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#F1F1F1',
         borderBottomWidth: 1,
     },
+
     dropdownContainer: {
         backgroundColor: '#F1F1F1',
     },
+
 });

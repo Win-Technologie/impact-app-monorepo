@@ -27,7 +27,8 @@ export default function ImagePickerModal({ isVisible, onClose, setImage }) {
 
             if (!result.canceled) {
               
-                setImage(result.assets[0].base64);
+              //  setImage(result.assets[0].base64);
+                setImage(result.assets[0]);
                 onClose();
             }
 
@@ -36,7 +37,7 @@ export default function ImagePickerModal({ isVisible, onClose, setImage }) {
             let result = await ImagePicker.launchCameraAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
-                base64:true,
+                //base64:true,
                 // aspect: [4, 3],
                 quality: 1,
             });

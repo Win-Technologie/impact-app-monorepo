@@ -12,6 +12,7 @@ import { useNavigation } from 'expo-router';
 export async function signout() {
     await AsyncStorage.removeItem("userToken");
     await AsyncStorage.removeItem("user");
+    await AsyncStorage.removeItem("selfie");
     router.push("signIn");
 }
 
@@ -20,6 +21,10 @@ export default function Index() {
     const { t, i18n } = useTranslation();
     const [selfie, setSelfie] = React.useState();
     const navigation = useNavigation();
+    const [name, setName] = React.useState("");
+    const [email, setEmail] = React.useState("");
+    const [language, setLanguage] = React.useState("");
+
 
     const userProfile = {
         name: "Michael Lessard",
@@ -28,6 +33,31 @@ export default function Index() {
         currentLanguage: i18n.language="en"? "English": "Français",
         appVersion: "1.0.0",
     };
+
+    const getUser = async () => {
+
+        try {
+            const userData = JSON.parse(await AsyncStorage.getItem("user"));
+            setEmail(userData.user.email);
+            const token = await AsyncStorage.getItem("userToken");
+            setName(userData.user.name + " " + userData.user.lastName)
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const getLanguage = async () => {
+        const val = await AsyncStorage.getItem('language');
+        setLanguage(val)
+    }
+
+
+    React.useEffect(() => {
+       // alert(i18n.languages[0]);
+        getUser();
+        getLanguage(i18n.languages[0]);
+
+    }, []);
 
 
 
@@ -61,14 +91,13 @@ export default function Index() {
             <ScrollView contentContainerStyle={styles.scrollView}>
 
                 <HeaderBox
-                    name={userProfile.name}
-                    email={userProfile.email}
+                    name={name}
+                    email={email}
                     selfie={selfie}
                     setSelfie={setSelfie}
                 />
 
-
-                <SettingsOptions currentLanguage={userProfile.currentLanguage} appVersion={userProfile.appVersion} />
+                <SettingsOptions currentLanguage={language} appVersion={userProfile.appVersion} />
 
 
                 <Button
