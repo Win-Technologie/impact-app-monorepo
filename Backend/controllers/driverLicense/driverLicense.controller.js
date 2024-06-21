@@ -309,7 +309,16 @@ const createDrivingLicence = async (req, res) => {
         });
 
         // Sauvegarder le permis de conduire dans la collection spécifiée
-        await drivingLicensesCollection.insertOne(newDriverLicense);
+        const result = await drivingLicensesCollection.insertOne(newDriverLicense);
+
+        // Récupérer l'ID du permis de conduire nouvellement inséré
+        const newLicenseId = result.insertedId;
+
+        // Mettre à jour le document de l'utilisateur avec l'ID du permis de conduire
+        await userCollection.updateOne(
+            { "_id": userId },
+            { $set: { driverLicense: newLicenseId } }
+        );
 
         // Répondre avec un message JSON indiquant le succès de la création du permis de conduire
         return res.status(201).json({ msg: "Permis de conduire créé avec succès", driverLicense: newDriverLicense });
@@ -320,6 +329,7 @@ const createDrivingLicence = async (req, res) => {
         return res.status(500).json({ msg: "Erreur serveur" });
     }
 };
+
 
 
 module.exports = {
