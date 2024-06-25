@@ -32,14 +32,17 @@ const onfidoRoutes = require('./routes/onfido/onfido.routes');
 const veriffRoutes = require('./routes/veriff/veriff.routes');
 const driverLicenseRoutes = require('./routes/driverLicense/driverLicense.routes');
 const accidentReportRoutes = require('./routes/accidentReport/accidentReport.routes');
+const api_doc = require('./api-doc/doc');
 
-connectToMongo();
+connectToMongo()
+
+console.log(path.join(__dirname, "uploads"));
 
 // // Express body parser
 app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Augmentez la limite selon vos besoins
 app.use(express.json({ limit: '10mb' })); // Augmentez la limite selon vos besoins
 
-// // Express body parser
+// Express body parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -72,10 +75,11 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/insurances', insuranceRoutes);
 app.use('/api/onfido', onfidoRoutes);
 app.use('/api/dl', driverLicenseRoutes);
-
 app.use('/api/veriff', veriffRoutes);
-
 app.use('/api/accidents',accidentReportRoutes);
+
+
+app.use('/api-docs', api_doc);
 
 // Programmation de tâches qui s'exécutent automatiquement après un certain laps de temps
 cron.schedule(`${MYCRONTIMER}`, async () => {
@@ -97,6 +101,7 @@ cron.schedule(`${MYCRONTIMER}`, async () => {
     scheduled: true,
     timezone: "America/New_York" // Régler le fuseau horaire en fonction de votre lieu de résidence
 });
+
 
 
 //Programmer une tâche cron pour envoyer des notifications d'expiration
