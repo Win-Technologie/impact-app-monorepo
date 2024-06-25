@@ -14,12 +14,181 @@ const multiparty = require('connect-multiparty');
 const md_uploadUserImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_PATH}` });
 // const md_uploadUserDocs = multiparty({uploadDir: `${DOCS_ROUTER_IMG_PATH}`});
 
-// To register new users.
-router.post('/user/register', userController.RegisterUser);
 
+
+
+
+
+
+/**
+ * @swagger
+ *  /api/users/user/register/code:
+ *      post:
+ *          summary: Enregistrement d'un utlisateur
+ *          tags:
+ *              - Users
+ *          requestBody:
+ *              required: true
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              email:
+ *                                  type: string
+ *                                  required: true
+ *                              password:
+ *                                  type: string
+ *                                  required: true
+ *                          example:
+ *                              email: "onanajunior92@gmail.com"
+ *                              password: "Oojj1992*"
+ *          responses:
+ *              '201':
+ *                description: >
+ *                    Utlisateur crée avec succès
+ *              '400':
+ *                description: >
+ *                    Utlisateur existe dejà
+ *              '500':
+ *                  description: >
+ *                    Erreur interne du serveur
+ *
+ */
 router.post('/user/register/code', userController.RegisterUserSendCode);
-// To verify verification code of register.
+
+
+
+
+
+
+/**
+ * @swagger
+ *  /api/users/user/register/verify:
+ *      post:
+ *          summary: Vérifie le code de validation de l'adresse email
+ *          tags:
+ *              - Users
+ *          requestBody:
+ *              required: true
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              email:
+ *                                  type: string
+ *                                  required: true
+ *                              verificationCode:
+ *                                  type: string
+ *                                  required: true
+ *                          example:
+ *                              email: "onanajunior92@gmail.com"
+ *                              verificationCode: "995843"
+ *          responses:
+ *              '201':
+ *                description: >
+ *                    Utlisateur crée avec succès
+ *              '400':
+ *                description: >
+ *                    Utlisateur existe dejà
+ *              '500':
+ *                  description: >
+ *                    Erreur interne du serveur
+ *
+ */
 router.post('/user/register/verify', userController.RegisterUserVerifyCode);
+
+
+/**
+ * @swagger
+ *  /api/users/user:
+ *      delete:
+ *          summary: Supprime un utlisateur de la bd
+ *          tags:
+ *              - Users
+ *          security:
+ *              - bearerAuth: []
+ *          parameters:
+ *              - in: query
+ *                name: id
+ *                schema:
+ *                  type: string
+ *                  required: false
+ *                description: User Id
+ *          requestBody:
+ *              required: true
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              email:
+ *                                  type: string
+ *                                  required: true
+ *                              password:
+ *                          example:
+ *                              email: "onanajunior92@gmail.com"
+ *          responses:
+ *              '201':
+ *                description: >
+ *                    Utlisateur crée avec succès
+ *              '400':
+ *                description: >
+ *                    Utlisateur existe dejà
+ *              '500':
+ *                  description: >
+ *                    Erreur interne du serveur
+ *
+ */
+router.delete('/user', userController.DeleteUser);
+
+
+
+/**
+ * @swagger
+ *  /api/users/user/login:
+ *      post:
+ *          summary: Connecte un utilisteur
+ *          tags:
+ *              - Users
+ *          requestBody:
+ *              required: true
+ *              content:
+ *                  application/json:
+ *                      schema:
+ *                          type: object
+ *                          properties:
+ *                              email:
+ *                                  type: string
+ *                                  required: true
+ *                              password:
+ *                                  type: string
+ *                                  required: true 
+ *                          example:
+ *                              email: "onanajunior92@gmail.com"
+ *                              password: "Oojj1992*"
+ *          responses:
+ *              '200':
+ *                description: >
+ *                    Delivery address successfully deleted
+ *              '404':
+ *                description: >
+ *                    User not found || Delivery address not found
+ *              '500':
+ *                  description: >
+ *                    Server Error || An error has occured, please try again later
+ *
+ */
+router.post('/user/login', userController.Login);
+
+
+
+//router.post('/user/register', userController.RegisterUser);
+
+//router.post('/user/register/code', userController.RegisterUserSendCode);
+// To verify verification code of register.
+//router.post('/user/register/verify', userController.RegisterUserVerifyCode);
 
 // For users to log in.
 router.post('/user/login', userController.Login);

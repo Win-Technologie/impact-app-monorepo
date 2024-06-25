@@ -289,6 +289,7 @@ async function RegisterUser(req, res) {
 }
 
 
+
 async function RegisterUserSendCode(req, res) {
     try {
         // Extraction des données de la requête
@@ -940,10 +941,10 @@ async function DeleteUser(req, res) {
         // Récupérer le jeton du header de la requête
         const token = req.headers.authorization?.replace("Bearer ", "");
         // Vérifier si le jeton est présent
-        if (!token) {
+        /*if (!token) {
             console.error('Le Token n\'est pas fourni');
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-        }
+        }*/
 
         const email = req.body.email ?? "";
 
@@ -958,10 +959,10 @@ async function DeleteUser(req, res) {
         }
 
         // Décoder le token pour obtenir les informations de l'utilisateur
-        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        /*const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
         if (!myToken) {
             return res.status(400).json({ msg: "Token invalide" });
-        }
+        }*/
 
         // Trouver l'utilisateur à supprimer par ID ou par email
         const query = id ? { _id: id } : { email: email };
