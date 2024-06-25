@@ -7,19 +7,28 @@ const userController = require('../../controllers/user/user.controller.js');
 const driverLicenseController = require('../../controllers/driverLicense/driverLicense.controller.js');
 // VARIABLES
 const USER_ROUTER_IMG_PATH = process.env.USER_ROUTER_IMG_PATH;
+const USER_ROUTER_IMG_IDS_PATH = process.env.USER_ROUTER_IMG_IDS_PATH;
+const USER_ROUTER_IMG_PROFILE_PATH = process.env.USER_ROUTER_IMG_PROFILE_PATH;
 // const DOCS_ROUTER_IMG_PATH = process.env.DOCS_ROUTER_DOC_PATH;
 // ADMIN FILES AND IMAGES
 const multiparty = require('connect-multiparty');
 // IMAGES PATH
 const md_uploadUserImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_PATH}` });
-// const md_uploadUserDocs = multiparty({uploadDir: `${DOCS_ROUTER_IMG_PATH}`});
+
+const md_uploadUserProfileImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_PROFILE_PATH}` });
+
+const md_uploadUserLicenceImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_IDS_PATH}` });
 
 
 // Route to upload and save the user's profile image
-router.patch('/user/upload-profile-image', [userAuth.ensureAuth, md_uploadUserImg], userController.UploadUserProfileImage);
+router.patch('/user/upload-profile-image', [userAuth.ensureAuth, md_uploadUserProfileImg], userController.UploadUserProfileImage);
 
 // Route to delete the user's profile image
 router.delete('/user/delete-profile-image', userAuth.ensureAuth, userController.DeleteUserProfileImage);
+
+// Route to upload and save the user's driving licence photos (selfie, front, back)
+router.patch('/user/upload-driving-licence-photos', [userAuth.ensureAuth, md_uploadUserLicenceImg], userController.UploadUserDrivingLicencePhoto);
+
 
 // Route to authenticate a user using a JWT token
 router.post('/user/login/token', userAuth.ensureAuth, userController.LoginWithToken);
@@ -53,10 +62,6 @@ router.post('/user/password/code', userController.SendVerificationCode);
 router.post('/user/password/verify', userController.verifyAndChangePassword);
 //To delete an user from DB
 router.delete('/user/:id?', [userAuth.ensureAuth, userAuth.isActiveSession], userController.DeleteUser);
-// To upload Documents
-// router.post('/user/uploads', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserDocs],
-//     userController.UploadDocument
-// );
 
 /* CODE QR USER INFO ENDPOINTS */
 
@@ -92,12 +97,5 @@ router.post('/user/validate/:id?', [userAuth.ensureAuth, userAuth.isActiveSessio
     userController.validateInscription
 );
 
-
-
-// /* DRIVER LICENCE ENDPOINTS */
-// // To upload driver licence
-// router.post('/user/license', [userAuth.ensureAuth, userAuth.isActiveSession, md_uploadUserDocs],
-//     userController.UploadDriverLicense
-// );
 
 module.exports = router;

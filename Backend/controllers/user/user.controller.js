@@ -38,6 +38,8 @@ const DRIVERLICENSECOLLECTION = process.env.DRIVERSLICENSECOLLECTION;
 const VEHICLES_COLLECTION = process.env.VEHICLESCOLLECTION;
 const INSURANCES_COLLECTION = process.env.INSURANCESCOLLECTION;
 const USER_ROUTER_IMG_PATH = process.env.USER_ROUTER_IMG_PATH;
+const USER_ROUTER_IMG_PROFILE_PATH = process.env.USER_ROUTER_IMG_PROFILE_PATH;
+const USER_ROUTER_IMG_IDS_PATH = process.env.USER_ROUTER_IMG_IDS_PATH;
 
 const SECRETKEY_IDQR = process.env.SECRETKEY_IDQR;
 
@@ -1675,7 +1677,7 @@ async function UploadUserProfileImage(req, res) {
         const uniqueFilename = `${loggedInUserId}_${Date.now()}${fileExtension}`;
 
         // Déplacez le fichier téléchargé vers le répertoire de destination
-        const destinationPath = path.join(USER_ROUTER_IMG_PATH, uniqueFilename);
+        const destinationPath = path.join(USER_ROUTER_IMG_PROFILE_PATH, uniqueFilename);
 
         // Déplacez le fichier temporaire vers le répertoire de destination
         fs.renameSync(uploadedImage.path, destinationPath);
@@ -1752,12 +1754,101 @@ async function DeleteUserProfileImage(req, res) {
 }
 
 
+
+/**
+ * Télécharge et enregistre les photos de la carte d'identité de l'utilisateur à partir de la requête HTTP.
+ * Cette fonction vérifie si les fichiers image (selfie, front, back) ont été correctement téléchargés,
+ * vérifie l'authentification de l'utilisateur via un token JWT, puis déplace chaque fichier téléchargé
+ * vers un répertoire de destination spécifié. Elle met également à jour les chemins des images de la carte d'identité
+ * dans la base de données utilisateur. En cas de succès, elle renvoie un message JSON avec les chemins relatifs des images enregistrées.
+ * 
+ * @param {*} req Requête HTTP contenant les fichiers image à télécharger dans req.files.selfie, req.files.front, et req.files.back.
+ * @param {*} res Réponse HTTP pour renvoyer le résultat du téléchargement.
+ * @returns Renvoie une réponse JSON avec le statut de l'opération et les chemins relatifs des images enregistrées.
+ */
+async function UploadUserDrivingLicencePhoto(req, res) {
+    try {
+        // Vérifie si les fichiers ont été correctement téléchargés
+        const { selfie, front, back } = req.files;
+        if (!selfie || !front || !back) {
+            return res.status(400).json({ msg: "Tous les fichiers (selfie, front, back) doivent être téléchargés." });
+        }
+
+        // Vérifie si le token est fourni dans les en-têtes Authorization
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        if (!token) {
+            console.error("Le Token n'est pas fourni");
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        // Décoder le token JWT pour obtenir l'ID de l'utilisateur
+        const myToken = jwt.decoded(token);
+        if (!myToken || !myToken.user_id) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const loggedInUserId = myToken.user_id;
+
+        // Fonction pour vérifier et sauvegarder chaque image
+        const saveImage = (image, type) => {
+            if (!image || !image.path) {
+                throw new Error(`Le fichier téléchargé pour ${type} est invalide.`);
+            }
+
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+            const fileExtension = path.extname(image.name).toLowerCase();
+            if (!allowedExtensions.includes(fileExtension)) {
+                throw new Error(`Le fichier téléchargé pour ${type} n'est pas une image valide.`);
+            }
+
+            const uniqueFilename = `${loggedInUserId}_${type}_${Date.now()}${fileExtension}`;
+            const destinationPath = path.join(USER_ROUTER_IMG_IDS_PATH, uniqueFilename);
+
+            fs.renameSync(image.path, destinationPath);
+            return destinationPath;
+        };
+
+        // Sauvegarde des images
+        const selfiePath = saveImage(selfie, 'selfie');
+        const frontPath = saveImage(front, 'front');
+        const backPath = saveImage(back, 'back');
+
+        // Mettre à jour les chemins des images dans la collection drivingLicensesCollection
+        const drivingLicence = await drivingLicensesCollection.findOneAndUpdate(
+            { user: loggedInUserId }, // Filtrer par l'utilisateur connecté
+            {
+                $set: {
+                    photoSelfie: selfiePath,
+                    photoRecto: frontPath,
+                    photoVerso: backPath
+                }
+            },
+            { new: true, upsert: true } // Options pour créer un nouveau document si nécessaire
+        );
+
+        // Retourne une réponse JSON réussie avec les chemins relatifs des images enregistrées
+        return res.status(200).json({
+            msg: "Photos de la carte d'identité téléchargées avec succès",
+            paths: {
+                selfiePath: selfiePath,
+                frontPath: frontPath,
+                backPath: backPath
+            }
+        });
+    } catch (error) {
+        console.error("Erreur lors du téléchargement des photos de la carte d'identité:", error);
+        return res.status(500).json({ msg: "Erreur lors du téléchargement des photos de la carte d'identité", error: error.message });
+    }
+}
+
+
 module.exports = {
     RegisterUser,
     Login,
     LoginWithToken,
     UploadUserProfileImage,
     DeleteUserProfileImage,
+    UploadUserDrivingLicencePhoto,
     Logout,
     RefresLogin,
     GetUserById,

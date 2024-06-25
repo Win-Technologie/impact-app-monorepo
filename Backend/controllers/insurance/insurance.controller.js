@@ -42,23 +42,37 @@ async function validateUpdateInsuranceFields(req) {
     ]);
 }
 
-// FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache
+
+/**
+ * Ajoute une nouvelle assurance pour un véhicule spécifié.
+ * 
+ * Cette fonction gère la requête pour ajouter une nouvelle assurance à un véhicule. Elle vérifie l'authentification de l'utilisateur via un token JWT,
+ * valide les champs de la requête, récupère les informations du véhicule à partir de la base de données, vérifie si une assurance avec le même numéro
+ * de police existe déjà, puis crée et insère un nouveau document d'assurance dans la collection 'insurances'. En cas de succès, elle renvoie une réponse JSON
+ * avec le statut de l'opération et les détails de l'assurance ajoutée.
+ * 
+ * @param {*} req Requête HTTP contenant les données de l'assurance à ajouter dans req.body et les paramètres du véhicule dans req.params.
+ * @param {*} res Réponse HTTP pour renvoyer le résultat de l'opération.
+ * @returns Renvoie une réponse JSON avec le statut de l'opération et les détails de l'assurance ajoutée en cas de succès, ou une erreur en cas d'échec.
+ */
 async function addInsurance(req, res) {
     try {
+        // Vérifier si le token est fourni dans les en-têtes Authorization
         const token = req.headers.authorization?.replace("Bearer ", "");
         if (!token) {
             console.error("Le Token n'est pas fourni");
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
         }
 
+        // Décoder le token JWT pour obtenir l'ID de l'utilisateur
         const myToken = jwt.decoded(token);
-        if (!myToken) {
+        if (!myToken || !myToken.user_id) {
             return res.status(400).json({ msg: "Token invalide" });
         }
 
         const subscriber = myToken.user_id;
-        console.log("Subscriber", subscriber);
 
+        // Validation des champs de la requête
         await validateInsuranceFields(req);
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -66,64 +80,53 @@ async function addInsurance(req, res) {
             return res.status(400).json({ error: errorMessage });
         }
 
-        const {vehicleId} = req.params;
-        const { policyNumber, insuranceCompany, expirationDate } = req.body;
-        
+        // Extraire l'ID du véhicule à assurer depuis les paramètres de la requête
+        const { vehicleId } = req.params;
 
-        // Extraire les données du véhicule à partir de la base de données
-        // vehicle, vehicleRegistrationNumber, vehicleBrand, vehicleModel, vehicleYear
-
-        const vehicle = vehicleId;
-        console.log("Vehicle", vehicle);
-
-        const vehicleData = await vehicleCollection.findOne({ _id: vehicle });
+        // Rechercher les données du véhicule dans la base de données
+        const vehicleData = await vehicleCollection.findOne({ _id: vehicleId });
         if (!vehicleData) {
             return res.status(404).json({ error: "Véhicule non trouvé" });
         }
 
+        // Extraire les informations pertinentes du véhicule
         const { plate, brand, model, year } = vehicleData;
         const vehicleRegistrationNumber = plate;
         const vehicleBrand = brand;
         const vehicleModel = model;
         const vehicleYear = year;
 
-        
-        // Vérification de l'existence préalable d'une assurance avec le même numéro
+        // Vérifier l'existence préalable d'une assurance avec le même numéro de police
+        const { policyNumber, insuranceCompany, expirationDate } = req.body;
         const existingInsurance = await insuranceCollection.findOne({ policyNumber });
         if (existingInsurance) {
             return res.status(400).json({ message: "Une assurance avec ce numéro existe déjà." });
         }
 
-        // Création de la nouvelle assurance
+        // Créer une nouvelle instance de l'assurance
         const newInsurance = new Insurance({
-            // insuranceNumber,
             insuranceCompany,
-            subscriber: subscriber, // récupéré depuis le token
-            vehicle,
+            subscriber,
+            vehicle: vehicleId,
             vehicleRegistrationNumber,
             vehicleBrand,
             vehicleModel,
             vehicleYear,
             policyNumber,
-            // coverageType,
-            // startDate: new Date(startDate),
             expirationDate: new Date(expirationDate)
         });
 
-        // Insérer le nouveau document d'assurance
+        // Insérer le nouveau document d'assurance dans la collection 'insurances'
         await insuranceCollection.insertOne(newInsurance);
 
-        // Construire la clé de cache et mettre en cache les données de l'assurance
-        const cacheKey = `${subscriber}_${newInsurance._id}`;
-        const encryptedData = encryptData(newInsurance, AES_KEY);
-        myCache.set(cacheKey, encryptedData, 600);
-
+        // Répondre avec une confirmation JSON de l'ajout réussi de l'assurance
         return res.status(201).json({ message: 'Assurance ajoutée avec succès', insurance: newInsurance });
     } catch (error) {
         console.error("Erreur lors de l'ajout de l'assurance :", error);
         return res.status(500).json({ error: 'Erreur interne du serveur' });
     }
 }
+
 
 // FONCTIONNEL | CACHE IMPLEMENTE | Manque le test sur le cache
 async function getInsuranceById(req, res) {
