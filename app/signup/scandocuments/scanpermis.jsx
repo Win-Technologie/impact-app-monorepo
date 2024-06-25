@@ -109,7 +109,7 @@ export default function ScanPermis() {
                     onPress: () => { },
                     style: 'cancel',
                 },
-                //  { text: 'OK', onPress: () => { } },
+                
             ]);
 
         } else {
@@ -147,6 +147,7 @@ export default function ScanPermis() {
                 referenceNumber: "PF8181RM1",
                 height: "1.82",
                 weight: "87",
+
                 issued: userDetails.licenseDelivery.replaceAll('-', '/'),// "2021/12/09",
                 expires: userDetails.licenseExpiration.replaceAll('-', '/'), // "2029/09/14",
                 city: userDetails.city, // "Saint-Lambert",
