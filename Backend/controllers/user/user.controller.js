@@ -1756,7 +1756,7 @@ async function DeleteUserProfileImage(req, res) {
 
 
 /**
- * Télécharge et enregistre les photos de la carte d'identité de l'utilisateur à partir de la requête HTTP.
+ * Télécharge et enregistre les photos du permis de conduire de l'utilisateur à partir de la requête HTTP.
  * Cette fonction vérifie si les fichiers image (selfie, front, back) ont été correctement téléchargés,
  * vérifie l'authentification de l'utilisateur via un token JWT, puis déplace chaque fichier téléchargé
  * vers un répertoire de destination spécifié. Elle met également à jour les chemins des images de la carte d'identité
