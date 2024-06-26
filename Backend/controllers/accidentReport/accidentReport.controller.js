@@ -31,6 +31,7 @@ const DRIVERLICENSECOLLECTION = process.env.DRIVERSLICENSECOLLECTION;
 const VEHICLES_COLLECTION = process.env.VEHICLESCOLLECTION;
 const INSURANCES_COLLECTION = process.env.INSURANCESCOLLECTION;
 const ACCIDENTREPORTS_COLLECTION = process.env.ACCIDENTREPORTSCOLLECTION;
+const USER_ROUTER_IMG_ACCIDENT_REPPORT_PATH = process.env.USER_ROUTER_IMG_ACCIDENT_REPPORT_PATH;
 
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
@@ -393,6 +394,7 @@ async function newAccidentReport01(req, res) {
     }
 }
 
+
 async function newAccidentReport(req, res) {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");
@@ -411,31 +413,47 @@ async function newAccidentReport(req, res) {
 
         const { accidentDate, accidentHour } = accidentDataArray[0];
 
-        // Transformación de accidentDate y accidentHour
+        // Transformation de accidentDate et accidentHour
         const currentDate = new Date(accidentDate); // Transformar accidentDate en Date
         const [hour, minute] = accidentHour.split('h'); // Dividir accidentHour en hora y minutos
-        // const currentTime = new Date(1970, 0, 1, hour, minute);
         const currentTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 
-        // console.log(currentTime);
-
-
-        // const now = new Date();
-        // const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        // const currentTime = new Date(1970, 0, 1, now.getHours(), now.getMinutes(), now.getSeconds());
-
         let myAccidentLocation = accidentDataArray[0].accidentLocation;
-
         let _accidentSketch = accidentDataArray[0].accidentSketch || "not provided";
         let _accitendType = accidentDataArray[0].accitendType || "not provided";
         let _vehicleDamageDescription = accidentDataArray[0].vehicleDamageDescription || "not provided";
-        let _photos = accidentDataArray[0].photos || undefined;
 
+        let _photos = [];
+        if (req.files && req.files.photos) {
+            const uploadedPhotos = req.files.photos;
+            if (Array.isArray(uploadedPhotos) && (uploadedPhotos.length < 3 || uploadedPhotos.length > 6)) {
+                return res.status(400).json({ msg: "Photo limit: min 3 and max 6." });
+            }
+            for (const photo of uploadedPhotos) {
+                // Vérifiez si uploadedImage est défini et contient un chemin temporaire
+                if (!photo || !photo.path) {
+                    return res.status(400).json({ msg: "Le fichier téléchargé est invalide." });
+                }
 
-        if (_photos && (_photos.length < 3 || _photos.length > 6)) {
-            return res.status(400).json({ msg: "Photo limit: min 3 and max 6." });
+                // Vérifiez le type de fichier en fonction de l'extension
+                const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+                const fileExtension = path.extname(photo.name).toLowerCase();
+                if (!allowedExtensions.includes(fileExtension)) {
+                    return res.status(400).json({ msg: "Le fichier téléchargé n'est pas une image valide." });
+                }
+
+                // Générez un nom de fichier unique pour éviter les collisions
+                const uniqueFilename = `${myToken.user_id}_${Date.now()}${fileExtension}`;
+
+                // Déplacez le fichier téléchargé vers le répertoire de destination
+                const destinationPath = path.join(USER_ROUTER_IMG_ACCIDENT_REPPORT_PATH, uniqueFilename);
+
+                // Déplacez le fichier temporaire vers le répertoire de destination
+                fs.renameSync(photo.path, destinationPath);
+
+                _photos.push(destinationPath);
+            }
         }
-
 
         const vehicleReports = accidentDataArray.map(accidentData => {
             const { owner, vehicle, insurance, driverLicense } = accidentData;
@@ -496,13 +514,10 @@ async function newAccidentReport(req, res) {
             accidentSketch: _accidentSketch,
             accitendType: _accitendType,
             vehicleDamageDescription: _vehicleDamageDescription,
-            accitendType: _accitendType,
             photos: _photos
         });
 
-        // console.log(newAccidentReport);
-
-        // // Save the accident report to the database
+        // Save the accident report to the database
         await accidentReportCollection.insertOne(newAccidentReport);
         
         await userCollection.updateOne(
@@ -518,6 +533,7 @@ async function newAccidentReport(req, res) {
         return res.status(500).json({ msg: "New Accident: Internal server error", error: error });
     }
 }
+
 
 
 /*

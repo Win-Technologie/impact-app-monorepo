@@ -6,16 +6,18 @@ const userAuth = require('../../auth/jwt.authenticated.js')
 const accidentController = require('../../controllers/accidentReport/accidentReport.controller.js');
 // VARIABLES
 const ACCIDENT_IMG_PATH = process.env.ACCIDENT_IMG_PATH;
+const USER_ROUTER_IMG_ACCIDENT_REPPORT_PATH = process.env.USER_ROUTER_IMG_ACCIDENT_REPPORT_PATH;
 // ADMIN FILES AND IMAGES
 const multiparty = require('connect-multiparty');
 // IMAGES PATH
 const md_uploadAccidentImg = multiparty({ uploadDir: `${ACCIDENT_IMG_PATH}` });
+const md_uploadAccidentRepportImg = multiparty({ uploadDir: `${USER_ROUTER_IMG_ACCIDENT_REPPORT_PATH}` });
 
 
 
 // Route pour ajouter une voiture
 // router.post('/report/new/:vehicleId', [userAuth.ensureAuth, md_uploadAccidentImg], accidentController.newAccidentReport);
-router.post('/report/new', [userAuth.ensureAuth, md_uploadAccidentImg], accidentController.newAccidentReport);
+router.post('/report/new', [userAuth.ensureAuth, md_uploadAccidentRepportImg], accidentController.newAccidentReport);
 
 // Route pour obtenir une voiture par son ID
 router.get('/report/:id', [userAuth.ensureAuth], accidentController.getAccidentReport);

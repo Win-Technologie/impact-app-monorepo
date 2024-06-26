@@ -458,6 +458,7 @@ async function Login(req, res) {
         }
 
         if (loggedInUser.active) {
+            console.log("loggedInUser.active");
             // Vérifier si le mot de passe correspond
             const passwordMatch = await bcrypt.compare(password, loggedInUser.password);
             if (passwordMatch) {
@@ -510,7 +511,7 @@ async function Login(req, res) {
  * Authentifie un utilisateur en utilisant un token JWT.
  * Cette fonction extrait le token JWT de l'en-tête de la requête,
  * vérifie et décrypte le token, puis renvoie les informations de l'utilisateur
- * si le token est valide et que l'utilisateur est actif.
+ * si le token est valide et que l'utilisateur est actif et toutes les informations requises sont complètes.
  * 
  * @param {*} req - L'objet de requête Express, contenant les en-têtes et les données de la requête.
  * @param {*} res - L'objet de réponse Express, utilisé pour envoyer la réponse au client.
@@ -545,7 +546,7 @@ async function LoginWithToken(req, res) {
         if (loggedInUser.active) {
             // Vérifier si l'utilisateur a complété toutes les informations requises
             if (!loggedInUser.allFieldsComplete) {
-                return res.status(403).send({ msg: "L'utilisateur n'a pas complété toute son inscription." });
+                return res.status(403).json({ msg: "L'utilisateur n'a pas complété toute son inscription." });
             }
 
             // Obtenir les informations de l'utilisateur à partir d'une fonction utilitaire
@@ -561,6 +562,7 @@ async function LoginWithToken(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error.message });
     }
 }
+
 
 
 //CACHE:
@@ -1826,6 +1828,22 @@ async function UploadUserDrivingLicencePhoto(req, res) {
             { new: true, upsert: true } // Options pour créer un nouveau document si nécessaire
         );
 
+        // Mettre à jour le champ allFieldsComplete dans la collection des utilisateurs
+        const updateUser = await userCollection.findOneAndUpdate(
+            { _id: loggedInUserId }, // Filtrer par l'utilisateur connecté
+            {
+                $set: {
+                    allFieldsComplete: true
+                }
+            },
+            { new: true } // Pour obtenir le document mis à jour
+        );
+
+        // Vérifier si l'utilisateur a été mis à jour correctement
+        if (!updateUser) {
+            throw new Error("Impossible de mettre à jour l'utilisateur.");
+        }
+
         // Retourne une réponse JSON réussie avec les chemins relatifs des images enregistrées
         return res.status(200).json({
             msg: "Photos de la carte d'identité téléchargées avec succès",
@@ -1840,6 +1858,7 @@ async function UploadUserDrivingLicencePhoto(req, res) {
         return res.status(500).json({ msg: "Erreur lors du téléchargement des photos de la carte d'identité", error: error.message });
     }
 }
+
 
 
 module.exports = {
