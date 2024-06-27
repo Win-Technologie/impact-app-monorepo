@@ -113,17 +113,23 @@ async function addCar(req, res) {
             userCollection.findOne({ _id: ownerId, vehicles: plate }),
             userCollection.findOne({ _id: ownerId, serialNumber: serialNumber })
         ]);
-        if (existingCarForOwner || existingCarSerialForOwner) {
-            return res.status(400).json({ message: "Cette voiture est déjà associée à ce propriétaire." });
+        if (existingCarForOwner) {
+            return res.status(400).json({ message: "Cette plaque est déjà associée à ce propriétaire." });
+        }
+        if (existingCarSerialForOwner) {
+            return res.status(400).json({ message: "Ce numéro de série est déjà associé à ce propriétaire." });
         }
 
         // Vérifie si une voiture avec cette plaque d'immatriculation existe déjà
-        const [existingCar, existingCarSerial] = await Promise.all([
-            vehicleCollection.findOne({ plate }),
-            vehicleCollection.findOne({ serialNumber })
-        ]);
-        if (existingCar || existingCarSerial) {
+        const existingCar = await vehicleCollection.findOne({ plate });
+        if (existingCar) {
             return res.status(400).json({ message: "Une voiture avec cette plaque d'immatriculation existe déjà." });
+        }
+
+        // Vérifie si une voiture avec ce numéro de série existe déjà
+        const existingCarSerial = await vehicleCollection.findOne({ serialNumber });
+        if (existingCarSerial) {
+            return res.status(400).json({ message: "Une voiture avec ce numéro de série existe déjà." });
         }
 
         // Crée une nouvelle voiture
@@ -154,6 +160,7 @@ async function addCar(req, res) {
         return res.status(500).json({ error: 'Erreur interne du serveur' });
     }
 }
+
 
 
 
