@@ -191,11 +191,8 @@ const PersonalDetailsSchema = new Schema({
     city: String,
     province: String,
     country: String,
-    // user: {
-    //     type: String,
-    //     ref: 'User',
-    //     index: true
-    // }
+    profileImagePath: String,
+
 }, { _id: false });
 
 // Schéma pour le permis de conduire

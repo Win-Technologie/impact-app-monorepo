@@ -188,7 +188,8 @@ async function newAccidentReport(req, res) {
                     email: owner.email,
                     city: owner.city,
                     province: owner.province,
-                    country: owner.country
+                    country: owner.country,
+                    profileImagePath: owner.profileImagePath
                 },
                 drivingLicense: {
                     number: driverLicense.number,
@@ -672,6 +673,61 @@ async function getUserAccidentReports(req, res) {
 }
 
 
+/**
+ * Récupère les détails des accidents de la personne connectée, triés par date et heure les plus récentes.
+ * Les détails incluent la date de l'accident, les photos de profil des personnes impliquées,
+ * les détails des véhicules (marque, modèle, année, numéro de plaque), les informations sur l'utilisateur concerné
+ * (nom, adresse, numéro de téléphone), une photo du lieu de l'accident (si disponible), et une description de l'accident.
+ * @param {Object} req - Requête HTTP contenant les paramètres de pagination et l'identifiant de l'utilisateur.
+ * @param {Object} res - Réponse HTTP pour retourner les détails des accidents.
+ * @returns {Object} Détails des accidents de la personne connectée triés par date et heure les plus récentes.
+ */
+async function getUserAccidentDetails(req, res) {
+    try {
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const userId = myToken.user_id;
+
+        // Récupérer tous les rapports d'accidents de l'utilisateur, triés par date et heure décroissantes
+        const accidentReports = await accidentReportCollection
+            .find({ "vehicles.user": userId })
+            .sort({ accidentDate: -1, hourAccident: -1 })
+            .toArray();
+
+        if (!accidentReports || accidentReports.length === 0) {
+            return res.status(404).json({ msg: "Aucun rapport d'accident trouvé pour cet utilisateur" });
+        }
+
+        // Préparer les détails à retourner
+        const accidentDetails = accidentReports.map(report => ({
+            accidentDate: report.accidentDate,
+            profilesPhotos: report.vehicles.map(vehicle => vehicle.personalDetails.profileImagePath).filter(photo => !!photo),
+            vehicleDetails: report.vehicles.map(vehicle => ({
+                vehicleBrand: vehicle.vehicleDetails.registrationCertificate.vehicleBrand,
+                vehicleModel: vehicle.vehicleDetails.registrationCertificate.year,
+                licensePlateNumber: vehicle.vehicleDetails.registrationCertificate.licensePlateNumber
+            })),
+            userDetails: report.vehicles.find(vehicle => vehicle.user === userId).personalDetails,
+            accidentPhoto: report.accidentSketch || "Photo non fournie",
+            accidentDescription: report.vehicleDamageDescription || "Description non fournie"
+        }));
+
+        return res.status(200).json(accidentDetails);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error.message });
+    }
+}
 
 
 module.exports = {
@@ -679,5 +735,6 @@ module.exports = {
     getAccidentReport,
     updateAccidentReport,
     joinToAccidentReport,
-    getUserAccidentReports
+    getUserAccidentReports,
+    getUserAccidentDetails
 }

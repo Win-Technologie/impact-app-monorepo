@@ -49,4 +49,8 @@ router.post('/report/join', [userAuth.ensureAuth], accidentController.joinToAcci
 // Utilise le middleware d'authentification
 router.get('/accidentReports', [userAuth.ensureAuth], accidentController.getUserAccidentReports);
 
+// Route pour obtenir les détails des accidents historiques d'un utilisateur
+// Utilise le middleware d'authentification
+router.get('/accidentDetails', [userAuth.ensureAuth], accidentController.getUserAccidentDetails);
+
 module.exports = router;
