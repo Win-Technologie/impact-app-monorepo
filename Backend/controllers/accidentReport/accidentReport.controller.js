@@ -619,9 +619,64 @@ async function getAccidentReport(req, res) {
     }
 }
 
+
+
+/**
+ * Récupère la liste des rapports d'accident d'un utilisateur connecté, classée par ordre antéchronologique.
+ * @param {Object} req - Requête HTTP contenant les paramètres de pagination et l'identifiant de l'utilisateur.
+ * @param {Object} res - Réponse HTTP pour retourner les rapports d'accident.
+ * @returns {Object} Liste des rapports d'accident paginée.
+ */
+async function getUserAccidentReports(req, res) {
+    try {
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        // Vérifier si le jeton est présent
+        if (!token) {
+            return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+        }
+
+        // Décoder le token pour obtenir les informations de l'utilisateur
+        const myToken = jwt.decoded(token);
+        if (!myToken) {
+            return res.status(400).json({ msg: "Token invalide" });
+        }
+
+        const userId = myToken.user_id;
+        const size = 1; // Un rapport par page
+        const page = parseInt(req.query.page) || 1; // Numéro de la page
+
+        // Calculer l'offset pour la pagination
+        const offset = (page - 1) * size;
+
+        // Récupérer les rapports d'accident de l'utilisateur, triés par date décroissante
+        const accidentReports = await accidentReportCollection
+            .find({ "vehicles.user": userId })
+            .sort({ accidentDate: -1 })
+            .skip(offset)
+            .limit(size)
+            .toArray();
+
+        // Compter le nombre total de rapports pour la pagination
+        const totalReports = await accidentReportCollection.countDocuments({ "vehicles.user": userId });
+
+        return res.status(200).json({
+            totalReports,
+            totalPages: Math.ceil(totalReports / size),
+            currentPage: page,
+            reports: accidentReports
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Erreur interne du serveur", error: error.message });
+    }
+}
+
+
+
 module.exports = {
     newAccidentReport,
     getAccidentReport,
     updateAccidentReport,
-    joinToAccidentReport
+    joinToAccidentReport,
+    getUserAccidentReports
 }
