@@ -622,7 +622,7 @@ async function getAccidentReport(req, res) {
 
 
 /**
- * Récupère la liste des rapports d'accident d'un utilisateur connecté, classée par ordre antéchronologique.
+ * Récupère la liste des rapports d'accident d'un utilisateur connecté, classée par ordre chronologique inverse.
  * @param {Object} req - Requête HTTP contenant les paramètres de pagination et l'identifiant de l'utilisateur.
  * @param {Object} res - Réponse HTTP pour retourner les rapports d'accident.
  * @returns {Object} Liste des rapports d'accident paginée.
@@ -648,10 +648,10 @@ async function getUserAccidentReports(req, res) {
         // Calculer l'offset pour la pagination
         const offset = (page - 1) * size;
 
-        // Récupérer les rapports d'accident de l'utilisateur, triés par date décroissante
+        // Récupérer les rapports d'accident de l'utilisateur, triés par date et heure décroissantes
         const accidentReports = await accidentReportCollection
             .find({ "vehicles.user": userId })
-            .sort({ accidentDate: -1 })
+            .sort({ accidentDate: -1, hourAccident: -1 })  // Tri par date et heure décroissantes (plus récent au plus ancien)
             .skip(offset)
             .limit(size)
             .toArray();
@@ -670,6 +670,7 @@ async function getUserAccidentReports(req, res) {
         return res.status(500).json({ msg: "Erreur interne du serveur", error: error.message });
     }
 }
+
 
 
 
