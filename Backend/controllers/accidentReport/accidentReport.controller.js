@@ -230,7 +230,10 @@ async function newAccidentReport(req, res) {
                     issuanceDate: issuedDateFormat,
                     licenseClass: driverLicense.licenseClass,
                     expirationDate: expiresDateFormat,
-                    driverLicenseId: driverLicense._id
+                    driverLicenseId: driverLicense._id,
+                    photoRecto: driverLicense.photoRecto,
+                    photoSelfie: driverLicense.photoSelfie,
+                    photoVerso: driverLicense.photoVerso
                 },
                 vehicleDetails: {
                     registrationCertificate: {
@@ -277,7 +280,15 @@ async function newAccidentReport(req, res) {
 
         const pdfBytes = await generatePDF(newAccidentReport);
         const emails = accidentDataArray.map(data => data.owner.email);
-        await sendAccidentReportByEmail(emails, pdfBytes);
+
+        // Collecter les chemins des photos des permis de conduire
+        const drivingLicensePhotos = vehicleReports.flatMap(report => [
+            report.drivingLicense.photoRecto,
+            report.drivingLicense.photoSelfie,
+            report.drivingLicense.photoVerso
+        ]);
+
+        await sendAccidentReportByEmail(emails, pdfBytes, [...photoPaths, ...drivingLicensePhotos]);
 
         // Retourner un message de succès avec les détails du nouveau rapport d'accident créé
         return res.status(201).json({ msg: "Nouveau rapport d'accident créé avec succès", accidentId: newAccidentReport._id, newAccidentReport });

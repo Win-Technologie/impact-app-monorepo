@@ -1,6 +1,9 @@
 const nodemailer = require('nodemailer');
 const { getDb } = require('../mongoConnection');
 
+const path = require('path');
+const fs = require('fs');
+
 let COMPANY_MAIL = process.env.EMAIL;
 let COMP_MAIL_PASS = process.env.E_PSSWRD;
 let COMPANY_SERVICE = process.env.E_SERVICE;
@@ -57,23 +60,35 @@ async function sendExpirationEmail(email, plate) {
     }
 }
 
-async function sendAccidentReportByEmail(emails, pdfBytes) {
+async function sendAccidentReportByEmail(emails, pdfBytes, photoPaths) {
+    const attachments = [
+        {
+            filename: 'constat_amiable.pdf',
+            content: pdfBytes,
+            contentType: 'application/pdf'
+        }
+    ];
+
+    // Ajouter les photos en pièces jointes
+    photoPaths.forEach(photoPath => {
+        attachments.push({
+            filename: path.basename(photoPath), // Utilisez le nom de fichier de base
+            path: photoPath // Chemin absolu vers le fichier photo sur votre système
+        });
+    });
+
     const mailOptions = {
         from: COMPANY_MAIL,
         to: emails.join(', '),
         subject: 'Constat Amiable d\'Accident',
         text: 'Veuillez trouver ci-joint le constat amiable d\'accident.',
-        attachments: [
-            {
-                filename: 'constat_amiable.pdf',
-                content: pdfBytes,
-                contentType: 'application/pdf'
-            }
-        ]
+        attachments: attachments
     };
 
     await transporter.sendMail(mailOptions);
 }
+
+
 
 module.exports = {
     transporter,
