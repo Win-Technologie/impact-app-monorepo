@@ -10,6 +10,10 @@ const { deleteUploadedFiles, checkFileSize,
     checkFileQuantity, getFilePath, getFileName,
     processDocument, processLicenseText, processInsuranceText } = require('../../utils/files');
 
+const { generatePDF } = require('../../utils/pdfUtils');
+const { sendAccidentReportByEmail } = require('../../utils/nodemailer');
+    
+
 // CACHE
 const { myCache, encryptData, decryptData } = require("../../utils/cache");
 
@@ -41,6 +45,8 @@ const insuranceCollection = mainDb.collection(INSURANCES_COLLECTION);
 const vehicleCollection = mainDb.collection(VEHICLES_COLLECTION);
 const accidentReportCollection = mainDb.collection(ACCIDENTREPORTS_COLLECTION);
 
+const path = require('path');
+const fs = require('fs');
 
 async function validateAccidentReport(req) {
     await Promise.all([
@@ -135,16 +141,21 @@ async function validateAccidentReport(req) {
 async function newAccidentReport(req, res) {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");
+        
         // Vérifier si le jeton est présent
         if (!token) {
             console.error('Le Token n\'est pas fourni');
             return res.status(400).json({ msg: "Le Token n'est pas fourni" });
         }
+        
         // Décoder le token pour obtenir les informations de l'utilisateur
-        const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+        const myToken = jwt.decoded(token); // Correction du nom de la fonction pour décoder le token JWT
+        
         if (!myToken) {
             return res.status(400).json({ msg: "Token invalide" });
         }
+
+        const loggedInUserId = myToken.user_id;
 
         const accidentDataArray = req.body.accidentDataArray; // On s'attend maintenant à un tableau de données d'accidents
 
@@ -153,19 +164,42 @@ async function newAccidentReport(req, res) {
         // Transformation de accidentDate et accidentHour en formats appropriés
         const currentDate = new Date(accidentDate); // Transformer accidentDate en Date
         const [hour, minute] = accidentHour.split('h'); // Diviser accidentHour en heures et minutes
-        const currentTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const currentTime = `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`; // Utilisation de padStart pour formater l'heure
 
-        let myAccidentLocation = accidentDataArray[0].accidentLocation;
+        const myAccidentLocation = accidentDataArray[0].accidentLocation;
 
-        let _accidentSketch = accidentDataArray[0].accidentSketch || "not provided";
-        let _accitendType = accidentDataArray[0].accitendType || "not provided";
-        let _vehicleDamageDescription = accidentDataArray[0].vehicleDamageDescription || "not provided";
-        let _photos = accidentDataArray[0].photos || undefined;
+        const _accidentSketch = accidentDataArray[0].accidentSketch || "not provided";
+        const _accitendType = accidentDataArray[0].accitendType || "not provided";
+        const _vehicleDamageDescription = accidentDataArray[0].vehicleDamageDescription || "not provided";
 
-        // Vérifier la limite de photos
-        if (_photos && (_photos.length < 3 || _photos.length > 6)) {
+        // Récupérer les fichiers photos depuis la requête multipart
+        const photos = req.files?.photos;
+
+        // Vérifier la présence et la limite de photos
+        if (!photos || photos.length < 3 || photos.length > 6) {
             return res.status(400).json({ msg: "Limite de photos : minimum 3 et maximum 6." });
         }
+
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+
+        // Mapper les chemins de fichiers téléchargés pour les photos
+        const photoPaths = photos.map(photo => {
+            const fileExtension = path.extname(photo.name).toLowerCase();
+            
+            if (!allowedExtensions.includes(fileExtension)) {
+                throw new Error(`Le fichier téléchargé n'est pas une image valide.`);
+            }
+            
+            // Générer un nom de fichier unique pour éviter les conflits
+            const uniqueFileName = `${loggedInUserId}_${Date.now()}${fileExtension}`;
+            const filePath = path.join(USER_ROUTER_IMG_ACCIDENT_REPPORT_PATH, uniqueFileName);
+
+            // Déplacer le fichier téléchargé vers le dossier spécifié
+            fs.renameSync(photo.path, filePath);
+
+            // Retourner le chemin relatif du fichier
+            return filePath;
+        });
 
         // Mapper les rapports de véhicules pour chaque accident
         const vehicleReports = accidentDataArray.map(accidentData => {
@@ -229,8 +263,7 @@ async function newAccidentReport(req, res) {
             accidentSketch: _accidentSketch,
             accitendType: _accitendType,
             vehicleDamageDescription: _vehicleDamageDescription,
-            accitendType: _accitendType,
-            photos: _photos
+            photos: photoPaths
         });
 
         // Sauvegarder le rapport d'accident dans la base de données
@@ -242,14 +275,19 @@ async function newAccidentReport(req, res) {
             { $push: { accidentReports: newAccidentReport._id } }
         );
 
+        const pdfBytes = await generatePDF(newAccidentReport);
+        const emails = accidentDataArray.map(data => data.owner.email);
+        await sendAccidentReportByEmail(emails, pdfBytes);
+
         // Retourner un message de succès avec les détails du nouveau rapport d'accident créé
         return res.status(201).json({ msg: "Nouveau rapport d'accident créé avec succès", accidentId: newAccidentReport._id, newAccidentReport });
 
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ msg: "Erreur interne du serveur lors de la création du rapport d'accident", error: error });
+        return res.status(500).json({ msg: "Erreur interne du serveur lors de la création du rapport d'accident", error: error.message });
     }
 }
+
 
 
 
