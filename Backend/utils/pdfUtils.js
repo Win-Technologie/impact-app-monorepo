@@ -1,7 +1,14 @@
+/**
+ * Ce fichier contient une fonction pour générer un PDF de constat amiable d'accident du Québec.
+ * La fonction utilise la bibliothèque pdf-lib pour créer et personnaliser un document PDF
+ * avec les détails fournis sur l'accident, les véhicules impliqués, et la description des dommages.
+ */
+
+
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 
 /**
- * Génère un PDF de constat amiable d'accident du Québec
+ * Génère un PDF de constat amiable d'accident du Québe
  * @param {*} reportData 
  * @returns {Uint8Array} pdfBytes - Les octets du PDF généré
  */
