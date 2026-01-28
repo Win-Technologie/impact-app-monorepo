@@ -1,33 +1,30 @@
 // AnimatedButton.js
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React from "react";
+import { TouchableOpacity, Text, StyleSheet } from "react-native";
 
 const AnimatedButton = ({ onPress, title, customStyle, textStyle }) => {
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[styles.button, customStyle]}
-    >
+    <TouchableOpacity onPress={onPress} style={[styles.button, customStyle]}>
       <Text style={[styles.buttonText, textStyle]}>{title}</Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-    button: {
-        padding: 10,
-        borderRadius: 5,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'grey',
-       // marginBottom:0,
-        height:51,
-      },
-      buttonText: {
-        color: 'grey',
-        fontSize: 14.5,
-      },
+  button: {
+    padding: 10,
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "grey",
+    // marginBottom:0,
+    height: 51,
+  },
+  buttonText: {
+    color: "grey",
+    fontSize: 14.5,
+  },
 });
 
 export default AnimatedButton;

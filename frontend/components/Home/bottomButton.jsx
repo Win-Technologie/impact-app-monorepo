@@ -1,5 +1,5 @@
-import  { useEffect, useRef } from 'react';
-import { Text, Animated, TouchableOpacity } from 'react-native';
+import { useEffect, useRef } from "react";
+import { Text, Animated, TouchableOpacity } from "react-native";
 
 export default function BottomButton({ onPress, style, children }) {
   // Définir la valeur initiale de l'animation hors de l'écran
@@ -17,7 +17,9 @@ export default function BottomButton({ onPress, style, children }) {
   }, [slideUpAnim]);
 
   return (
-    <Animated.View style={[style, { transform: [{ translateY: slideUpAnim }] }]}>
+    <Animated.View
+      style={[style, { transform: [{ translateY: slideUpAnim }] }]}
+    >
       <TouchableOpacity onPress={onPress}>
         <Text>{children}</Text>
       </TouchableOpacity>

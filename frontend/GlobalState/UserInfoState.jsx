@@ -1,17 +1,17 @@
-import { atom } from 'recoil';
+import { atom } from "recoil";
 
 export const UserInfoState = atom({
-  key: 'userInfoState',
+  key: "userInfoState",
   default: {
     owner: {
-      name: '',
-      lastName: '',
-      phone: '',
-      address: '',
-      city: '',
-      postalCode: '',
-      country: '',
-      province: '',
+      name: "",
+      lastName: "",
+      phone: "",
+      address: "",
+      city: "",
+      postalCode: "",
+      country: "",
+      province: "",
     },
     driverLicense: {},
     insurance: {},

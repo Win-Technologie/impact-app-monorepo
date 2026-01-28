@@ -1,21 +1,15 @@
 // Dans ListItem.js
-import {  Animated, StyleSheet } from 'react-native';
+import { Animated, StyleSheet } from "react-native";
 
 const MainPageListItem = ({ item, slideAnim }) => (
   <>
     <Animated.Text
-      style={[
-        styles.title,
-        { transform: [{ translateX: slideAnim }] },
-      ]}
+      style={[styles.title, { transform: [{ translateX: slideAnim }] }]}
     >
       {item.title}
     </Animated.Text>
     <Animated.Text
-      style={[
-        styles.description,
-        { transform: [{ translateX: slideAnim }] },
-      ]}
+      style={[styles.description, { transform: [{ translateX: slideAnim }] }]}
     >
       {item.description}
     </Animated.Text>
@@ -25,7 +19,7 @@ const MainPageListItem = ({ item, slideAnim }) => (
 const styles = StyleSheet.create({
   title: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
     alignSelf: "flex-start",
   },

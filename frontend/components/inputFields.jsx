@@ -1,5 +1,5 @@
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const InputField = ({
   placeholder,
@@ -11,14 +11,14 @@ const InputField = ({
   <View style={[styles.inputContainer]}>
     <TextInput
       placeholder={placeholder}
-      placeholderTextColor='black'
+      placeholderTextColor="black"
       secureTextEntry={secureTextEntry}
       style={styles.textInput}
       onChangeText={onChangeText}
     />
     {icon && onIconPress && (
       <TouchableOpacity onPress={onIconPress} style={styles.icon}>
-        <Ionicons name={icon} size={24} color='black' />
+        <Ionicons name={icon} size={24} color="black" />
       </TouchableOpacity>
     )}
   </View>
@@ -26,12 +26,12 @@ const InputField = ({
 
 const styles = StyleSheet.create({
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
     height: 48,
-    backgroundColor: 'white',
-    borderColor: 'white',
+    backgroundColor: "white",
+    borderColor: "white",
     borderRadius: 2,
     borderWidth: 1,
     paddingLeft: 22,
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     marginRight: 10, // Laissez un peu d'espace pour l'icône
   },
   icon: {
-    position: 'absolute',
+    position: "absolute",
     right: 10, // Augmentez si l'icône est trop à droite
   },
 });

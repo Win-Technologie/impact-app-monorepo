@@ -1,2 +1,5 @@
-import {atom} from 'recoil';
-export const globalPersonalInfo = atom({key:"globalPersonalInfo",default:[]})
+import { atom } from "recoil";
+export const globalPersonalInfo = atom({
+  key: "globalPersonalInfo",
+  default: [],
+});

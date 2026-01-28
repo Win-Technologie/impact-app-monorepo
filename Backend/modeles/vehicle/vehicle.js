@@ -72,100 +72,98 @@
 // const Vehicle = mongoose.model('vehicles', vehicleSchema);
 
 // module.exports = Vehicle;
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 // Schéma de l'immatriculation
 const immatriculationSchema = new mongoose.Schema({
   certificateNumber: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
   issuanceDate: {
     type: Date,
-    required: true
+    required: true,
   },
   expirationDate: {
     type: Date,
-    required: true
+    required: true,
   },
   ESSIEUXNumber: {
-    type: Number 
+    type: Number,
   },
   netWeight: {
-    type: Number
+    type: Number,
   },
   engineDisplacement: {
-    type: Number
+    type: Number,
   },
   dossierNumber: {
-    type: String
+    type: String,
   },
   usageCategory: {
-    type: String
+    type: String,
   },
   serialNumber: {
     type: String,
     required: true,
     unique: true,
-    index: true
+    index: true,
   },
 });
-
-
 
 // Schéma du véhicule
 const vehicleSchema = new mongoose.Schema({
   _id: {
     type: String,
-    required: true
+    required: true,
   },
   immatriculation: {
     type: immatriculationSchema,
-    required: true
+    required: true,
   },
   brand: {
     type: String,
     required: true,
-    index: true
+    index: true,
   },
   model: {
     type: String,
     required: true,
-    index: true
+    index: true,
   },
   year: {
     type: Number,
-    required: true
+    required: true,
   },
   color: {
     type: String,
     required: true,
-    index: true
+    index: true,
   },
   plate: {
     type: String,
     required: true,
     unique: true,
-    index: true
+    index: true,
   },
   photo: {
-    type: String
+    type: String,
   },
   assurance: {
     type: String,
-    ref: 'Assurance'
+    ref: "Assurance",
   },
   serialNumber: {
     type: String,
     required: true,
     unique: true,
-    index: true
+    index: true,
   },
   owner: {
     type: String,
-    ref: 'User',
-    required: true
+    ref: "User",
+    required: true,
   },
   // documents: {
   //   type: Array
@@ -173,15 +171,15 @@ const vehicleSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     required: true,
-    default: true
+    default: true,
   },
   dateAdded: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 // Modèle Vehicle basé sur le schéma
-const Vehicle = mongoose.model('vehicles', vehicleSchema);
+const Vehicle = mongoose.model("vehicles", vehicleSchema);
 
 module.exports = Vehicle;

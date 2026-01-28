@@ -1,16 +1,22 @@
-const jwt = require('../../utils/jwt');
+const jwt = require("../../utils/jwt");
 
-const { getDb } = require('../../mongoConnection');
+const { getDb } = require("../../mongoConnection");
 
-const path = require('path');
-const fs = require('fs/promises');
+const path = require("path");
+const fs = require("fs/promises");
 
-const axios = require('axios');
-const got = require('got');
-const crypto = require('crypto');
+const axios = require("axios");
+const got = require("got");
+const crypto = require("crypto");
 
-const { getSessionDecision, isSignatureValid } = require('../../utils/veriff');
-const { deleteSession, getPersonInfo, uploadCollectedData, getMedia, getWatchlistScreening } = require('../../utils/veriff');
+const { getSessionDecision, isSignatureValid } = require("../../utils/veriff");
+const {
+  deleteSession,
+  getPersonInfo,
+  uploadCollectedData,
+  getMedia,
+  getWatchlistScreening,
+} = require("../../utils/veriff");
 
 // VARIABLES
 const ONFIDO_API_TOKEN = process.env.ONFIDO_API_TOKEN;
@@ -96,302 +102,297 @@ async function NewVeriffSession(req, res) {
 */
 
 async function NewVeriffSession(req, res) {
-    try {
-        const userData = req.body;
+  try {
+    const userData = req.body;
 
-        if (!userData) {
-            return res.status(403).json({ msg: "Bad request" });
-        }
-
-        // Récupérer le jeton du header de la requête
-        // const token = req.headers.authorization?.replace("Bearer ", "");
-        // // Vérifier si le jeton est présent
-        // if (!token) {
-        //     console.error('Le Token n\'est pas fourni');
-        //     return res.status(400).json({ msg: "Le Token n'est pas fourni" });
-        // }
-        // // Décoder le token pour obtenir les informations de l'utilisateur
-        // const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
-        // if (!myToken) {
-        //     return res.status(400).json({ msg: "Token invalide" });
-        // }
-
-        if (userData.country === 'Canada' || userData.country === 'CAN' || userData.country === 'CAD') {
-            userData.country = 'CA';
-        }
-
-        // const userExist = await userCollection.findOne({ _id: myToken.user_id });
-
-        // if (!userExist) {
-        //     return res.status(400).json({ msg: "l'utilisateur n'existe pas" });
-        // }
-
-        if (userData.country === 'Canada' || userData.country === 'CAN' || userData.country === 'CAD') {
-            userData.country = 'CA';
-        }
-
-        const requestBody = {
-            verification: {
-                callback: `${BASE_VERIFF_HTTPS}`,
-                person: {
-                    firstName: userData.name,
-                    lastName: userData.lastName,
-                    idNumber: userData.idNumber
-                },
-                document: {
-                    number: userData.number,
-                    type: userData.docType,
-                    country: userData.country
-                },
-                vendorData: 'Impact_Tecnhologie'
-            }
-        };
-
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY
-            },
-            responseType: 'json'
-        };
-
-        const response = await got.post(VERIFF_FULL_API_PATH, {
-            ...config,
-            json: requestBody
-        });
-        // console.log(response.body);
-
-        // const myResponse = response;
-        const headers = response.headers;
-        const body = response.body;
-
-        // console.log('*********HEADERS********')
-        // console.log(headers)
-        // console.log('*****************')
-        console.log('*****************')
-        console.log('*********BODY********')
-        console.log(body.status);
-
-        res.status(200).json({
-            msg: 'Hello from New Veriff Session',
-            id: body.verification.id,
-            status: body.verification.status,
-            url: body.verification.url,
-            sessionToken: body.verification.sessionToken
-         
-        });
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ msg: 'Internal server error: ', error });
+    if (!userData) {
+      return res.status(403).json({ msg: "Bad request" });
     }
+
+    // Récupérer le jeton du header de la requête
+    // const token = req.headers.authorization?.replace("Bearer ", "");
+    // // Vérifier si le jeton est présent
+    // if (!token) {
+    //     console.error('Le Token n\'est pas fourni');
+    //     return res.status(400).json({ msg: "Le Token n'est pas fourni" });
+    // }
+    // // Décoder le token pour obtenir les informations de l'utilisateur
+    // const myToken = jwt.decoded(token); // Assurez-vous que cette fonction peut décoder le token JWT
+    // if (!myToken) {
+    //     return res.status(400).json({ msg: "Token invalide" });
+    // }
+
+    if (
+      userData.country === "Canada" ||
+      userData.country === "CAN" ||
+      userData.country === "CAD"
+    ) {
+      userData.country = "CA";
+    }
+
+    // const userExist = await userCollection.findOne({ _id: myToken.user_id });
+
+    // if (!userExist) {
+    //     return res.status(400).json({ msg: "l'utilisateur n'existe pas" });
+    // }
+
+    if (
+      userData.country === "Canada" ||
+      userData.country === "CAN" ||
+      userData.country === "CAD"
+    ) {
+      userData.country = "CA";
+    }
+
+    const requestBody = {
+      verification: {
+        callback: `${BASE_VERIFF_HTTPS}`,
+        person: {
+          firstName: userData.name,
+          lastName: userData.lastName,
+          idNumber: userData.idNumber,
+        },
+        document: {
+          number: userData.number,
+          type: userData.docType,
+          country: userData.country,
+        },
+        vendorData: "Impact_Tecnhologie",
+      },
+    };
+
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        "X-AUTH-CLIENT": VERIF_API_PUBLIC_KEY,
+      },
+      responseType: "json",
+    };
+
+    const response = await got.post(VERIFF_FULL_API_PATH, {
+      ...config,
+      json: requestBody,
+    });
+    // console.log(response.body);
+
+    // const myResponse = response;
+    const headers = response.headers;
+    const body = response.body;
+
+    // console.log('*********HEADERS********')
+    // console.log(headers)
+    // console.log('*****************')
+    console.log("*****************");
+    console.log("*********BODY********");
+    console.log(body.status);
+
+    res.status(200).json({
+      msg: "Hello from New Veriff Session",
+      id: body.verification.id,
+      status: body.verification.status,
+      url: body.verification.url,
+      sessionToken: body.verification.sessionToken,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Internal server error: ", error });
+  }
 }
 
-
-
-
 async function uploadDocumentToVeriffSession(req, res) {
-    try {
+  try {
+    //sessionId, documentContext, base64Content
+    //Recuperer sessionId du parametre
+    const sessionId = req.params;
+    //Recuperer documentContext et base64Content du body
+    const { documentContext, base64Content } = req.body;
 
-        //sessionId, documentContext, base64Content
-        //Recuperer sessionId du parametre
-        const sessionId = req.params;
-        //Recuperer documentContext et base64Content du body
-        const { documentContext, base64Content } = req.body;
+    //const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/media`;
+    const url = `${VERIFF_FULL_API_PATH}${sessionId}/media`;
 
-        //const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/media`;
-        const url = `${VERIFF_FULL_API_PATH}${sessionId}/media`;
+    console.log(url);
 
-        console.log(url);
+    const apiKey = VERIF_API_PUBLIC_KEY;
+    const hmacSignature = "Impact_Tecnhologie"; // A implementer avec aide Nelson/Angelo
 
-        const apiKey = VERIF_API_PUBLIC_KEY;
-        const hmacSignature = 'Impact_Tecnhologie'; // A implementer avec aide Nelson/Angelo 
+    const requestBody = {
+      image: {
+        context: documentContext, // 'document-front', 'document-back', 'face'
+        content: base64Content, // image/document en base64
+      },
+    };
 
-        const requestBody = {
-            image: {
-                context: documentContext, // 'document-front', 'document-back', 'face'
-                content: base64Content // image/document en base64
-            }
-        };
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        "X-AUTH-CLIENT": VERIF_API_PUBLIC_KEY,
+        "X-HMAC-SIGNATURE": "Impact_Tecnhologie",
+      },
+    };
 
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY,
-                'X-HMAC-SIGNATURE': 'Impact_Tecnhologie'
-            }
-        };
-
-        const response = await axios.post(url, requestBody, config);
-        console.log('Response:', response.data);
-        return response.data;
-    } catch (error) {
-        console.error('Error uploading document to Veriff:', error.message);
-        throw error; // Ou gérer l'erreur d'une autre manière
-    }
+    const response = await axios.post(url, requestBody, config);
+    console.log("Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading document to Veriff:", error.message);
+    throw error; // Ou gérer l'erreur d'une autre manière
+  }
 }
 
 async function uploadDocuments(req, res) {
-    const { sessionId } = req.params;
+  const { sessionId } = req.params;
 
-    const reqFiles = req.files;
+  const reqFiles = req.files;
 
-    console.log(sessionId);
-    const photoFront = reqFiles.photoFront
-    const photoBack = reqFiles.photoBack;
-    const photoFace = reqFiles.photoFace;
+  console.log(sessionId);
+  const photoFront = reqFiles.photoFront;
+  const photoBack = reqFiles.photoBack;
+  const photoFace = reqFiles.photoFace;
 
-    // Validation basique pour s'assurer que toutes les photos sont fournies
-    if (!photoFront || !photoBack || !photoFace) {
-        return res.status(400).json({ error: 'Missing required photos' });
-    }
+  // Validation basique pour s'assurer que toutes les photos sont fournies
+  if (!photoFront || !photoBack || !photoFace) {
+    return res.status(400).json({ error: "Missing required photos" });
+  }
 
-    try {
-        // Téléchargement de chaque document/photo
-        //  const responses = await Promise.all([
-        //     uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront),
-        //     uploadDocumentToVeriffSessionSplit(sessionId, 'document-back', photoBack),
-        //     uploadDocumentToVeriffSessionSplit(sessionId, 'face', photoFace),
-        // ]);
+  try {
+    // Téléchargement de chaque document/photo
+    //  const responses = await Promise.all([
+    //     uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront),
+    //     uploadDocumentToVeriffSessionSplit(sessionId, 'document-back', photoBack),
+    //     uploadDocumentToVeriffSessionSplit(sessionId, 'face', photoFace),
+    // ]);
 
-        // const responses = await uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront);
+    // const responses = await uploadDocumentToVeriffSessionSplit(sessionId, 'document-front', photoFront);
 
-        // Vous pouvez choisir de loguer les réponses ou de les envoyer de retour au client
-        console.log('Upload responses:', responses);
-        res.status(200).json({ message: 'Documents uploaded successfully' });
-    } catch (error) {
-        // En cas d'erreur avec l'une des uploads, renvoyer une erreur
-        console.error('Error during document upload:', error);
-        res.status(500).json({ error: 'Failed to upload documents' });
-    }
+    // Vous pouvez choisir de loguer les réponses ou de les envoyer de retour au client
+    console.log("Upload responses:", responses);
+    res.status(200).json({ message: "Documents uploaded successfully" });
+  } catch (error) {
+    // En cas d'erreur avec l'une des uploads, renvoyer une erreur
+    console.error("Error during document upload:", error);
+    res.status(500).json({ error: "Failed to upload documents" });
+  }
 }
 
-async function uploadDocumentToVeriffSessionSplit(sessionId, documentContext, base64Content) {
-    try {
-      const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/media`;
-      const apiKey = VERIF_API_PUBLIC_KEY; // Remplacez par votre clé API publique
-      const hmacSignature = 'b2a0bd97-e5f7-4360-b17c-07479b92472e'; // Remplacez par votre signature HMAC
-    
-    
+async function uploadDocumentToVeriffSessionSplit(
+  sessionId,
+  documentContext,
+  base64Content,
+) {
+  try {
+    const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/media`;
+    const apiKey = VERIF_API_PUBLIC_KEY; // Remplacez par votre clé API publique
+    const hmacSignature = "b2a0bd97-e5f7-4360-b17c-07479b92472e"; // Remplacez par votre signature HMAC
+
     console.log(url);
     const photoPath = base64Content.path;
     //photoPath to base64
-    const base64 = await fs.readFile(photoPath, { encoding: 'base64' });
+    const base64 = await fs.readFile(photoPath, { encoding: "base64" });
 
+    console.log("DOCUMENT CONTEXT: ", documentContext, "FIN CONTEXT");
+    console.log("BASE64 CONTENT: ", base64, "FIN CONTENT");
+    const requestBody = {
+      image: {
+        context: documentContext, // 'document-front', 'document-back', 'face'
+        content: base64, // Votre image/document en base64
+      },
+    };
 
-     console.log("DOCUMENT CONTEXT: ", documentContext, "FIN CONTEXT") ;
-        console.log("BASE64 CONTENT: ", base64, "FIN CONTENT") ;
-      const requestBody = {
-        image: {
-          context: documentContext, // 'document-front', 'document-back', 'face'
-          content: base64 // Votre image/document en base64
-        }
-      };
-      
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        "X-AUTH-CLIENT": apiKey,
+        "X-HMAC-SIGNATURE": hmacSignature,
+      },
+    };
 
+    // Envoi de la requête POST à l'API Veriff utilisant got au lieu de axios
+    const response = await got.post(url, {
+      ...config,
+      json: requestBody,
+    });
 
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-AUTH-CLIENT': apiKey,
-          'X-HMAC-SIGNATURE': hmacSignature
-        }
-      };
-      
-      // Envoi de la requête POST à l'API Veriff utilisant got au lieu de axios
-        const response = await got.post(url, {
-            ...config,
-            json: requestBody
-        });
-
-      console.log('Response:', response.data);
-      return response.data;
-
-    } catch (error) {
-        console.error('Error uploading document to Veriff:', error.message);
-        throw error; // Ou gérer l'erreur d'une autre manière
-    }
+    console.log("Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading document to Veriff:", error.message);
+    throw error; // Ou gérer l'erreur d'une autre manière
+  }
 }
-  
 
 async function uploadDocumentToVeriffSession(req, res) {
-    try {
+  try {
+    //sessionId, documentContext, base64Content
+    //Recuperer sessionId du parametre
+    const sessionId = req.params;
+    //Recuperer documentContext et base64Content du body
+    const { documentContext, base64Content } = req.body;
 
-        //sessionId, documentContext, base64Content
-        //Recuperer sessionId du parametre
-        const sessionId = req.params;
-        //Recuperer documentContext et base64Content du body
-        const { documentContext, base64Content } = req.body;
+    //const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/media`;
+    const url = `${VERIFF_FULL_API_PATH}${sessionId}/media`;
 
-        //const url = `https://stationapi.veriff.com/v1/sessions/${sessionId}/media`;
-        const url = `${VERIFF_FULL_API_PATH}${sessionId}/media`;
+    console.log(url);
 
-        console.log(url);
+    //   const apiKey = VERIF_API_PUBLIC_KEY;
+    //  const hmacSignature = 'Impact_Tecnhologie'; // A implementer avec aide Nelson/Angelo
 
-        //   const apiKey = VERIF_API_PUBLIC_KEY; 
-        //  const hmacSignature = 'Impact_Tecnhologie'; // A implementer avec aide Nelson/Angelo 
+    // const requestBody = {
+    //     image: {
+    //         context: documentContext, // 'document-front', 'document-back', 'face'
+    //         content: base64Content // image/document en base64
+    //     }
+    // };
 
-        // const requestBody = {
-        //     image: {
-        //         context: documentContext, // 'document-front', 'document-back', 'face'
-        //         content: base64Content // image/document en base64
-        //     }
-        // };
+    // const config = {
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //         'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY,
+    //         'X-HMAC-SIGNATURE': 'Impact_Tecnhologie'
+    //     }
+    // };
 
-        // const config = {
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         'X-AUTH-CLIENT': VERIF_API_PUBLIC_KEY,
-        //         'X-HMAC-SIGNATURE': 'Impact_Tecnhologie'
-        //     }
-        // };
-
-        // const response = await axios.post(url, requestBody, config);
-        // console.log('Response:', response.data);
-        // return response.data;
-    } catch (error) {
-        console.error('Error uploading document to Veriff:', error.message);
-        throw error; // Ou gérer l'erreur d'une autre manière
-    }
+    // const response = await axios.post(url, requestBody, config);
+    // console.log('Response:', response.data);
+    // return response.data;
+  } catch (error) {
+    console.error("Error uploading document to Veriff:", error.message);
+    throw error; // Ou gérer l'erreur d'une autre manière
+  }
 }
 
 async function checkDecision(req, res) {
+  try {
+    const { sessionId } = req.params;
+    const { headers, body } = await getSessionDecision(sessionId); // Obtener la decisión de sesión
 
-    try {
-        const { sessionId } = req.params;  
-        const { headers, body } = await getSessionDecision(sessionId); // Obtener la decisión de sesión
+    // console.log(headers);
+    if ("x-hmac-signature" in headers) {
+      const signature = headers["x-hmac-signature"];
+      console.log("Valor de X-HMAC-SIGNATURE:", signature);
 
-        // console.log(headers);
-        if ('x-hmac-signature' in headers) {
-            const signature = headers['x-hmac-signature'];
-            console.log('Valor de X-HMAC-SIGNATURE:', signature);
+      // Vérifier la validité de la signature sur la réponse
+      const isVeriffSignatureValid = isSignatureValid({
+        signature: signature, // Obtenir la signature des en-têtes de réponse de Veriff
+        shared_secret_key: X_HMAC_SIGNATURE, // Clé secrète partagée
+        payload: body, // Utiliser le corps de la réponse comme payload pour la vérification
+      });
 
-            // Vérifier la validité de la signature sur la réponse
-            const isVeriffSignatureValid = isSignatureValid({
-                signature: signature, // Obtenir la signature des en-têtes de réponse de Veriff
-                shared_secret_key: X_HMAC_SIGNATURE, // Clé secrète partagée
-                payload: body // Utiliser le corps de la réponse comme payload pour la vérification
-            });
-
-             // Vérifier si la signature est valide
-            if (isVeriffSignatureValid) {
-                console.log('La signature sur la réponse de Veriff est valide.');
-               return res.status(200).json(body); 
-
-            } else {
-                console.log("La signature dans la réponse de Veriff n'est pas valide.");
-                return res.status(403).json({msg:"Signature non autorisée"}); 
-            }
-
-        } else {
-            console.log("X-HMAC-SIGNATURE introuvable dans les en-têtes.");
-            return res.status(403).json({msg:"Signature non trouvée"}); 
-        }
-
-    } catch (error) {
-        console.error('Error:', error);
-        return res.status(500).json({ msg: 'Internal server error: ', error });
+      // Vérifier si la signature est valide
+      if (isVeriffSignatureValid) {
+        console.log("La signature sur la réponse de Veriff est valide.");
+        return res.status(200).json(body);
+      } else {
+        console.log("La signature dans la réponse de Veriff n'est pas valide.");
+        return res.status(403).json({ msg: "Signature non autorisée" });
+      }
+    } else {
+      console.log("X-HMAC-SIGNATURE introuvable dans les en-têtes.");
+      return res.status(403).json({ msg: "Signature non trouvée" });
     }
+  } catch (error) {
+    console.error("Error:", error);
+    return res.status(500).json({ msg: "Internal server error: ", error });
+  }
 }
 
 // async function getSessionDecision(sessionId) {
@@ -440,55 +441,49 @@ async function checkDecision(req, res) {
 //     }
 // }
 
-
 // function generateHMACSignature(message, sharedSecretKey) {
 //     const hmac = crypto.createHmac('sha256', sharedSecretKey);
 //     hmac.update(message);
 //     return hmac.digest('hex');
 // }
 
-
-
-
-
 //DELETE /sessions/{sessionId}
 
-
 async function deleteVeriffSession(req, res) {
-    try {
-        const { sessionId } = req.params;
-        // const apiKey = VERIF_API_PUBLIC_KEY;
-        
-        const {headers,body} = await deleteSession(sessionId);
-        console.log('Response:', body);
+  try {
+    const { sessionId } = req.params;
+    // const apiKey = VERIF_API_PUBLIC_KEY;
 
-        if ('x-hmac-signature' in headers) {
-            const signature = headers['x-hmac-signature'];
-            console.log('Value of X-HMAC-SIGNATURE:', signature);
+    const { headers, body } = await deleteSession(sessionId);
+    console.log("Response:", body);
 
-            const isVeriffSignatureValid = isSignatureValid({
-                signature: signature,
-                shared_secret_key: X_HMAC_SIGNATURE,
-                payload: body
-            });
+    if ("x-hmac-signature" in headers) {
+      const signature = headers["x-hmac-signature"];
+      console.log("Value of X-HMAC-SIGNATURE:", signature);
 
-            if (isVeriffSignatureValid) {
-                console.log('Veriff response signature is valid.');
-                return res.status(200).json(body);
-            } else {
-                console.log("Signature in Veriff response is not valid.");
-                return res.status(403).json({ msg: "Unauthorized signature" });
-            }
-        } else {
-            console.log("X-HMAC-SIGNATURE not found in headers.");
-            return res.status(403).json({ msg: "Signature not found" });
-        }
-    } catch (error) {
-        console.log("Liste des erreures   : "); 
-        console.log(error); 
-        console.error('Error deleting session:', error);
-        return res.status(500).json({ msg: 'Internal server error: ', error });
+      const isVeriffSignatureValid = isSignatureValid({
+        signature: signature,
+        shared_secret_key: X_HMAC_SIGNATURE,
+        payload: body,
+      });
+
+      if (isVeriffSignatureValid) {
+        console.log("Veriff response signature is valid.");
+        return res.status(200).json(body);
+      } else {
+        console.log("Signature in Veriff response is not valid.");
+        return res.status(403).json({ msg: "Unauthorized signature" });
+      }
+    } else {
+      console.log("X-HMAC-SIGNATURE not found in headers.");
+      return res.status(403).json({ msg: "Signature not found" });
     }
+  } catch (error) {
+    console.log("Liste des erreures   : ");
+    console.log(error);
+    console.error("Error deleting session:", error);
+    return res.status(500).json({ msg: "Internal server error: ", error });
+  }
 }
 
 // async function deleteVeriffSession(req, res) {
@@ -497,7 +492,7 @@ async function deleteVeriffSession(req, res) {
 //     try {
 //         const { sessionId } = req.params;
 //         const apiKey = VERIF_API_PUBLIC_KEY;
-        
+
 //         const response = await deleteSession(sessionId, apiKey);
 //         console.log('Response:', response);
 //         return response;
@@ -510,31 +505,25 @@ async function deleteVeriffSession(req, res) {
 
 // api veriff getPersonInfo
 async function getVeriffPersonInfo(req, res) {
-    try {
-        const { sessionId } = req.params;
-        const apiKey = VERIF_API_PUBLIC_KEY;
+  try {
+    const { sessionId } = req.params;
+    const apiKey = VERIF_API_PUBLIC_KEY;
 
-        const response = await getPersonInfo(sessionId, apiKey);
-        console.log('Response:', response);
-        return response;
-    }
-    catch (error) {
-        console.error('Error getting person info:', error.message);
-        throw error;
-    }
+    const response = await getPersonInfo(sessionId, apiKey);
+    console.log("Response:", response);
+    return response;
+  } catch (error) {
+    console.error("Error getting person info:", error.message);
+    throw error;
+  }
 }
 
-
-
-
 module.exports = {
-
-    NewVeriffSession,
-    uploadDocumentToVeriffSession,
-    uploadDocuments,
-    checkDecision,
-    deleteVeriffSession,
-    getVeriffPersonInfo,
-    // instanceVeriffSession
+  NewVeriffSession,
+  uploadDocumentToVeriffSession,
+  uploadDocuments,
+  checkDecision,
+  deleteVeriffSession,
+  getVeriffPersonInfo,
+  // instanceVeriffSession
 };
-

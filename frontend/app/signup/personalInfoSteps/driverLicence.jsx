@@ -1,12 +1,12 @@
 ﻿import {
-    StyleSheet,
-    Text,
-    View,
-    Button,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    TextInput,
+  StyleSheet,
+  Text,
+  View,
+  Button,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TextInput,
 } from "react-native";
 import React, { useState } from "react";
 import { router } from "expo-router";
@@ -17,167 +17,158 @@ import Stepper from "../../../components/SignUp/stepper";
 import { useRecoilState } from "recoil";
 import { userDetailsState } from "../../../GlobalState/userDetailState";
 import Checkbox from "expo-checkbox";
-import jwtDecode from 'jwt-decode';
+import jwtDecode from "jwt-decode";
 import { userInfoGatherState } from "../../../GlobalState/userDetailState";
 import { Controller, useForm } from "react-hook-form";
-import { DatePickerInput } from 'react-native-paper-dates';
+import { DatePickerInput } from "react-native-paper-dates";
 import { useTranslation } from "react-i18next";
-import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Insurance() {
+  // console.log(userDetails);
 
-   // console.log(userDetails);
+  const [userDetails, setUserDetails] = useRecoilState(userDetailsState);
+  const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
+  const [differentAddress, setDifferentAddress] = useState(false);
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  const [currentStep, setCurrentStep] = useState(4);
+  const totalSteps = 4;
+  const [dateDe, setDateDe] = useState(undefined);
+  const [inputDateDe, setInputDateDe] = React.useState(undefined);
+  const [dateEx, setDateEx] = useState(undefined);
+  const [inputDateEx, setInputDateEx] = React.useState(undefined);
+  const { t } = useTranslation();
 
-    const [userDetails, setUserDetails] = useRecoilState(userDetailsState);
-    const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
-    const [differentAddress, setDifferentAddress] = useState(false);
-    const API_URL = process.env.EXPO_PUBLIC_API_URL;
-    const [currentStep, setCurrentStep] = useState(4);
-    const totalSteps = 4;
-    const [dateDe, setDateDe] = useState(undefined);
-    const [inputDateDe, setInputDateDe] = React.useState(undefined);
-    const [dateEx, setDateEx] = useState(undefined);
-    const [inputDateEx, setInputDateEx] = React.useState(undefined);
-    const {t} = useTranslation()
+  const handleInputChange = (field, value) => {
+    setUserDetails((prev) => ({ ...prev, [field]: value }));
+  };
 
-    const handleInputChange = (field, value) => {
-        setUserDetails(prev => ({ ...prev, [field]: value }));
-    };
+  const handlePressBack = () => {
+    setCurrentStep(currentStep - 1);
+    //router.push("./phoneAndAdress");
+    router.back();
+  };
 
- 
+  const formatDate = (val) => {
+    if (Number(val) > 9) {
+      return val;
+    } else {
+      return "0" + val;
+    }
+  };
 
-    const handlePressBack = () => {
-        setCurrentStep(currentStep - 1);
-        //router.push("./phoneAndAdress");
-        router.back();
-    };
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      licenseExpiration: null, // userDetails.licenseExpiration,
+      licenseDelivery: null, //userDetails.licenseDelivery,
+      licenseMention: userDetails.licenseMention,
+      licenseNumber: userDetails.licenseNumber,
+      licenseCategory: userDetails.licenseNumber,
+    },
+    mode: "onChange",
+  });
 
-    const  formatDate = (val) => {
+  const lauchrequest = async () => {
+    const token = await AsyncStorage.getItem("userToken");
 
-        if (Number(val) > 9) {
-            return val
-        } else {
-            return '0' + val;
-        }
+    if (!token) {
+      console.error("No token provided");
+      return;
     }
 
+    console.log(token);
+
+    const userDetailsUrl = `${API_URL}users/user/`;
+    const licenseDetailsUrl = `${API_URL}users/user/license`;
 
     const {
-        control,
-        handleSubmit,
-        formState: { errors },
-    } = useForm({
-        defaultValues: {
-            licenseExpiration: null, // userDetails.licenseExpiration,
-            licenseDelivery: null, //userDetails.licenseDelivery,
-            licenseMention: userDetails.licenseMention,
-            licenseNumber: userDetails.licenseNumber,
-            licenseCategory: userDetails.licenseNumber,
-        },
-        mode: "onChange",
-    });
+      name,
+      lastName,
+      gender,
+      phone,
+      address,
+      city,
+      postalCode,
+      country,
+      birthDay,
+      province,
+      licenseNumber,
+      licenseCategory,
+      licenseExpiration,
+      licenseMention,
+      alternateAddress,
+      alternateCity,
+      alternatePostalCode,
+      alternateCountry,
+      alternateProvince,
+      typeAccount,
+    } = userDetails;
 
-    const lauchrequest = async () => {
+    const userDetailsPayload = {
+      name,
+      lastName,
+      phone,
+      address,
+      postalCode,
+      city,
+      province,
+      country,
+      gender,
+      typeAccount: "free",
+    };
 
-
-        const token = await AsyncStorage.getItem('userToken');
-
-        if (!token) {
-            console.error("No token provided");
-            return;
-        }
-
-        console.log(token);
-
-
-        const userDetailsUrl = `${API_URL}users/user/`;
-        const licenseDetailsUrl = `${API_URL}users/user/license`;
-
-        const {
-            name,
-            lastName,
-            gender,
-            phone,
-            address,
-            city,
-            postalCode,
-            country,
-            birthDay,
-            province,
-            licenseNumber,
-            licenseCategory,
-            licenseExpiration,
-            licenseMention,
-            alternateAddress,
-            alternateCity,
-            alternatePostalCode,
-            alternateCountry,
-            alternateProvince,
-            typeAccount
-        } = userDetails;
-
-        const userDetailsPayload = {
-            name,
-            lastName,
-            phone,
-            address,
-            postalCode,
-            city,
-            province,
-            country,
-            gender,
-            typeAccount: 'free',
-        };
-
-        const licenseDetailsPayload = {
-            number: licenseNumber,
-            birthdate: birthDay,
-            /*address: differentAddress ? alternateAddress : address,
+    const licenseDetailsPayload = {
+      number: licenseNumber,
+      birthdate: birthDay,
+      /*address: differentAddress ? alternateAddress : address,
             country: differentAddress ? alternateCountry : country,
             province: differentAddress ? alternateProvince : province,
             postalCode: differentAddress ? alternatePostalCode : postalCode,*/
-            address: address,
-            country: country,
-            province: province,
-            postalCode: postalCode,
-            city: city,
-            licenseClass: licenseCategory,
-            expires: "2026-09-09",
-            mention: licenseMention,
-            sex: gender
-        };
+      address: address,
+      country: country,
+      province: province,
+      postalCode: postalCode,
+      city: city,
+      licenseClass: licenseCategory,
+      expires: "2026-09-09",
+      mention: licenseMention,
+      sex: gender,
+    };
 
-        console.log("licence payload",licenseDetailsPayload);
+    console.log("licence payload", licenseDetailsPayload);
 
-        try {
+    try {
+      // Send user details
+      // console.log(userDetailsPayload);
 
-            // Send user details
-            // console.log(userDetailsPayload);
+      const userResponse = await fetch(userDetailsUrl, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(userDetailsPayload),
+      });
 
-            const userResponse = await fetch(userDetailsUrl, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(userDetailsPayload)
-            });
- 
-            //console.log(userResponse);
+      //console.log(userResponse);
 
+      if (!userResponse.ok) {
+        console.error(
+          "Failed to submit user details",
+          await userResponse.text(),
+        );
+        throw new Error("Failed to submit user details");
+      }
 
-            if (!userResponse.ok) {
-                console.error("Failed to submit user details", await userResponse.text());
-                throw new Error('Failed to submit user details');
-            }
+      // const userData = await userResponse.json();
+      // console.log('User data submission successful:', userData);
 
-
-           // const userData = await userResponse.json();
-           // console.log('User data submission successful:', userData);
-
-            // Send license details
-            /*const licenseResponse = await fetch(licenseDetailsUrl, {
+      // Send license details
+      /*const licenseResponse = await fetch(licenseDetailsUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -196,67 +187,62 @@ export default function Insurance() {
             const licenseData = await licenseResponse.json();
             console.log('License data submission successful:', licenseData);*/
 
-
-
-            if (userResponse.ok /*&& licenseResponse.ok*/) {
-
-                if (progressData[0].actualstep == 3) {
-
-                    const array = progressData.map((item) => {
-
-                        if (item.id == 0) {
-
-                            return { id: 0, title: "Information personnelles", subtitle: "4 minutes", completion: 1, actualstep: 4, nbstep: 4 };
-
-                        } else {
-
-
-                            return item
-                        }
-
-                    });
-
-                    setProgressData(array);
-                }
-
-                router.push("/signup/signUpLanding");
+      if (userResponse.ok /*&& licenseResponse.ok*/) {
+        if (progressData[0].actualstep == 3) {
+          const array = progressData.map((item) => {
+            if (item.id == 0) {
+              return {
+                id: 0,
+                title: "Information personnelles",
+                subtitle: "4 minutes",
+                completion: 1,
+                actualstep: 4,
+                nbstep: 4,
+              };
+            } else {
+              return item;
             }
+          });
 
-
-        } catch (error) {
-            console.error('Error submitting data:', error);
+          setProgressData(array);
         }
 
+        router.push("/signup/signUpLanding");
+      }
+    } catch (error) {
+      console.error("Error submitting data:", error);
+    }
+  };
 
-    };
+  const handlePressContinue = handleSubmit((data) => {
+    let datExp =
+      data.dateEx.getFullYear() +
+      "-" +
+      formatDate(data.dateEx.getMonth() + 1) +
+      "-" +
+      formatDate(data.dateEx.getDate());
+    let datDe =
+      data.dateDe.getFullYear() +
+      "-" +
+      formatDate(data.dateDe.getMonth() + 1) +
+      "-" +
+      formatDate(data.dateDe.getDate());
+    setUserDetails({ ...userDetails, licenseExpiration: datExp });
+    setUserDetails({ ...userDetails, licenseDelivery: datDe });
 
-    const   handlePressContinue =  handleSubmit( (data) => {
+    setTimeout(() => {
+      lauchrequest();
+    }, 500);
+  });
 
-        let datExp = data.dateEx.getFullYear() + '-' + formatDate(data.dateEx.getMonth() + 1) + '-' + formatDate(data.dateEx.getDate());
-        let datDe = data.dateDe.getFullYear() + '-' + formatDate(data.dateDe.getMonth() + 1) + '-' + formatDate(data.dateDe.getDate());
-        setUserDetails({ ...userDetails, licenseExpiration: datExp });
-        setUserDetails({ ...userDetails, licenseDelivery: datDe });
+  // try {
+  //     const decoded = jwtDecode(token);
+  //     console.log(decoded); // Assurez-vous que le token est correct et peut être décodé
+  // } catch (error) {
+  //     console.error("Failed to decode token:", error);
+  // }
 
-        setTimeout(() => {
-            lauchrequest();
-        },500);
-
-       
-    });
-
-
-  
-
-
-
-    // try {
-    //     const decoded = jwtDecode(token);
-    //     console.log(decoded); // Assurez-vous que le token est correct et peut être décodé
-    // } catch (error) {
-    //     console.error("Failed to decode token:", error);
-    // }
-
-    /*
+  /*
     const {
       name,
       lastName,
@@ -358,213 +344,192 @@ export default function Insurance() {
       // Handle errors, possibly with alert messages
     }*/
 
+  // };
 
-    // };
+  return (
+    <SafeAreaView style={styles.container}>
+      <Stepper
+        currentStep={progressData[0].actualstep}
+        totalSteps={totalSteps}
+      />
 
-    return (
+      <ScrollView
+        //  contentContainerStyle={styles.scrollviewContainer}
+        //  keyboardShouldPersistTaps='handled'
+        style={styles.content}
+      >
+        <View style={styles.contentContainer}>
+          <Text style={styles.titleText}>{t("insuranceScreen.pageTitle")}</Text>
 
-        <SafeAreaView style={styles.container}>
-            <Stepper
-                currentStep={progressData[0].actualstep}
-                totalSteps={totalSteps}
+          <View style={styles.inputSection}>
+            <Controller
+              control={control}
+              name="licenseNumber"
+              rules={{ required: t("insuranceScreen.licenseNumberRequired") }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.textInput}
+                  placeholder={t("insuranceScreen.licenseNumberPlaceholder")}
+                  onBlur={onBlur}
+                  onChangeText={(text) => {
+                    onChange(text);
+                    setUserDetails({ ...userDetails, licenseNumber: text });
+                  }}
+                  value={value}
+                />
+              )}
             />
+            {errors.licenseNumber && (
+              <Text style={styles.errorText}>
+                {errors.licenseNumber.message}
+              </Text>
+            )}
+          </View>
 
-            <ScrollView
-                //  contentContainerStyle={styles.scrollviewContainer}
-                //  keyboardShouldPersistTaps='handled'
-                style={styles.content}
-            >
+          <View style={styles.inputSection}>
+            <Controller
+              control={control}
+              name="dateDe"
+              rules={{
+                required: t("licenseDetails.expiryDateRequired"),
+                minLength: {
+                  value: 10,
+                  message: t("licenseDetails.invalidFormat"),
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <DatePickerInput
+                  label={t("licenseDetails.issueDateLabel")}
+                  locale="en"
+                  underlineColor="transparent"
+                  mode="outlined"
+                  activeOutlineColor="gray"
+                  style={styles.inputDate}
+                  onChangeText={(text) => {
+                    onChange(text);
+                    setDateDe(text);
+                  }}
+                  //onChange={(d) => setInputDateDe(d)}
+                  onChange={(d) => {
+                    onChange(d);
+                    setInputDateDe(d);
+                  }}
+                  inputMode="start"
+                  value={inputDateDe}
+                />
+              )}
+            />
+            {errors.dateDe && (
+              <Text style={styles.errorText}>{errors.dateDe.message}</Text>
+            )}
+          </View>
 
-                <View style={styles.contentContainer}>
+          <View style={styles.inputSection}>
+            <Controller
+              control={control}
+              name="dateEx"
+              rules={{
+                required: t("licenseDetails.expiryDateRequired"),
+                minLength: {
+                  value: 10,
+                  message: t("licenseDetails.invalidFormat"),
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <DatePickerInput
+                  label={t("licenseDetails.expiryDateLabel")}
+                  locale="en"
+                  underlineColor="transparent"
+                  mode="outlined"
+                  activeOutlineColor="gray"
+                  style={styles.inputDate}
+                  onChangeText={(text) => {
+                    onChange(text);
+                    setDateEx(text);
+                  }}
+                  onChange={(d) => {
+                    onChange(d);
+                    setInputDateEx(d);
+                  }}
+                  inputMode="start"
+                  value={inputDateEx}
+                />
+              )}
+            />
+            {errors.dateEx && (
+              <Text style={styles.errorText}>{errors.dateEx.message}</Text>
+            )}
+          </View>
 
-                    <Text style={styles.titleText}>
-                    {t('insuranceScreen.pageTitle')}
-                    </Text>
+          <View style={{ flexDirection: "row" }}>
+            <View style={{ flex: 1 }}>
+              <View style={styles.inputSection}>
+                <Controller
+                  control={control}
+                  name="category"
+                  rules={{
+                    required: t("licenseDetails.licenseCategoryRequired"),
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder={t(
+                        "licenseDetails.licenseCategoryPlaceholder",
+                      )}
+                      onBlur={onBlur}
+                      onChangeText={(text) => {
+                        onChange(text);
+                        setUserDetails({
+                          ...userDetails,
+                          licenseCategory: text,
+                        });
+                      }}
+                      value={value}
+                    />
+                  )}
+                />
+                {errors.category && (
+                  <Text style={styles.errorText}>
+                    {errors.category.message}
+                  </Text>
+                )}
+              </View>
+            </View>
 
-                    <View style={styles.inputSection}>
-                        <Controller
-                            control={control}
-                            name='licenseNumber'
-                            rules={{ required: t('insuranceScreen.licenseNumberRequired') }}
-                            render={({ field: { onChange, onBlur, value } }) => (
-                                <TextInput
-                                    style={styles.textInput}
-                                    placeholder={t('insuranceScreen.licenseNumberPlaceholder')}
-                                    onBlur={onBlur}
-                                    onChangeText={(text) => {
-                                        onChange(text);
-                                        setUserDetails({ ...userDetails, licenseNumber: text });
-                                    }}
-                                    value={value}
-                                />
-                            )}
-                        />
-                        {errors.licenseNumber && (
-                            <Text style={styles.errorText}>{errors.licenseNumber.message}</Text>
-                        )}
-                    </View>
+            <View style={{ flex: 1 }}>
+              <View style={styles.inputSection}>
+                <Controller
+                  control={control}
+                  name="mention"
+                  rules={{
+                    required: t("licenseDetails.licenseMentionRequired"),
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={[styles.textInput, { marginLeft: 5 }]}
+                      placeholder={t(
+                        "licenseDetails.licenseMentionPlaceholder",
+                      )}
+                      onBlur={onBlur}
+                      onChangeText={(text) => {
+                        onChange(text);
+                        setUserDetails({
+                          ...userDetails,
+                          licenseMention: text,
+                        });
+                      }}
+                      value={value}
+                    />
+                  )}
+                />
+                {errors.mention && (
+                  <Text style={styles.errorText}>{errors.mention.message}</Text>
+                )}
+              </View>
+            </View>
+          </View>
 
-
-
-                    <View style={styles.inputSection}>
-                        <Controller
-                            control={control}
-                            name='dateDe'
-                            rules={{
-                                required: t('licenseDetails.expiryDateRequired'),
-                                minLength: {
-                                    value: 10,
-                                    message: t('licenseDetails.invalidFormat'),
-                                },
-
-                            }}
-                            render={({ field: { onChange, onBlur, value } }) => (
-
-                                <DatePickerInput
-                                    label={t("licenseDetails.issueDateLabel")}
-                                    locale="en"
-                                    underlineColor="transparent"
-                                    mode="outlined"
-                                    activeOutlineColor="gray"
-                                    style={styles.inputDate}
-                                    onChangeText={(text) => {
-                                        onChange(text);
-                                        setDateDe(text)
-                                    }}
-                                    //onChange={(d) => setInputDateDe(d)}
-                                    onChange={(d) => {
-                                        onChange(d)
-                                        setInputDateDe(d);
-                                    }}
-                                    inputMode="start"
-                                    value={inputDateDe}
-                                 
-                                />
-
-                            )}
-                        />
-                        {errors.dateDe && (
-                            <Text style={styles.errorText}>{errors.dateDe.message}</Text>
-                        )}
-                    </View>
-
-
-
-                    <View style={styles.inputSection}>
-
-                        <Controller
-                            control={control}
-                            name='dateEx'
-                            rules={{
-                                required: t("licenseDetails.expiryDateRequired"),
-                                    minLength: {
-                                    value: 10,
-                                    message: t("licenseDetails.invalidFormat"),
-                                    },
-
-
-                            }}
-                            render={({ field: { onChange, onBlur, value } }) => (
-
-                                <DatePickerInput
-                                label={t("licenseDetails.expiryDateLabel")}
-                                locale="en"
-                                    underlineColor="transparent"
-                                    mode="outlined"
-                                    activeOutlineColor="gray"
-                                    style={styles.inputDate}
-                                    onChangeText={(text) => {
-                                        onChange(text);
-                                        setDateEx(text)
-                                    }}
-                                    onChange={(d) => {
-                                        onChange(d)
-                                        setInputDateEx(d)
-                                    }}
-                                    inputMode="start"
-                                    value={inputDateEx}
-                                />
-
-                            )}
-                        />
-                        {errors.dateEx && (
-                            <Text style={styles.errorText}>{errors.dateEx.message}</Text>
-                        )}
-
-
-                    </View>
-
-
-
-                    <View style={{ flexDirection: "row" }}>
-
-                        <View style={{ flex: 1 }}>
-
-                            <View style={styles.inputSection}>
-
-                                <Controller
-                                    control={control}
-                                    name='category'
-                                    rules={{ required: t("licenseDetails.licenseCategoryRequired") }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={styles.textInput}
-                                            placeholder={t("licenseDetails.licenseCategoryPlaceholder")}
-                                            onBlur={onBlur}
-                                            onChangeText={(text) => {
-                                                onChange(text);
-                                                setUserDetails({
-                                                    ...userDetails, licenseCategory: text
-                                                });
-                                            }}
-                                            value={value}
-                                        />
-                                    )}
-                                />
-                                {errors.category && (
-                                    <Text style={styles.errorText}>{errors.category.message}</Text>
-                                )}
-
-
-                            </View>
-                        </View>
-
-
-                        <View style={{ flex: 1 }}>
-                            <View style={styles.inputSection}>
-
-                                <Controller
-                                    control={control}
-                                    name='mention'
-                                    rules={{ required: t("licenseDetails.licenseMentionRequired") }}
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <TextInput
-                                            style={[styles.textInput, { marginLeft: 5 }]}
-                                            placeholder={t("licenseDetails.licenseMentionPlaceholder")}
-                                            onBlur={onBlur}
-                                            onChangeText={(text) => {
-                                                onChange(text);
-                                                setUserDetails({
-                                                    ...userDetails, licenseMention: text
-                                                });
-                                            }}
-                                            value={value}
-                                        />
-                                    )}
-                                />
-                                {errors.mention && (
-                                    <Text style={styles.errorText}>{errors.mention.message}</Text>
-                                )}
-
-
-
-                            </View>
-                        </View>
-
-                    </View>
-
-
-                    {/*<View style={styles.checkboxContainer}>
+          {/*<View style={styles.checkboxContainer}>
                         <Checkbox
                             value={differentAddress}
                             onValueChange={setDifferentAddress}
@@ -573,198 +538,186 @@ export default function Insurance() {
                         <Text style={styles.label}>Utiliser une adresse différente?</Text>
                     </View>*/}
 
+          {differentAddress && (
+            <>
+              <TextInput
+                style={styles.input2}
+                placeholder={t("licenseDetails.addressPlaceholder")}
+                value={userDetails.alternateAddress}
+                onChangeText={(text) =>
+                  handleInputChange("alternateAddress", text)
+                }
+              />
 
-                    { differentAddress && (
-                        <>
-                            <TextInput
-                                style={styles.input2}
-                                placeholder={t("licenseDetails.addressPlaceholder")}
-                                value={userDetails.alternateAddress}
-                                onChangeText={(text) => handleInputChange("alternateAddress", text)}
-                            />
+              <TextInput
+                style={styles.input2}
+                placeholder={t("licenseDetails.cityPlaceholder")}
+                value={userDetails.alternateCity}
+                onChangeText={(text) =>
+                  handleInputChange("alternateCity", text)
+                }
+              />
 
-                            <TextInput
-                                style={styles.input2}
-                                placeholder={t("licenseDetails.cityPlaceholder")}
-                                value={userDetails.alternateCity}
-                                onChangeText={(text) => handleInputChange("alternateCity", text)}
-                            />
+              <TextInput
+                style={styles.input2}
+                placeholder={t("licenseDetails.postalCodePlaceholder")}
+                value={userDetails.alternatePostalCode}
+                onChangeText={(text) =>
+                  handleInputChange("alternatePostalCode", text)
+                }
+              />
 
-                            <TextInput
-                                style={styles.input2}
-                                placeholder={t("licenseDetails.postalCodePlaceholder")}
-                                value={userDetails.alternatePostalCode}
-                                onChangeText={(text) => handleInputChange("alternatePostalCode", text)}
-                            />
+              <TextInput
+                style={[styles.input, styles.input2]}
+                placeholder={t("licenseDetails.countryPlaceholder")}
+                value={userDetails.alternateCountry}
+                onChangeText={(text) =>
+                  handleInputChange("alternateCountry", text)
+                }
+              />
 
-                            <TextInput
-                                style={[styles.input, styles.input2]}
-                                placeholder={t("licenseDetails.countryPlaceholder")}
-                                value={userDetails.alternateCountry}
-                                onChangeText={(text) => handleInputChange('alternateCountry', text)}
-                            />
+              <TextInput
+                style={[styles.input, styles.input2]}
+                placeholder={t("licenseDetails.provincePlaceholder")}
+                value={userDetails.alternateProvince}
+                onChangeText={(text) =>
+                  handleInputChange("alternateProvince", text)
+                }
+              />
+            </>
+          )}
 
-                            <TextInput
-                                style={[styles.input, styles.input2]}
-                                placeholder={t("licenseDetails.provincePlaceholder")}
-                                value={userDetails.alternateProvince}
-                                onChangeText={(text) => handleInputChange('alternateProvince', text)}
-                            />
-
-                        </>
-                    )}
-
-                    {/*<View style={{  }}>
+          {/*<View style={{  }}>
                         <UploadButton text='de votre permis de conduire' />
                     </View>*/}
-                </View>
+        </View>
+      </ScrollView>
 
-            </ScrollView>
-
-            <View style={styles.absoluteButtonContainer}>
-                <DualOptionButton
-                    onPressBack={handlePressBack}
-                    onPressContinue={handlePressContinue}
-                />
-            </View>
-
-        </SafeAreaView>
-
-
-
-    );
+      <View style={styles.absoluteButtonContainer}>
+        <DualOptionButton
+          onPressBack={handlePressBack}
+          onPressContinue={handlePressContinue}
+        />
+      </View>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-
-
-    container: {
-        flex: 1,
-        justifyContent: "flex-start",
-        alignItems: "stretch",
-        padding: 20,
-        paddingTop:0
-        },
-
-  content: {
-    paddingTop:20
+  container: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "stretch",
+    padding: 20,
+    paddingTop: 0,
   },
 
+  content: {
+    paddingTop: 20,
+  },
 
+  scrollviewContainer: {},
 
-    scrollviewContainer: {
-    },
+  safeAreaContainer: {
+    flex: 1,
+  },
 
-    safeAreaContainer: {
-        flex: 1,
-    },
+  contentContainer: {
+    flex: 1,
+  },
 
+  titleText: {
+    fontSize: 23,
+    // marginHorizontal: 20,
+    marginVertical: 10,
+    marginBottom: 15,
+    fontWeight: "bold",
+    color: "#19363C",
+  },
 
-    contentContainer: {
-        flex: 1,
-    },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 10,
+    height: 60,
+  },
 
-    titleText: {
-        fontSize: 23,
-        // marginHorizontal: 20,
-        marginVertical: 10,
-        marginBottom: 15,
-        fontWeight: "bold",
-        color: "#19363C",
-    },
+  inputDate: {
+    backgroundColor: "#ffff",
+  },
 
+  inputHalf: {
+    width: "60%",
+    marginRight: "5%",
+  },
 
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 5,
-        padding: 10,
-        height: 60,
-    },
+  inputQuarter: {
+    width: "35%",
+    marginRight: "5%",
+  },
 
-    inputDate: {
-        backgroundColor: '#ffff',
-    },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginHorizontal: 20,
+    marginVertical: 10,
+  },
 
+  stepper: {
+    marginHorizontal: 20,
+  },
 
-    inputHalf: {
-        width: "60%",
-        marginRight: "5%",
-    },
+  checkboxContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    alignItems: "flex-start",
+  },
 
+  checkbox: {
+    marginRight: 8,
+  },
 
-    inputQuarter: {
-        width: "35%",
-        marginRight: "5%",
-    },
+  input2: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    height: 50,
+    marginLeft: "5%",
+    marginRight: "5%",
+  },
 
+  inputSection: {
+    marginVertical: 15,
+  },
 
-    row: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginHorizontal: 20,
-        marginVertical: 10,
-    },
+  absoluteButtonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
 
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    paddingLeft: 5,
+  },
 
-    stepper: {
-        marginHorizontal: 20,
-    },
+  textInput: {
+    height: 51,
+    borderColor: "gray",
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+  },
 
-
-    checkboxContainer: {
-        flexDirection: "row",
-        marginBottom: 20,
-        alignItems: "flex-start",
-    },
-
-
-    checkbox: {
-        marginRight: 8,
-    },
-
-
-    input2: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 5,
-        padding: 10,
-        marginBottom: 10,
-        height: 50,
-        marginLeft: '5%',
-        marginRight: '5%'
-    },
-
-    inputSection: {
-        marginVertical: 15
-    },
-
-    absoluteButtonContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-    },
-
-    errorText: {
-        color: "red",
-        fontSize: 12,
-        paddingLeft: 5
-    },
-
-    textInput: {
-        height: 51,
-        borderColor: "gray",
-        borderWidth: 1,
-        padding: 10,
-        borderRadius: 5,
-    },
-
-    title: {
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 20,
-        marginTop: 20,
-    },
-
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    marginTop: 20,
+  },
 });

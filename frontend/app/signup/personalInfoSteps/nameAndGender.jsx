@@ -10,9 +10,7 @@ import { useRecoilState } from "recoil";
 import { userDetailsState } from "../../../GlobalState/userDetailState";
 import { userInfoGatherState } from "../../../GlobalState/userDetailState";
 import { useTranslation } from "react-i18next";
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const nameAndGender = ({ onNext }) => {
   const [name, setName] = useState("");
@@ -108,20 +106,18 @@ const nameAndGender = ({ onNext }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-
       <Stepper
         currentStep={progressData[0].actualstep}
         totalSteps={totalSteps}
       />
 
       <ScrollView style={styles.content}>
-
         <Text style={styles.title}>{t("nameAndGenderScreen.pageTitle")}</Text>
 
         <View style={styles.inputSection}>
           <Controller
             control={control}
-            name='name'
+            name="name"
             rules={{ required: t("nameAndGenderScreen.firstNameRequired") }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInputLarge
@@ -143,7 +139,7 @@ const nameAndGender = ({ onNext }) => {
         <View style={styles.inputSection}>
           <Controller
             control={control}
-            name='lastName'
+            name="lastName"
             rules={{ required: t("nameAndGenderScreen.lastNameRequired") }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInputLarge
@@ -169,30 +165,30 @@ const nameAndGender = ({ onNext }) => {
         <View style={styles.inputSection}>
           <Controller
             control={control}
-            name='gender'
+            name="gender"
             rules={{ required: t("nameAndGenderScreen.genderRequired") }}
             render={({ field: { onChange, value } }) => (
               <View style={styles.genderButtonContainer}>
                 <View style={styles.inputSection}>
                   <GenderButton
                     title={t("nameAndGenderScreen.male")}
-                    gender='M'
+                    gender="M"
                     isSelected={value === "M"}
                     onPress={onChange}
                   />
                 </View>
                 <View style={styles.inputSection}>
                   <GenderButton
-                    title={t('nameAndGenderScreen.female')}
-                    gender='F'
+                    title={t("nameAndGenderScreen.female")}
+                    gender="F"
                     isSelected={value === "F"}
                     onPress={onChange}
                   />
                 </View>
                 <View style={styles.inputSection}>
                   <GenderButton
-                    title={t('nameAndGenderScreen.nonBinary')}
-                    gender='non-binary'
+                    title={t("nameAndGenderScreen.nonBinary")}
+                    gender="non-binary"
                     isSelected={value === "non-binary"}
                     onPress={onChange}
                   />
@@ -219,17 +215,16 @@ const nameAndGender = ({ onNext }) => {
 };
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "stretch",
     padding: 20,
-    paddingTop:0
+    paddingTop: 0,
   },
 
   content: {
-    paddingTop:20
+    paddingTop: 20,
   },
 
   absoluteButtonContainer: {
@@ -285,7 +280,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-   
   },
 });
 

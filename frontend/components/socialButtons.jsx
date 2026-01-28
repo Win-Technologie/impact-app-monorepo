@@ -1,5 +1,5 @@
-import React from 'react';
-import { TouchableOpacity, Image, Text } from 'react-native';
+import React from "react";
+import { TouchableOpacity, Image, Text } from "react-native";
 
 const SocialButton = ({ source, onPress, text }) => (
   <TouchableOpacity
@@ -11,7 +11,7 @@ const SocialButton = ({ source, onPress, text }) => (
       height: 52,
       borderWidth: 1,
       borderColor: "white",
-      justifyContent: 'center',
+      justifyContent: "center",
       borderRadius: 5,
       marginRight: 4,
       backgroundColor: "white",

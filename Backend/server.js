@@ -3,19 +3,22 @@
 // La connexion à la base de données MongoDB est établie grâce à la fonction connectToMongo du fichier 'mongoConnection'.
 // Les routes de l'application sont définies dans les fichiers 'routes/payments/payments.routes' et 'routes/projects/projects.routes'.
 // Le serveur écoute sur le port défini par la variable d'environnement PORT ou sur le port 8000 par défaut.
-require('dotenv').config(); // lecteur de variables d'environnement 
+require("dotenv").config(); // lecteur de variables d'environnement
 // MODULES
-const express = require('express');
-const mongoose = require('mongoose');
-const session = require('express-session');
-const flash = require('connect-flash');
-const path = require('path');
-const cors = require('cors');
-const cron = require('node-cron');
-const { connectToMongo } = require('./mongoConnection');
-const { removeRevokedTokens } = require('./utils/jwt');
-const { sendExpirationImmatriculationNotifications, sendExpirationDriverLicensesNotifications, sendExpirationInsuranceNotifications } = require("./utils/cron");
-
+const express = require("express");
+const mongoose = require("mongoose");
+const session = require("express-session");
+const flash = require("connect-flash");
+const path = require("path");
+const cors = require("cors");
+const cron = require("node-cron");
+const { connectToMongo } = require("./mongoConnection");
+const { removeRevokedTokens } = require("./utils/jwt");
+const {
+  sendExpirationImmatriculationNotifications,
+  sendExpirationDriverLicensesNotifications,
+  sendExpirationInsuranceNotifications,
+} = require("./utils/cron");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -25,30 +28,32 @@ const CHECKEXPIRATIONTIMER = process.env.CRONTIMER_DAILY1AM;
 //const CHECKEXPIRATIONTIMER = process.env.CRONTIMER_EVERYMINUTE;
 
 // Routes
-const userRoutes = require('./routes/user/user.routes');
-const vehicleRoutes = require('./routes/vehicle/vehicle.routes');
-const insuranceRoutes = require('./routes/insurance/insurance.routes');
-const onfidoRoutes = require('./routes/onfido/onfido.routes');
-const veriffRoutes = require('./routes/veriff/veriff.routes');
-const driverLicenseRoutes = require('./routes/driverLicense/driverLicense.routes');
-const accidentReportRoutes = require('./routes/accidentReport/accidentReport.routes');
+const userRoutes = require("./routes/user/user.routes");
+const vehicleRoutes = require("./routes/vehicle/vehicle.routes");
+const insuranceRoutes = require("./routes/insurance/insurance.routes");
+const onfidoRoutes = require("./routes/onfido/onfido.routes");
+const veriffRoutes = require("./routes/veriff/veriff.routes");
+const driverLicenseRoutes = require("./routes/driverLicense/driverLicense.routes");
+const accidentReportRoutes = require("./routes/accidentReport/accidentReport.routes");
 
 connectToMongo();
 
 // // Express body parser
-app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Augmentez la limite selon vos besoins
-app.use(express.json({ limit: '10mb' })); // Augmentez la limite selon vos besoins
+app.use(express.urlencoded({ extended: true, limit: "10mb" })); // Augmentez la limite selon vos besoins
+app.use(express.json({ limit: "10mb" })); // Augmentez la limite selon vos besoins
 
 // // Express body parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // // Configuration d'express-session
-app.use(session({
-    secret: 'votre_secret_session', // Remplacez par une chaîne aléatoire et sécurisée
+app.use(
+  session({
+    secret: "votre_secret_session", // Remplacez par une chaîne aléatoire et sécurisée
     resave: true,
     saveUninitialized: true,
-}));
+  }),
+);
 
 // // Utilisation de CORS middleware
 app.use(cors());
@@ -58,67 +63,77 @@ app.use(flash());
 
 // Global variables for flash messages
 app.use((req, res, next) => {
-    res.locals.success_msg = req.flash('success_msg');
-    res.locals.error_msg = req.flash('error_msg');
-    res.locals.error = req.flash('error');
-    next();
+  res.locals.success_msg = req.flash("success_msg");
+  res.locals.error_msg = req.flash("error_msg");
+  res.locals.error = req.flash("error");
+  next();
 });
 
 // Configuration pour utiliser les fichiers statiques du dossier "uploads".
 app.use("/Backend/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.use('/api/users', userRoutes);
-app.use('/api/vehicles', vehicleRoutes);
-app.use('/api/insurances', insuranceRoutes);
-app.use('/api/onfido', onfidoRoutes);
-app.use('/api/dl', driverLicenseRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/insurances", insuranceRoutes);
+app.use("/api/onfido", onfidoRoutes);
+app.use("/api/dl", driverLicenseRoutes);
 
-app.use('/api/veriff', veriffRoutes);
+app.use("/api/veriff", veriffRoutes);
 
-app.use('/api/accidents',accidentReportRoutes);
+app.use("/api/accidents", accidentReportRoutes);
 
 // Programmation de tâches qui s'exécutent automatiquement après un certain laps de temps
-cron.schedule(`${MYCRONTIMER}`, async () => {
-    console.log('Exécution du nettoyage des tokens révoqués...');
+cron.schedule(
+  `${MYCRONTIMER}`,
+  async () => {
+    console.log("Exécution du nettoyage des tokens révoqués...");
     // await removeRevokedTokens();
     removeRevokedTokens()
-        .then((result) => {
-            if (result) {
-                console.log('Les tokens révoqués ont été supprimés avec succès.');
-            } else {
-                console.log("Une erreur s'est produite lors de la suppression des tokens révoqués");
-            }
-        })
-        .catch((error) => {
-            console.error('Erreur lors de la suppression des tokens révoqués :', error);
-        });
-
-}, {
+      .then((result) => {
+        if (result) {
+          console.log("Les tokens révoqués ont été supprimés avec succès.");
+        } else {
+          console.log(
+            "Une erreur s'est produite lors de la suppression des tokens révoqués",
+          );
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "Erreur lors de la suppression des tokens révoqués :",
+          error,
+        );
+      });
+  },
+  {
     scheduled: true,
-    timezone: "America/New_York" // Régler le fuseau horaire en fonction de votre lieu de résidence
-});
-
+    timezone: "America/New_York", // Régler le fuseau horaire en fonction de votre lieu de résidence
+  },
+);
 
 //Programmer une tâche cron pour envoyer des notifications d'expiration
-cron.schedule(CHECKEXPIRATIONTIMER, async () => {
-    console.log("Exécution de la révision des certificats d'immatriculation proches de l'expiration...");
+cron.schedule(
+  CHECKEXPIRATIONTIMER,
+  async () => {
+    console.log(
+      "Exécution de la révision des certificats d'immatriculation proches de l'expiration...",
+    );
     try {
-
-        // await sendExpirationImmatriculationNotifications();
-
-        // await sendExpirationDriverLicensesNotifications();
-
-        // await sendExpirationInsuranceNotifications();
-
+      // await sendExpirationImmatriculationNotifications();
+      // await sendExpirationDriverLicensesNotifications();
+      // await sendExpirationInsuranceNotifications();
     } catch (error) {
-        console.error("Erreur lors de l'exécution de la tâche cron pour envoyer les notifications d'expiration :", error);
+      console.error(
+        "Erreur lors de l'exécution de la tâche cron pour envoyer les notifications d'expiration :",
+        error,
+      );
     }
-}, {
+  },
+  {
     scheduled: true,
-    timezone: "America/New_York"
-});
-
-
+    timezone: "America/New_York",
+  },
+);
 
 // Start the server
 app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));

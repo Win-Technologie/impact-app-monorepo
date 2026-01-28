@@ -1,24 +1,24 @@
-import { atom } from 'recoil';
+import { atom } from "recoil";
 
 export const VehicleUserInfoState = atom({
-  key: 'vehicleUserInfoState',
+  key: "vehicleUserInfoState",
   default: {
-    brand: '',
-    model: '',
-    year: '',
-    color: '',
-    plate: '',
-    serialNumber: '',
+    brand: "",
+    model: "",
+    year: "",
+    color: "",
+    plate: "",
+    serialNumber: "",
     immatriculation: {
-      categorieUsage: '',
-      cylindree: '',
-      dateDelivrance: '',
-      dateExpiration: '',
-      masseNette: '',
-      numeroCertificatImmatriculation: '',
-      numeroDossier: '',
-      numeroEssieux: '',
-      serialNumber: '',
+      categorieUsage: "",
+      cylindree: "",
+      dateDelivrance: "",
+      dateExpiration: "",
+      masseNette: "",
+      numeroCertificatImmatriculation: "",
+      numeroDossier: "",
+      numeroEssieux: "",
+      serialNumber: "",
     },
   },
 });

@@ -26,7 +26,6 @@
 // });
 // const carImageUpload = multer({ storage: carImageStorage });
 
-
 // module.exports = {
 //     avatarUpload,
 //     carImageUpload

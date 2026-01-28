@@ -1,7 +1,7 @@
 // GlobalState/selectedVehicleState.js
-import { atom } from 'recoil';
+import { atom } from "recoil";
 
 export const SelectedVehicleState = atom({
-  key: 'selectedVehicleState',
+  key: "selectedVehicleState",
   default: null,
 });

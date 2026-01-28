@@ -18,19 +18,17 @@ import { vehicleDetailsState } from "../../../GlobalState/vehiculeState";
 import { userInfoGatherState } from "../../../GlobalState/userDetailState";
 import { DatePickerInput } from "react-native-paper-dates";
 import { useTranslation } from "react-i18next";
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VehicleDetails() {
-    const [keyboardIsOpen, setKeyboardIsOpen] = React.useState(false);
-    const actuaYear = '2024';
+  const [keyboardIsOpen, setKeyboardIsOpen] = React.useState(false);
+  const actuaYear = "2024";
   const [vehicleDetails, setVehicleDetails] =
     useRecoilState(vehicleDetailsState);
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const {
     control,
@@ -93,21 +91,20 @@ export default function VehicleDetails() {
 
   return (
     <SafeAreaView style={styles.container}>
-
       <Stepper
         currentStep={progressData[1].actualstep}
         totalSteps={totalSteps}
       />
 
       <ScrollView style={styles.content}>
-      <Text style={styles.title}>{t('vehicleDetails.modelTitle')}</Text>
+        <Text style={styles.title}>{t("vehicleDetails.modelTitle")}</Text>
         <View style={styles.inputSection}>
           <Controller
             control={control}
-            rules={{ required: t('vehicleDetails.brandRequired') }}
+            rules={{ required: t("vehicleDetails.brandRequired") }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-              placeholder={t('vehicleDetails.brandPlaceholder')}
+                placeholder={t("vehicleDetails.brandPlaceholder")}
                 style={styles.textInput}
                 onBlur={onBlur}
                 value={value} // Utiliser 'value' du contrôleur ici
@@ -117,7 +114,7 @@ export default function VehicleDetails() {
                 }}
               />
             )}
-            name='marque'
+            name="marque"
           />
 
           {errors.marque && (
@@ -130,11 +127,11 @@ export default function VehicleDetails() {
             <View style={{ flex: 1.5, marginRight: 10 }}>
               <Controller
                 control={control}
-                rules={{ required: t('vehicleDetails.modelRequired') }}
+                rules={{ required: t("vehicleDetails.modelRequired") }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                  placeholder={t('vehicleDetails.modelPlaceholder')}
-                  style={styles.textInput}
+                    placeholder={t("vehicleDetails.modelPlaceholder")}
+                    style={styles.textInput}
                     onBlur={onBlur}
                     value={value} // Utiliser 'value' du contrôleur ici
                     onChangeText={(text) => {
@@ -143,7 +140,7 @@ export default function VehicleDetails() {
                     }}
                   />
                 )}
-                name='modele'
+                name="modele"
               />
 
               {errors.modele && (
@@ -154,13 +151,13 @@ export default function VehicleDetails() {
             <View style={{ flex: 1.5 }}>
               <Controller
                 control={control}
-                name='annee'
+                name="annee"
                 rules={{
-                    required: t('vehicleDetails.yearRequired'),
+                  required: t("vehicleDetails.yearRequired"),
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
-                    placeholder={t('vehicleDetails.yearPlaceholder')}
+                    placeholder={t("vehicleDetails.yearPlaceholder")}
                     style={styles.textInput}
                     keyboardType="numeric"
                     onBlur={onBlur}
@@ -180,27 +177,25 @@ export default function VehicleDetails() {
           </View>
         </View>
 
-        <Text style={styles.title}>
-            {t('vehicleDetails.colorTitle')}
-        </Text>
+        <Text style={styles.title}>{t("vehicleDetails.colorTitle")}</Text>
 
         <View style={styles.inputSection}>
           <Controller
             control={control}
-            rules={{ required: t('vehicleDetails.colorRequired') }}
+            rules={{ required: t("vehicleDetails.colorRequired") }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                  placeholder={t('vehicleDetails.colorPlaceholder')}
-                  style={[styles.textInput]}
-                  onBlur={onBlur}
-                  value={value} // Utiliser 'value' du contrôleur ici
-                  onChangeText={(text) => {
-                      handleInputChange("vehicleColor", text);
-                      onChange(text); // Mettre à jour la valeur dans 'react-hook-form'
-                  }}
+                placeholder={t("vehicleDetails.colorPlaceholder")}
+                style={[styles.textInput]}
+                onBlur={onBlur}
+                value={value} // Utiliser 'value' du contrôleur ici
+                onChangeText={(text) => {
+                  handleInputChange("vehicleColor", text);
+                  onChange(text); // Mettre à jour la valeur dans 'react-hook-form'
+                }}
               />
             )}
-            name='couleur'
+            name="couleur"
           />
 
           {errors.couleur && (
@@ -209,23 +204,26 @@ export default function VehicleDetails() {
         </View>
 
         <Text style={styles.title}>
-            {t('vehicleDetails.serialNumberTitle')}     
-         </Text>
+          {t("vehicleDetails.serialNumberTitle")}
+        </Text>
 
         <View style={styles.inputSection}>
           <Controller
             control={control}
-            name='serialNumber'
+            name="serialNumber"
             rules={{
-              required: t('vehicleDetails.serialNumberRequired'),
+              required: t("vehicleDetails.serialNumberRequired"),
               minLength: {
                 value: 5,
-                  message: t('vehicleDetails.serialNumberRequired') + " - " + t('vehicleDetails.serialNumberMinLength')
+                message:
+                  t("vehicleDetails.serialNumberRequired") +
+                  " - " +
+                  t("vehicleDetails.serialNumberMinLength"),
               },
             }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
-                placeholder={t('vehicleDetails.serialNumberPlaceholder')}
+                placeholder={t("vehicleDetails.serialNumberPlaceholder")}
                 style={[styles.textInput]}
                 onBlur={onBlur}
                 value={value} // Utiliser 'value' du contrôleur ici
@@ -260,16 +258,16 @@ export default function VehicleDetails() {
 }
 
 const styles = StyleSheet.create({
-   container: {
+  container: {
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "stretch",
     padding: 20,
-    paddingTop:0
+    paddingTop: 0,
   },
 
   content: {
-    paddingTop:20
+    paddingTop: 20,
   },
 
   absoluteButtonContainer: {

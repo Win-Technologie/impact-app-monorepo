@@ -1,5 +1,4 @@
 {
-
   "french": "French",
   "english": "English",
   "signin": "SignIn",
@@ -394,8 +393,6 @@
     "accidents": "accidents"
   },
 
-
-
   "addVehicle": {
     "title": "Add a Vehicle",
     "vehicleBrand": "Vehicle Brand",
@@ -443,7 +440,6 @@
     "vehicleOwnerPostalCode": "Postal Code",
     "vehicleOwnerPostalCodeRequired": "Postal code is required",
     "country": "Country"
-    
   },
 
   "common": {
@@ -561,14 +557,10 @@
     "learnMoreButton": "Learn more about Impact"
   },
 
-
   "verified": {
     "verifyyouremail": "Validation de votre email address",
     "validationmessage": "We have sent you a temporary code to your email address. Please enter this code to validate your email address",
     "validationcode": "Validation Code",
     "resendanewvalidationcode": "resend a new validationcode"
   }
-
-
-
 }

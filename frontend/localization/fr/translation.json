@@ -1,5 +1,4 @@
 {
-
   "french": "Français",
   "english": "Anglais",
   "signin": "Connexion",
@@ -8,7 +7,6 @@
   "language": "Langue",
   "error": "Erreur",
   "back": "Retour",
-
 
   "signUpPage": {
     "emailerrormessage": "L'email doit être au format **@**.**",
@@ -28,10 +26,7 @@
     "alreadyuseEmail": "Adresse email dejà utilisé",
     "youmusthavecompletedalltheinformationcollectionsteps": "Vous devez avoir complété toutes les étapes de collecte d'informations",
     "mustscanyourlicence": "Vous devez avoir complété toutes les étapes de collectes d'informations et faire vérifier votre permis de conduire"
-
   },
-
-
 
   "signInPage": {
     "emailrequired": "Email requis",
@@ -45,8 +40,6 @@
     "invalidemailorpassword": "Mot de passe ou email invalide",
     "alreadyuseEmail": "Adresse email dejà utilisée"
   },
-
-
 
   "account": {
     "modifyyourprofil": "Modifier votre profil",
@@ -63,7 +56,6 @@
     "Login": "Me déconnecter"
   },
 
-
   "mainScreen": {
     "complicatedSituationTitle": "À chaque situation compliquée, sa solution simple",
     "complicatedSituationDescription": "Nous savons qu'un accident n'est pas un évènement facile. C'est pour cette raison que l'application Impact vous aidera en vous guidant dans la démarche à suivre suite à un accident.",
@@ -72,7 +64,6 @@
     "dataSecurityTitle": "La sécurité des données est une valeur que nous prônons",
     "dataSecurityDescription": "L'échange d'informations personnelles demande un haut niveau de cybersécurité. Votre confiance étant notre priorité, nous vous assurons donc une totale sécurité"
   },
-
 
   "homeScreen": {
     "welcome": "Bienvenue",
@@ -88,7 +79,6 @@
     "declareIncident": "Déclarer un incident"
   },
 
-
   "forgottenPasswordScreen": {
     "back": "Retour",
     "header": "Mot de passe oublié?",
@@ -102,7 +92,6 @@
     "emailErrorMessage": "L'adresse courriel n'a pas été trouvée.",
     "genericErrorMessage": "Une erreur est survenue."
   },
-
 
   "nameAndGenderScreen": {
     "pageTitle": "Quel est votre nom complet ?",
@@ -118,7 +107,6 @@
     "continue": "Continuer",
     "back": "Retour"
   },
-
 
   "insuranceScreen": {
     "pageTitle": "Veuillez fournir votre permis de conduire",
@@ -177,7 +165,6 @@
     "fourcarminimum": "4 charatère au  minimum"
   },
 
-
   "passwordResetVerification": {
     "header": "Réinitialisation du mot de passe",
     "verificationCodePlaceholder": "Code de vérification",
@@ -191,9 +178,6 @@
     "passwordResetSuccess": "Votre mot de passe a été réinitialisé avec succès.",
     "passwordResetError": "Erreur lors de la réinitialisation du mot de passe"
   },
-
-
-
 
   "dobScreen": {
     "title": "Date de naissance",
@@ -223,7 +207,6 @@
     "drivenlicencesave": "Votre permis de conduite a été vérifié et enregistré.",
     "end": "Terminer"
   },
-
 
   "vehicleDetails": {
     "pageTitle": "Détails du véhicule",
@@ -414,8 +397,6 @@
     "accidents": "accidents"
   },
 
-
-
   "common": {
     "save": "Enregistrer",
     "back": "Retour",
@@ -478,7 +459,6 @@
     "ownerProvince": "Province du propriétaire"
   },
 
-
   "about": {
     "title": "À propos d'",
     "text1": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.",
@@ -486,7 +466,6 @@
     "text3": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.",
     "accessFaq": "Accéder à la FAQ"
   },
-
 
   "faq": {
     "title": "Foire aux questions",
@@ -523,8 +502,6 @@
     "privacyPolicySubtitle": "Informations que nous recevons et ce que nous en faisons.",
     "learnMoreButton": "En savoir plus sur Impact"
   },
-
-
 
   "addVehicle": {
     "title": "Ajout d'un véhicule",
@@ -576,7 +553,6 @@
     "vehicleBrand": "Marque du véhicule"
   },
 
-
   "verified": {
     "verifyyouremail": "Validation de votre adresse email",
     "validationmessage": "Nous vous avons envoyé un code temporaire à votre adresse email. Veuillez entrer ce code afin de valider votre adresse email",
@@ -584,7 +560,6 @@
     "coderequired": "Code de validation requis",
     "resendanewvalidationcode": "Renvoyez un nouveau code validation"
   },
-
 
   "addInsurance": {
     "title": "Ajouter une assurance",
@@ -594,6 +569,4 @@
     "submit": "Soumettre",
     "successMessage": "Assurance ajoutée avec succès!"
   }
-
-
 }

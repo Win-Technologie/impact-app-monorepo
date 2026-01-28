@@ -1,37 +1,54 @@
 const { Router } = require("express");
 const router = Router();
 //MIDDLEWARES
-const userAuth = require('../../auth/jwt.authenticated.js')
+const userAuth = require("../../auth/jwt.authenticated.js");
 //CONTROLLERS
-const veriffController = require('../../controllers/veriff/veriff.controller.js');
-const veriffWebHookController = require('../../controllers/veriff/veriff.webhooks.controller.js')
+const veriffController = require("../../controllers/veriff/veriff.controller.js");
+const veriffWebHookController = require("../../controllers/veriff/veriff.webhooks.controller.js");
 // VARIABLES
 const VERIFF_ROUTER_PATH = process.env.VERIFF_ROUTER_PATH;
 // ADMIN FILES AND IMAGES
-const multiparty = require('connect-multiparty');
+const multiparty = require("connect-multiparty");
 // IMAGES PATH
 const md_uploadPdf = multiparty({ uploadDir: `${VERIFF_ROUTER_PATH}` });
 
-
-
 // Create a new user verification session on Veriff
-router.post('/sessions', [userAuth.ensureAuth, md_uploadPdf], veriffController.NewVeriffSession);
+router.post(
+  "/sessions",
+  [userAuth.ensureAuth, md_uploadPdf],
+  veriffController.NewVeriffSession,
+);
 // Delete a user verification session on Veriff
-router.delete('/sessions/:sessionId', [userAuth.ensureAuth], veriffController.deleteVeriffSession);
-// Get person info 
-router.get('/sessions/:sessionId', [userAuth.ensureAuth], veriffController.getVeriffPersonInfo);
+router.delete(
+  "/sessions/:sessionId",
+  [userAuth.ensureAuth],
+  veriffController.deleteVeriffSession,
+);
+// Get person info
+router.get(
+  "/sessions/:sessionId",
+  [userAuth.ensureAuth],
+  veriffController.getVeriffPersonInfo,
+);
 // uploadDocumentToVeriffSession
 //router.post('/sessions/media/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.uploadDocumentToVeriffSession);
-// uploadDocument 
-router.post('/sessions/media/uploadDocuments/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.uploadDocuments);
+// uploadDocument
+router.post(
+  "/sessions/media/uploadDocuments/:sessionId",
+  [userAuth.ensureAuth, md_uploadPdf],
+  veriffController.uploadDocuments,
+);
 //Check a session decision
 // router.get('/decision/:sessionId?"', [userAuth.ensureAuth], veriffController.veriffCheckDecision);
 
-router.get('/decision/:sessionId', [userAuth.ensureAuth, md_uploadPdf], veriffController.checkDecision);
+router.get(
+  "/decision/:sessionId",
+  [userAuth.ensureAuth, md_uploadPdf],
+  veriffController.checkDecision,
+);
 
 //WEBHOOKS
- router.post('/webhook/decisions', veriffWebHookController.webhookDecisions);
- router.post('/webhook/events', veriffWebHookController.webHookEvents);
-
+router.post("/webhook/decisions", veriffWebHookController.webhookDecisions);
+router.post("/webhook/events", veriffWebHookController.webHookEvents);
 
 module.exports = router;

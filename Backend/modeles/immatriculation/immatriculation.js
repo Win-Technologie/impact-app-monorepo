@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 // Schéma de l'immatriculation
 // Pour l'instant utiliser celui de vehicule js
@@ -6,35 +6,37 @@ const immatriculationSchema = new mongoose.Schema({
   certificateNumber: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
   issueDate: {
     type: Date,
-    required: true
+    required: true,
   },
   expirationDate: {
     type: Date,
-    required: true
+    required: true,
   },
   ESSIEUXNumber: {
-    type: Number 
+    type: Number,
   },
   netWeight: {
-    type: Number
+    type: Number,
   },
   engineDisplacement: {
-    type: Number
+    type: Number,
   },
   fileNumber: {
-    type: String
+    type: String,
   },
   usageCategory: {
-    type: String
-  }
+    type: String,
+  },
 });
 
-
 // Modèle immatriculation basé sur le schéma
-const Immatriculation = mongoose.model('immatriculations', immatriculationSchema);
+const Immatriculation = mongoose.model(
+  "immatriculations",
+  immatriculationSchema,
+);
 
 module.exports = Immatriculation;

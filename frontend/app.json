@@ -12,9 +12,7 @@
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -23,7 +21,6 @@
       "bundleIdentifier": "com.anonymous.impact11"
     },
     "android": {
-     
       "permissions": [
         "CAMERA",
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -39,9 +36,7 @@
       [
         "expo-font",
         {
-          "fonts": [
-            "./assets/Font/InterDynamic.ttf"
-          ]
+          "fonts": ["./assets/Font/InterDynamic.ttf"]
         }
       ],
       [

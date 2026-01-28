@@ -19,8 +19,6 @@ import SelectDropdown from "react-native-select-dropdown";
 import { AntDesign } from "@expo/vector-icons";
 import { getMyVehicles } from "../../../api/users/userApi";
 
-
-
 const QRCodePage = () => {
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
   const [qrValue, setQrValue] = useState(""); // Initial QR code value
@@ -28,117 +26,114 @@ const QRCodePage = () => {
   const [allVehicles, setAllVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [errorVehicleState, setErrorVehicleState] = useState("");
-  const [textData, setTextData] = useState("");  // State to hold the text data
+  const [textData, setTextData] = useState(""); // State to hold the text data
   const ENDPOINT = "vehicles/";
-
-
 
   useEffect(() => {
     loadVehicles();
   }, []);
-  
-    const fetchTokenAndQR = async (vehicleId) => {
-      const token = await AsyncStorage.getItem("userToken");
-      const API_URL = process.env.EXPO_PUBLIC_API_URL;
-      if (!API_URL) {
-        console.error("API URL is not defined");
-        return;
-      }
-      if (!vehicleId) {
-        console.error("No vehicle ID provided for QR code generation");
-        return;
-      }
-    
-      try {
-        const response = await fetch(`${API_URL}users/code/generate`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ vehicleId }) // Make sure this matches server expectations
-        });
-    
-        const data = await response.json(); // Adjust according to the server response
-        if (response.ok) {
-          setQrImageUri(data.qrImage);
-          setTextData(data.AlphNumCode);
-        } else {
-          throw new Error(data.msg || "Failed to fetch QR code");
-        }
-      } catch (error) {
-        console.error("Error fetching QR code:", error.message);
-      }
-    };
-    
-  
 
-    const loadVehicles = async () => {
-      const userToken = await AsyncStorage.getItem("userToken");
-      const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
-      if (vehiclesResponse.status === 200) {
-        setAllVehicles(vehiclesResponse.data.cars);
-      } else {
-        console.error("Failed to fetch vehicles:", vehiclesResponse.message);
-      }
-    };
-  
+  const fetchTokenAndQR = async (vehicleId) => {
+    const token = await AsyncStorage.getItem("userToken");
+    const API_URL = process.env.EXPO_PUBLIC_API_URL;
+    if (!API_URL) {
+      console.error("API URL is not defined");
+      return;
+    }
+    if (!vehicleId) {
+      console.error("No vehicle ID provided for QR code generation");
+      return;
+    }
 
-    const handleVehicleSelect = (selectedItem) => {
-      // Using selectedItem._id since the object uses _id as shown in your error log
-      const vehicleId = selectedItem._id;
-      if (vehicleId) {
-        setSelectedVehicleId(vehicleId);
-        fetchTokenAndQR(vehicleId); // Fetch QR Code using the correct vehicle ID
-        setErrorVehicleState(""); // Clear any previous errors
+    try {
+      const response = await fetch(`${API_URL}users/code/generate`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ vehicleId }), // Make sure this matches server expectations
+      });
+
+      const data = await response.json(); // Adjust according to the server response
+      if (response.ok) {
+        setQrImageUri(data.qrImage);
+        setTextData(data.AlphNumCode);
       } else {
-        console.error("Selected item is invalid:", selectedItem);
-        setErrorVehicleState("Invalid vehicle selection. Please try again.");
+        throw new Error(data.msg || "Failed to fetch QR code");
       }
-    };
-    
-    
+    } catch (error) {
+      console.error("Error fetching QR code:", error.message);
+    }
+  };
+
+  const loadVehicles = async () => {
+    const userToken = await AsyncStorage.getItem("userToken");
+    const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
+    if (vehiclesResponse.status === 200) {
+      setAllVehicles(vehiclesResponse.data.cars);
+    } else {
+      console.error("Failed to fetch vehicles:", vehiclesResponse.message);
+    }
+  };
+
+  const handleVehicleSelect = (selectedItem) => {
+    // Using selectedItem._id since the object uses _id as shown in your error log
+    const vehicleId = selectedItem._id;
+    if (vehicleId) {
+      setSelectedVehicleId(vehicleId);
+      fetchTokenAndQR(vehicleId); // Fetch QR Code using the correct vehicle ID
+      setErrorVehicleState(""); // Clear any previous errors
+    } else {
+      console.error("Selected item is invalid:", selectedItem);
+      setErrorVehicleState("Invalid vehicle selection. Please try again.");
+    }
+  };
 
   const handleButton = () => {
     if (selectedVehicleId === "") {
       setErrorVehicleState("Ce champ est obligatoire");
     } else if (!qrImageUri) {
-      setErrorVehicleState("QR code not available. Please select a vehicle again.");
+      setErrorVehicleState(
+        "QR code not available. Please select a vehicle again.",
+      );
     } else {
       setErrorVehicleState("");
       setVehiculeState(selectedVehicleId); // Assuming this sets some global state or performs further actions
       router.push("/getinformation");
     }
   };
-  
 
   return (
     <SafeAreaView style={styles.container}>
-       <View style={styles.headersContainer}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <View style={styles.headerIcon}>
-              <AntDesign name='arrowleft' size={24} color='black' />
-              <Text>Retour</Text>
-            </View>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Fournir mes informations</Text>
-        </View>
-        <View style={styles.selectContainer}>
-          <Text style={styles.titleSelect}>Veuillez sélectionner le véhicule impliqué dans l'accident:</Text>
-          <SelectDropdown
-  data={allVehicles}
-  onSelect={(selectedItem) => handleVehicleSelect(selectedItem)}  // Pass the full selected item
-  buttonTextAfterSelection={(selectedItem) => selectedItem.model}
-  rowTextForSelection={(item) => item.model}
-  buttonStyle={styles.dropdown1BtnStyle}
-  buttonTextStyle={styles.dropdown1BtnTxtStyle}
-  dropdownStyle={styles.dropdown1DropdownStyle}
-  rowStyle={styles.dropdown1RowStyle}
-  rowTextStyle={styles.dropdown1RowTxtStyle}
-  renderDropdownIcon={() => <AntDesign name="down" size={14} color="gray" />}
-/>
-
-        </View>
+      <View style={styles.headersContainer}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <View style={styles.headerIcon}>
+            <AntDesign name="arrowleft" size={24} color="black" />
+            <Text>Retour</Text>
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Fournir mes informations</Text>
+      </View>
+      <View style={styles.selectContainer}>
+        <Text style={styles.titleSelect}>
+          Veuillez sélectionner le véhicule impliqué dans l'accident:
+        </Text>
+        <SelectDropdown
+          data={allVehicles}
+          onSelect={(selectedItem) => handleVehicleSelect(selectedItem)} // Pass the full selected item
+          buttonTextAfterSelection={(selectedItem) => selectedItem.model}
+          rowTextForSelection={(item) => item.model}
+          buttonStyle={styles.dropdown1BtnStyle}
+          buttonTextStyle={styles.dropdown1BtnTxtStyle}
+          dropdownStyle={styles.dropdown1DropdownStyle}
+          rowStyle={styles.dropdown1RowStyle}
+          rowTextStyle={styles.dropdown1RowTxtStyle}
+          renderDropdownIcon={() => (
+            <AntDesign name="down" size={14} color="gray" />
+          )}
+        />
+      </View>
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <View style={styles.qrContainer}>
           {qrImageUri ? (
@@ -152,8 +147,10 @@ const QRCodePage = () => {
                 onPress={() => console.log("clicked")}
                 style={styles.iconButton}
               >
-                <Icon name='content-copy' size={36} color='#FFF' />
-                <Text style={styles.textStyle}>{textData.toUpperCase() || "Some Text"}</Text>
+                <Icon name="content-copy" size={36} color="#FFF" />
+                <Text style={styles.textStyle}>
+                  {textData.toUpperCase() || "Some Text"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -166,28 +163,28 @@ const QRCodePage = () => {
             style={styles.infoBox}
             onPress={() => router.push("/personalInfo")}
           >
-            <Icon name='person' size={34} color='#19363C' />
+            <Icon name="person" size={34} color="#19363C" />
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoTextPerso}>
                 Informations personnelles
               </Text>
               <Text style={styles.subInfoTextPerso}>Nom,âge,adresse...</Text>
             </View>
-            <Icon name='chevron-right' size={30} color='#000' />
+            <Icon name="chevron-right" size={30} color="#000" />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.infoBox}
             onPress={() => router.push("/vehicleInfo")}
           >
-            <FontAwesome5 name='car' size={30} color='#19363C' />
+            <FontAwesome5 name="car" size={30} color="#19363C" />
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoTextCar}>Informations du véhicule</Text>
               <Text style={styles.subInfoTextCar}>
                 Modèle,numéro de plaque...
               </Text>
             </View>
-            <Icon name='chevron-right' size={30} color='#000' />
+            <Icon name="chevron-right" size={30} color="#000" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -195,7 +192,7 @@ const QRCodePage = () => {
             onPress={() => router.push("/insuranceInfo")}
           >
             <View style={styles.iconBackground}>
-              <MaterialIcons name='checklist' size={30} color='white' />
+              <MaterialIcons name="checklist" size={30} color="white" />
             </View>
 
             <View style={styles.infoTextContainer}>
@@ -204,7 +201,7 @@ const QRCodePage = () => {
                 Numéro d'assurance, nom de société...
               </Text>
             </View>
-            <Icon name='chevron-right' size={30} color='#000' />
+            <Icon name="chevron-right" size={30} color="#000" />
           </TouchableOpacity>
         </View>
       </ScrollView>

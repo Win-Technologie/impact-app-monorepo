@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useForm, Controller } from "react-hook-form";
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 
@@ -25,12 +25,12 @@ export default function PasswordResetVerification() {
     formState: { errors },
   } = useForm();
   const newPassword = watch("newPassword");
-  const [email, setEmail] = useState('');
-  const {t}= useTranslation();
+  const [email, setEmail] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     async function loadEmail() {
-      const storedEmail = await SecureStore.getItemAsync('userEmail');
+      const storedEmail = await SecureStore.getItemAsync("userEmail");
       if (storedEmail) {
         setEmail(storedEmail);
       }
@@ -42,10 +42,10 @@ export default function PasswordResetVerification() {
   const onSubmit = async (data) => {
     // Vérifier si les mots de passe correspondent
     if (data.newPassword !== data.confirmNewPassword) {
-      Alert.alert(t('passwordResetVerification.passwordsDontMatchError'));
+      Alert.alert(t("passwordResetVerification.passwordsDontMatchError"));
       return;
     }
-  
+
     try {
       // Envoi de la demande de réinitialisation du mot de passe
       const response = await fetch(`${API_URL}users/user/password/verify`, {
@@ -59,42 +59,50 @@ export default function PasswordResetVerification() {
           newPassword: data.newPassword,
         }),
       });
-      
+
       const responseData = await response.json();
       console.log("Verification Code:", data.verificationCode);
       console.log("Response Data:", responseData);
-  
+
       if (response.ok) {
-        Alert.alert(
-          t('passwordResetVerification.passwordResetSuccess'),
-          [
-            { text: "OK", onPress: () => router.push('signIn') }
-          ]
-        );
+        Alert.alert(t("passwordResetVerification.passwordResetSuccess"), [
+          { text: "OK", onPress: () => router.push("signIn") },
+        ]);
       } else {
-        throw new Error(responseData.message || t('passwordResetVerification.passwordResetError'));
+        throw new Error(
+          responseData.message ||
+            t("passwordResetVerification.passwordResetError"),
+        );
       }
     } catch (error) {
-      Alert.alert(t('passwordResetVerification.passwordResetError'), error.message);
+      Alert.alert(
+        t("passwordResetVerification.passwordResetError"),
+        error.message,
+      );
     }
   };
-  
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>{t('passwordResetVerification.header')}</Text>
+      <Text style={styles.headerText}>
+        {t("passwordResetVerification.header")}
+      </Text>
 
       <Controller
         control={control}
-        name='verificationCode'
-        rules={{ required: t('passwordResetVerification.verificationCodeRequired') }}
+        name="verificationCode"
+        rules={{
+          required: t("passwordResetVerification.verificationCodeRequired"),
+        }}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
             style={styles.input}
             onBlur={onBlur}
             onChangeText={onChange}
             value={value}
-            placeholder={t('passwordResetVerification.verificationCodePlaceholder')}
+            placeholder={t(
+              "passwordResetVerification.verificationCodePlaceholder",
+            )}
           />
         )}
       />
@@ -104,7 +112,7 @@ export default function PasswordResetVerification() {
 
       <Controller
         control={control}
-        rules={{ required: t('passwordResetVerification.newPasswordRequired') }}
+        rules={{ required: t("passwordResetVerification.newPasswordRequired") }}
         render={({ field: { onChange, onBlur, value } }) => (
           <View style={styles.inputContainer}>
             <TextInput
@@ -112,7 +120,9 @@ export default function PasswordResetVerification() {
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
-              placeholder={t('passwordResetVerification.newPasswordPlaceholder')}
+              placeholder={t(
+                "passwordResetVerification.newPasswordPlaceholder",
+              )}
               secureTextEntry={passwordVisibility}
             />
             <TouchableOpacity
@@ -122,12 +132,12 @@ export default function PasswordResetVerification() {
               <Ionicons
                 name={passwordVisibility ? "eye-off" : "eye"}
                 size={24}
-                color='black'
+                color="black"
               />
             </TouchableOpacity>
           </View>
         )}
-        name='newPassword'
+        name="newPassword"
       />
       {errors.newPassword && (
         <Text style={styles.errorText}>{errors.newPassword.message}</Text>
@@ -137,7 +147,8 @@ export default function PasswordResetVerification() {
         control={control}
         rules={{
           validate: (value) =>
-            value === newPassword || t('passwordResetVerification.passwordMismatch'),
+            value === newPassword ||
+            t("passwordResetVerification.passwordMismatch"),
         }}
         render={({ field: { onChange, onBlur, value } }) => (
           <View style={styles.inputContainer}>
@@ -146,7 +157,9 @@ export default function PasswordResetVerification() {
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
-              placeholder={t('passwordResetVerification.confirmNewPasswordPlaceholder')}
+              placeholder={t(
+                "passwordResetVerification.confirmNewPasswordPlaceholder",
+              )}
               secureTextEntry={confirmPasswordVisibility}
             />
             <TouchableOpacity
@@ -158,12 +171,12 @@ export default function PasswordResetVerification() {
               <Ionicons
                 name={confirmPasswordVisibility ? "eye-off" : "eye"}
                 size={24}
-                color='black'
+                color="black"
               />
             </TouchableOpacity>
           </View>
         )}
-        name='confirmNewPassword'
+        name="confirmNewPassword"
       />
       {errors.confirmNewPassword && (
         <Text style={styles.errorText}>
@@ -172,7 +185,9 @@ export default function PasswordResetVerification() {
       )}
 
       <TouchableOpacity style={styles.button} onPress={handleSubmit(onSubmit)}>
-        <Text style={styles.buttonText}>{t('passwordResetVerification.confirmButton')}</Text>
+        <Text style={styles.buttonText}>
+          {t("passwordResetVerification.confirmButton")}
+        </Text>
       </TouchableOpacity>
     </View>
   );

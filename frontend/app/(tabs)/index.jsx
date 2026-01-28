@@ -1,94 +1,86 @@
-
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import HomeHeader from "../../components/Home/homeHeader";
 import BoxComponent from "../../components/Home/boxComponent";
 import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import BottomButton from "../../components/Home/bottomButton";
 import { router } from "expo-router";
-import { useNavigation } from 'expo-router';
+import { useNavigation } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Linking from "expo-linking";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
-
 export default function index() {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  const [name, setName] = useState("");
+  const [selfie, setSelfie] = useState(null);
 
-    const { t } = useTranslation();
-    const navigation = useNavigation();
-    const [name, setName] = useState("");
-    const [selfie, setSelfie] = useState(null);
+  const callUrgence = () => {
+    Linking.openURL("tel:911");
+  };
 
-    const callUrgence = () => {
-        Linking.openURL("tel:911");
-    };
+  const callRemorcage = () => {
+    Linking.openURL(
+      "https://www.google.com/search?q=remorqueur&oq=remorqueur+&gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBCDY1MjNqMGoxqAIAsAIA&sourceid=chrome&ie=UTF-8",
+    );
+  };
 
-
-    const callRemorcage = () => {
-        Linking.openURL("https://www.google.com/search?q=remorqueur&oq=remorqueur+&gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBCDY1MjNqMGoxqAIAsAIA&sourceid=chrome&ie=UTF-8");
-    };
-
-    const getUser = async () => {
-       
-        try {
-            const userData = JSON.parse(await AsyncStorage.getItem("user"));
-            console.log(userData.vehicles[0].vehicle);
-            const token = await AsyncStorage.getItem("userToken");
-            console.log(token);
-            setName(userData.user.name + " " + userData.user.lastName)
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-
-    React.useEffect(() => {
-
-        getUser();
-
-    }, []);
-
-
-    useEffect(() => {
-        navigation.addListener('beforeRemove', (e) => {
-            e.preventDefault();
-            console.log('onback');
-           // alert();
-            // Do your stuff here
-           // navigation.dispatch(e.data.action);
-        });
-    }, []);
-
-
-    React.useEffect(() => {
-        const unsubscribe = navigation.addListener('focus', () => {
-
-            getSelfie();
-            // The screen is focused
-            // Call any action
-        });
-
-        // Return the function to unsubscribe from the event so it gets removed on unmount
-        return unsubscribe;
-    }, [navigation])
-
-
-    const getSelfie = async () => {
-        const s = await AsyncStorage.getItem("selfie");
-        setSelfie(s);
+  const getUser = async () => {
+    try {
+      const userData = JSON.parse(await AsyncStorage.getItem("user"));
+      console.log(userData.vehicles[0].vehicle);
+      const token = await AsyncStorage.getItem("userToken");
+      console.log(token);
+      setName(userData.user.name + " " + userData.user.lastName);
+    } catch (error) {
+      console.log(error);
     }
+  };
 
+  React.useEffect(() => {
+    getUser();
+  }, []);
+
+  useEffect(() => {
+    navigation.addListener("beforeRemove", (e) => {
+      e.preventDefault();
+      console.log("onback");
+      // alert();
+      // Do your stuff here
+      // navigation.dispatch(e.data.action);
+    });
+  }, []);
+
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      getSelfie();
+      // The screen is focused
+      // Call any action
+    });
+
+    // Return the function to unsubscribe from the event so it gets removed on unmount
+    return unsubscribe;
+  }, [navigation]);
+
+  const getSelfie = async () => {
+    const s = await AsyncStorage.getItem("selfie");
+    setSelfie(s);
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView>
-
         <HomeHeader clientName={name} selfie={selfie}>
-            <Text style={{ marginBottom: 10, color: "gray" }}>Bienvenue</Text>
+          <Text style={{ marginBottom: 10, color: "gray" }}>Bienvenue</Text>
         </HomeHeader>
-
 
         <BoxComponent
           height={150}
@@ -125,21 +117,18 @@ export default function index() {
           </Text>
         </BoxComponent>
 
-
         <BoxComponent height={131} style={styles.box}>
           <View style={{ flexDirection: "row", height: 131 }}>
             <View style={{ flex: 5, padding: 20 }}>
               <View style={styles.textWithIcon}>
                 <Text style={styles.mainText}>{t("home.emergency")}</Text>
-                <MaterialIcons name='error' size={24} color='#CF8C58' />
+                <MaterialIcons name="error" size={24} color="#CF8C58" />
               </View>
 
               <Text style={styles.subText}>
                 {t("home.emergencyDescription")}
               </Text>
-
             </View>
-
 
             <View
               style={{
@@ -158,7 +147,7 @@ export default function index() {
                     callUrgence();
                   }}
                 >
-                  <FontAwesome name='phone' size={28} color='#CF8C58' />
+                  <FontAwesome name="phone" size={28} color="#CF8C58" />
                 </TouchableOpacity>
               </View>
 
@@ -190,7 +179,7 @@ export default function index() {
           <TouchableOpacity
             style={{ flex: 1, marginLeft: 5 }}
             onPress={() => {
-                callRemorcage();
+              callRemorcage();
             }}
           >
             <BoxComponent height={157} style={styles.innerBox2}>
@@ -228,7 +217,6 @@ export default function index() {
       </ScrollView>
     </SafeAreaView>
   );
-
 }
 
 const styles = StyleSheet.create({

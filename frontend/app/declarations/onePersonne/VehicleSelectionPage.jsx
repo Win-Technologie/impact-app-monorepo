@@ -14,8 +14,7 @@ import { VehicleChoiceState } from "../../../GlobalState/AccidentVehiculeState";
 import { getMyVehicles } from "../../api/users/userApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const VehicleSelectionPage = () => {
   const [allVehicles, setAllVehicles] = useState([]);
@@ -31,14 +30,12 @@ const VehicleSelectionPage = () => {
     const userToken = await AsyncStorage.getItem("userToken");
     const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
     if (vehiclesResponse.status === 200) {
-        //console.log(vehiclesResponse.data.carsWithInsurances)
+      //console.log(vehiclesResponse.data.carsWithInsurances)
       setAllVehicles(vehiclesResponse.data.carsWithInsurances);
     } else {
       Alert.alert("Erreur", "Échec du chargement des véhicules.");
     }
   };
-
-  
 
   const handleVehicleSelect = (selectedItem) => {
     const vehicleId = selectedItem?.car?._id;
@@ -46,7 +43,7 @@ const VehicleSelectionPage = () => {
       setSelectedVehicleId(vehicleId);
       setVehiculeState(vehicleId);
       //Alert.alert("Succès", `Véhicule ${selectedItem?.car?.model} sélectionné.`);
-      router.push("./typeOfAccident")
+      router.push("./typeOfAccident");
     } else {
       //Alert.alert("Erreur", "Sélection de véhicule invalide. Veuillez réessayer.");
     }
@@ -54,30 +51,38 @@ const VehicleSelectionPage = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <AntDesign name='arrowleft' size={20} color="#19363C" />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <AntDesign name="arrowleft" size={20} color="#19363C" />
           <Text style={styles.backText}>{"   "}Retour</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Sélectionner un véhicule</Text>
       </View>
-      
+
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <View style={styles.selectContainer}>
-          <Text style={styles.titleSelect}>Veuillez sélectionner un véhicule:</Text>
+          <Text style={styles.titleSelect}>
+            Veuillez sélectionner un véhicule:
+          </Text>
           <SelectDropdown
             data={allVehicles}
             defaultButtonText="Choisir une voiture"
             onSelect={handleVehicleSelect}
-            buttonTextAfterSelection={(selectedItem) => selectedItem?.car?.model}
+            buttonTextAfterSelection={(selectedItem) =>
+              selectedItem?.car?.model
+            }
             rowTextForSelection={(item) => item.car.model}
             buttonStyle={styles.dropdownBtnStyle}
             buttonTextStyle={styles.dropdownBtnTxtStyle}
             dropdownStyle={styles.dropdownDropdownStyle}
             rowStyle={styles.dropdownRowStyle}
             rowTextStyle={styles.dropdownRowTxtStyle}
-            renderDropdownIcon={() => <AntDesign name="down" size={14} color="gray" />}
+            renderDropdownIcon={() => (
+              <AntDesign name="down" size={14} color="gray" />
+            )}
           />
         </View>
       </ScrollView>

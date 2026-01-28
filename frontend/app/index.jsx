@@ -4,117 +4,93 @@ import {
   ImageBackground,
   Animated,
   FlatList,
-} from 'react-native';
-import { useEffect, useRef, useState } from 'react';
-import MainPageListItem from '../components/MainPageListItem';
-import { router } from 'expo-router';
-import MainPageButton from '../components/Main/BottomTabsBar/MainPageButton';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTranslation } from 'react-i18next';
+} from "react-native";
+import { useEffect, useRef, useState } from "react";
+import MainPageListItem from "../components/MainPageListItem";
+import { router } from "expo-router";
+import MainPageButton from "../components/Main/BottomTabsBar/MainPageButton";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 //import { Stack } from 'expo-router';
 
 export default function MainScreen() {
-
   const [dataIndex, setDataIndex] = useState(0);
   const slideUpAnim = useRef(new Animated.Value(400)).current;
   const slideAnim = useRef(new Animated.Value(-1000)).current;
   const [showPopup] = useState(true);
   const { t, i18n } = useTranslation();
- 
-    const onSkipPress = () => {
-        router.push('/signIn');
+
+  const onSkipPress = () => {
+    router.push("/signIn");
+  };
+
+  const getLanguage = async () => {
+    const val = await AsyncStorage.getItem("language");
+    return val;
+  };
+
+  useEffect(() => {
+    getLanguage().then((val) => {
+      if (val) {
+        i18n.changeLanguage(val);
+      } else {
+        i18n.changeLanguage(val);
+      }
+    });
+
+    const getTokenFromAsyncSto = async () => {
+      const token = await AsyncStorage.getItem("userToken");
+      const user = await AsyncStorage.getItem("user");
+
+      //router.push('signup/signUpLanding');
+
+      //router.push('(tabs)');
+
+      //router.push('/signup/verifyEmail');
+
+      //router.push('declarations/onePersonne/otherSpecification');
+
+      //router.push('declarations/onePersonne/submitDeclaration');
+
+      // router.push('declarations/onePersonne/placeOfAccident');
+      // router.push('(tabs)');
+
+      if (user) {
+        router.navigate("(tabs)");
+      } else if (token && token.length > 0) {
+        router.navigate("signup/signUpLanding");
+      }
+
+      //router.push('/signup/personalInfoSteps/phoneAndAddress')
+      //router.navigate('signup/signUpLanding');
+
+      // alert(token);
+
+      if (token && token.length > 0) {
+        //  router.push('(tabs)');
+        //router.push('/signup/verifyEmail');
+        //router.push('/signIn')
+        //router.push('declarations/twoPersonnes/InfoPersons/otherInfo')
+        //router.push('declarations/twoPersonnes/InfoPersons/myInfo/personalInfo')
+        //router.push('declarations/twoPersonnes/InfoPersons/myInfo')
+        // router.push('declarations/twoPersonnes/infoDebase');
+        // router.push('declarations/onePersonne/hourOfAccident');
+        //   router.push('declarations/onePersonne/otherSpecification');
+        //router.push('declarations/onePersonne/submitDeclaration');
+        // router.push('declarations/onePersonne/typeOfAccident');
+        //router.push('declarations/onePersonne/placeOfAccident');
+        // router.push('declarations/onePersonne/placeOfAccident');
+        // router.push('(home)');
+        // router.push('signup/personalInfoSteps/dateOfBirth');
+        // router.push('signup/signUpLanding');
+        // router.push('signup/personalInfoSteps/phoneAndAdress');
+        //  router.push('/signup/personalInfoSteps/driverLicense');
+        //  router.push('/signup/personalInfoSteps/idValidation');
+      }
     };
 
-    const getLanguage = async () => {
-        const val = await AsyncStorage.getItem('language');
-        return val;
-    }
-
-    useEffect(() => {
-
-       
-
-        getLanguage().then((val) => {
-
-            if (val) {
-                i18n.changeLanguage(val);
-            } else {
-                i18n.changeLanguage(val);
-            }
-
-        });
-
-
-
-        const getTokenFromAsyncSto = async () => {
-
-            const token = await AsyncStorage.getItem('userToken');
-            const user = await AsyncStorage.getItem('user');
-
-            //router.push('signup/signUpLanding');
-
-            //router.push('(tabs)');
-
-            //router.push('/signup/verifyEmail');
-
-            //router.push('declarations/onePersonne/otherSpecification');
-
-            //router.push('declarations/onePersonne/submitDeclaration');
-
-           // router.push('declarations/onePersonne/placeOfAccident');
-            // router.push('(tabs)');
-
-           if (user) {
-                router.navigate('(tabs)');
-            }
-
-            else if (token && token.length > 0) {
-                router.navigate('signup/signUpLanding');
-            }
-
-            //router.push('/signup/personalInfoSteps/phoneAndAddress')
-            //router.navigate('signup/signUpLanding');
-
-
-            // alert(token);
-
-
-            if (token && token.length > 0) {
-
-              //  router.push('(tabs)');
-
-                //router.push('/signup/verifyEmail');
-                //router.push('/signIn')
-                
-                   //router.push('declarations/twoPersonnes/InfoPersons/otherInfo')
-                   //router.push('declarations/twoPersonnes/InfoPersons/myInfo/personalInfo')
-
-                   //router.push('declarations/twoPersonnes/InfoPersons/myInfo')
-            
-                   // router.push('declarations/twoPersonnes/infoDebase');
-
-                    // router.push('declarations/onePersonne/hourOfAccident');
-                    //   router.push('declarations/onePersonne/otherSpecification');
-                    //router.push('declarations/onePersonne/submitDeclaration');
-                    // router.push('declarations/onePersonne/typeOfAccident');
-                    //router.push('declarations/onePersonne/placeOfAccident');
-                    // router.push('declarations/onePersonne/placeOfAccident');
-                    // router.push('(home)');
-                    // router.push('signup/personalInfoSteps/dateOfBirth');
-                    // router.push('signup/signUpLanding');
-                    // router.push('signup/personalInfoSteps/phoneAndAdress');
-                    //  router.push('/signup/personalInfoSteps/driverLicense');
-                    //  router.push('/signup/personalInfoSteps/idValidation');
-          
-            }
-        };
-
-        getTokenFromAsyncSto();
-
-    }, []);
-
-
-
+    getTokenFromAsyncSto();
+  }, []);
 
   useEffect(() => {
     if (showPopup) {
@@ -150,27 +126,23 @@ export default function MainScreen() {
     }
   }, [showPopup, dataIndex]);
 
- 
-
   const data = [
     {
-      title: t('mainScreen.complicatedSituationTitle'),
-      description: t('mainScreen.complicatedSituationDescription'),
+      title: t("mainScreen.complicatedSituationTitle"),
+      description: t("mainScreen.complicatedSituationDescription"),
       showButton: true,
     },
     {
-      title: t('mainScreen.quickResolutionTitle'),
-      description: t('mainScreen.quickResolutionDescription'),
+      title: t("mainScreen.quickResolutionTitle"),
+      description: t("mainScreen.quickResolutionDescription"),
       showButton: true,
     },
     {
-      title: t('mainScreen.dataSecurityTitle'),
-      description: t('mainScreen.dataSecurityDescription'),
+      title: t("mainScreen.dataSecurityTitle"),
+      description: t("mainScreen.dataSecurityDescription"),
       showButton: false,
     },
-    ];
-
-
+  ];
 
   const onNextPress = () => {
     if (dataIndex < data.length - 1) {
@@ -193,20 +165,16 @@ export default function MainScreen() {
   };
 
   const onRegisterPress = () => {
-    router.push('signup');
+    router.push("signup");
   };
 
-    return (
-
-        
-
-
+  return (
     <View style={styles.container}>
       <ImageBackground
-         //source={{ uri: '../../assets/fond.png' }}
-        source={require('../assets/fond.png')}
-        resizeMode='cover'
-        style={{ flex: 1, justifyContent: 'center', width: '100%' }}
+        //source={{ uri: '../../assets/fond.png' }}
+        source={require("../assets/fond.png")}
+        resizeMode="cover"
+        style={{ flex: 1, justifyContent: "center", width: "100%" }}
       >
         <Animated.View
           style={[
@@ -237,36 +205,36 @@ export default function MainScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-    backgroundImage: {
-        flex: 1,
-        justifyContent: 'center',
-        width: '100%',
-    },
+  backgroundImage: {
+    flex: 1,
+    justifyContent: "center",
+    width: "100%",
+  },
 
   popupContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -5,
     left: 0,
     right: 0,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     padding: 25,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     //borderBottomLeftRadius: 20,
     // borderBottomRightRadius: 20,
     borderWidth: 1,
-    height: '40%',
-    borderColor: '#ccc',
-    alignItems: 'center',
+    height: "40%",
+    borderColor: "#ccc",
+    alignItems: "center",
   },
   popupContent: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
   },
 });

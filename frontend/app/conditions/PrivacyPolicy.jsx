@@ -1,7 +1,13 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
+import React from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
 
 const PrivacyPolicy = () => {
   const router = useRouter();
@@ -18,24 +24,44 @@ const PrivacyPolicy = () => {
           <Text style={styles.backText}>Retour</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+      >
         <Text style={styles.title}>Politique de confidentialité</Text>
         <View style={styles.box}>
           <Text style={styles.boxText}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
+            vulputate libero et velit interdum, ac aliquet odio mattis. Class
+            aptent taciti sociosqu ad litora torquent per conubia nostra, per
+            inceptos himenaeos. Lorem ipsum dolor sit amet, consectetur
+            adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet
+            odio mattis.
           </Text>
         </View>
         <View style={styles.box}>
           <Text style={styles.boxText}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
+            vulputate libero et velit interdum, ac aliquet odio mattis. Class
+            aptent taciti sociosqu ad litora torquent per conubia nostra, per
+            inceptos himenaeos. Lorem ipsum dolor sit amet, consectetur
+            adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet
+            odio mattis.
           </Text>
         </View>
         <View style={styles.box}>
           <Text style={styles.boxText}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet odio mattis.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
+            vulputate libero et velit interdum, ac aliquet odio mattis. Class
+            aptent taciti sociosqu ad litora torquent per conubia nostra, per
+            inceptos himenaeos. Lorem ipsum dolor sit amet, consectetur
+            adipiscing elit. Nunc vulputate libero et velit interdum, ac aliquet
+            odio mattis.
           </Text>
         </View>
-        <Text style={styles.updatedText}>Dernière mise à jour : 17 Mai 2022</Text>
+        <Text style={styles.updatedText}>
+          Dernière mise à jour : 17 Mai 2022
+        </Text>
       </ScrollView>
     </View>
   );
@@ -44,17 +70,17 @@ const PrivacyPolicy = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginTop: 25,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 10,
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   backText: {
     marginLeft: 5,
@@ -65,28 +91,28 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   box: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     padding: 15,
     borderRadius: 5,
     marginBottom: 10,
   },
   boxText: {
     fontSize: 16,
-    color: '#555',
+    color: "#555",
   },
   scrollContent: {
     padding: 20,
     paddingBottom: 30,
   },
   updatedText: {
-    textAlign: 'left',
+    textAlign: "left",
     marginTop: 10,
     fontSize: 14,
-    color: '#555',
+    color: "#555",
   },
 });
 

@@ -1,80 +1,101 @@
 import React from "react";
-import { View, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
 import { useTranslation } from "react-i18next";
-
 
 import { useForm, Controller } from "react-hook-form";
 //const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-
 export default function ForgottenPassword() {
-const {control,handleSubmit,formState: {errors}} = useForm({
-    mode:'onChange'
-})
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    mode: "onChange",
+  });
 
-async function saveEmail(email) {
-  await SecureStore.setItemAsync('userEmail', email);
-}
+  async function saveEmail(email) {
+    await SecureStore.setItemAsync("userEmail", email);
+  }
 
-const {t} = useTranslation();
+  const { t } = useTranslation();
 
-const onSubmit = async data => {
+  const onSubmit = async (data) => {
     const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
     try {
-        const response = await fetch(`${API_URL}users/user/password/code`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: data.email,
-          }),
-          
-        });
-        console.log(data.email)
-        const responseData = await response.json();
-        console.log("Code de vérification reçu:", responseData.code);
-        
-        if (response.ok) {
-          alert(t('forgottenPasswordScreen.checkYourEmail'), t('forgottenPasswordScreen.emailSuccessMessage'));
-          await saveEmail(data.email);
-          router.push('signup/resetPassword')
-        } else {
-          alert("Erreur", responseData.message || t('forgottenPasswordScreen.emailErrorMessage'));
-          throw new Error(responseData.message || t('forgottenPasswordScreen.genericErrorMessage'));
-        }
-      } catch (error) {
-        alert("Erreur", error.toString());
+      const response = await fetch(`${API_URL}users/user/password/code`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+        }),
+      });
+      console.log(data.email);
+      const responseData = await response.json();
+      console.log("Code de vérification reçu:", responseData.code);
+
+      if (response.ok) {
+        alert(
+          t("forgottenPasswordScreen.checkYourEmail"),
+          t("forgottenPasswordScreen.emailSuccessMessage"),
+        );
+        await saveEmail(data.email);
+        router.push("signup/resetPassword");
+      } else {
+        alert(
+          "Erreur",
+          responseData.message ||
+            t("forgottenPasswordScreen.emailErrorMessage"),
+        );
+        throw new Error(
+          responseData.message ||
+            t("forgottenPasswordScreen.genericErrorMessage"),
+        );
       }
-}
+    } catch (error) {
+      alert("Erreur", error.toString());
+    }
+  };
   return (
     <View style={styles.outerContainer}>
-    <View style={styles.container}>
-     
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.push('signIn')}>
-        <Ionicons name="arrow-back" size={18} color="#19363C" />
-        <Text style={styles.backButtonText}>{t('forgottenPasswordScreen.back')}</Text>
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.push("signIn")}
+        >
+          <Ionicons name="arrow-back" size={18} color="#19363C" />
+          <Text style={styles.backButtonText}>
+            {t("forgottenPasswordScreen.back")}
+          </Text>
         </TouchableOpacity>
-        
-        <Text style={styles.headerText}>{t('forgottenPasswordScreen.header')}</Text>
+
+        <Text style={styles.headerText}>
+          {t("forgottenPasswordScreen.header")}
+        </Text>
         <Text style={styles.infoText}>
-          {t('forgottenPasswordScreen.instruction')}
+          {t("forgottenPasswordScreen.instruction")}
         </Text>
 
-      <Controller
+        <Controller
           control={control}
           name="email"
           rules={{
-            required: t('forgottenPasswordScreen.emailRequired'),
+            required: t("forgottenPasswordScreen.emailRequired"),
             pattern: {
               value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: t('forgottenPasswordScreen.emailFormatError'),
+              message: t("forgottenPasswordScreen.emailFormatError"),
             },
           }}
           render={({ field: { onChange, onBlur, value } }) => (
@@ -90,37 +111,39 @@ const onSubmit = async data => {
             />
           )}
         />
-        {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
- 
- <TouchableOpacity 
-        style={styles.continueButton}
-        onPress={handleSubmit(onSubmit)}
-      >
-        <Text style={styles.continueButtonText}>{t('forgottenPasswordScreen.continue')}</Text>
-      </TouchableOpacity>
-    </View>
-    </View>
+        {errors.email && (
+          <Text style={styles.errorText}>{errors.email.message}</Text>
+        )}
 
+        <TouchableOpacity
+          style={styles.continueButton}
+          onPress={handleSubmit(onSubmit)}
+        >
+          <Text style={styles.continueButtonText}>
+            {t("forgottenPasswordScreen.continue")}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-    outerContainer: {
-        flex: 1,
-        backgroundColor: '#F1F1F1', 
-      },
+  outerContainer: {
+    flex: 1,
+    backgroundColor: "#F1F1F1",
+  },
   container: {
     flex: 1,
     marginHorizontal: 23,
-  
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 35,
   },
   backButtonText: {
-    marginLeft:5,
+    marginLeft: 5,
     fontSize: 14,
     color: "#19363C",
   },
@@ -135,7 +158,7 @@ const styles = StyleSheet.create({
   infoText: {
     color: "#19363C",
     fontSize: 14,
-    fontFamily: 'regular',
+    fontFamily: "regular",
     marginBottom: 30,
   },
   textInput: {
@@ -152,19 +175,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#1B6878",
     borderRadius: 5,
     padding: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
     bottom: 30,
     left: 0,
     right: 0,
-    shadowOffset:{height:4,width:4},
-    shadowColor:'grey',
-    shadowOpacity:1,
-    height:'8%',
+    shadowOffset: { height: 4, width: 4 },
+    shadowColor: "grey",
+    shadowOpacity: 1,
+    height: "8%",
   },
   continueButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
   },
 });

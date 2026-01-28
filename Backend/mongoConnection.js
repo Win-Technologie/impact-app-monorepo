@@ -2,10 +2,8 @@
 // Il exporte deux fonctions réutilisables : connectToMongo pour établir la connexion,
 // et getDb pour obtenir une référence à une base de données spécifique.
 
-
-const { MongoClient } = require('mongodb');
+const { MongoClient } = require("mongodb");
 const MYDBCONNECTION = process.env.URLDBCONNECTION;
-
 
 const url = MYDBCONNECTION;
 const client = new MongoClient(url, { maxPoolSize: 20000 });
@@ -14,10 +12,10 @@ const client = new MongoClient(url, { maxPoolSize: 20000 });
 const connectToMongo = async () => {
   try {
     await client.connect();
-    console.log('Connected to the database');
+    console.log("Connected to the database");
     return client;
   } catch (error) {
-    console.error('Error connecting to the database:', error);
+    console.error("Error connecting to the database:", error);
   }
 };
 

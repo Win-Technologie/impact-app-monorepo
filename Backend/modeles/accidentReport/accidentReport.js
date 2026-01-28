@@ -167,21 +167,24 @@ module.exports = Accident;
 
 */
 
-
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 // Schéma pour les witnesses
-const WitnessSchema = new Schema({
+const WitnessSchema = new Schema(
+  {
     name: String,
     phone: String,
     address: String,
-    is_vehicle_passenger: { type: String, enum: ['A', 'B', 'NON'] },
-    is_pedestrian: { type: String }
-}, { _id: false });
+    is_vehicle_passenger: { type: String, enum: ["A", "B", "NON"] },
+    is_pedestrian: { type: String },
+  },
+  { _id: false },
+);
 
 // Schéma pour les données personnelles
-const PersonalDetailsSchema = new Schema({
+const PersonalDetailsSchema = new Schema(
+  {
     name: String,
     lastName: String,
     address: String,
@@ -192,24 +195,29 @@ const PersonalDetailsSchema = new Schema({
     province: String,
     country: String,
     profileImagePath: String,
-
-}, { _id: false });
+  },
+  { _id: false },
+);
 
 // Schéma pour le permis de conduire
-const DrivingLicenseSchema = new Schema({
+const DrivingLicenseSchema = new Schema(
+  {
     number: String,
     issuanceDate: Date,
     licenseClass: String,
     expirationDate: Date,
     driverLicenseId: {
-        type: String,
-        ref: 'DriverLicense',
-        index: true
-    }
-}, { _id: false });
+      type: String,
+      ref: "DriverLicense",
+      index: true,
+    },
+  },
+  { _id: false },
+);
 
 // Schéma pour le certificat d'enregistrement
-const RegistrationCertificateSchema = new Schema({
+const RegistrationCertificateSchema = new Schema(
+  {
     fileNumber: String,
     // owner: Boolean,
     ownerName: String,
@@ -223,14 +231,17 @@ const RegistrationCertificateSchema = new Schema({
     licensePlateNumber: String,
     issuanceDate: Date,
     vehicleId: {
-        type: String,
-        ref: 'immatriculations',
-        index: true
-    }
-}, { _id: false });
+      type: String,
+      ref: "immatriculations",
+      index: true,
+    },
+  },
+  { _id: false },
+);
 
 // Schéma pour la certification d'assurance
-const InsuranceCertificationSchema = new Schema({
+const InsuranceCertificationSchema = new Schema(
+  {
     insuranceCompany: String,
     policyNumber: String,
     effectiveDate: Date,
@@ -240,62 +251,70 @@ const InsuranceCertificationSchema = new Schema({
     insuredCity: String,
     insuredPhone: String,
     assuranceId: {
-        type: String,
-        ref: 'assurances',
-        index: true
-    }
-}, { _id: false });
+      type: String,
+      ref: "assurances",
+      index: true,
+    },
+  },
+  { _id: false },
+);
 
 // Schéma pour les détails du véhicule
-const VehicleDetailsSchema = new Schema({
+const VehicleDetailsSchema = new Schema(
+  {
     // personalDetails: PersonalDetailsSchema,
     // drivingLicense: DrivingLicenseSchema,
     registrationCertificate: RegistrationCertificateSchema,
-    insuranceCertification: InsuranceCertificationSchema
-}, { _id: false });
+    insuranceCertification: InsuranceCertificationSchema,
+  },
+  { _id: false },
+);
 
 // Schéma pour le rapport de véhicule
-const VehicleReportSchema = new Schema({
+const VehicleReportSchema = new Schema(
+  {
     user: {
-        type: String,
-        ref: 'User',
-        index: true
+      type: String,
+      ref: "User",
+      index: true,
     },
     personalDetails: PersonalDetailsSchema,
     drivingLicense: DrivingLicenseSchema,
     vehicleDetails: VehicleDetailsSchema,
-}, { _id: false });
+  },
+  { _id: false },
+);
 
 // Schéma principal pour la déclaration d'accident
 const AccidentSchema = new Schema({
-    _id: {
-        type: String,
-        default: () => new mongoose.Types.ObjectId().toString(),
-        required: true,
-        index: true
+  _id: {
+    type: String,
+    default: () => new mongoose.Types.ObjectId().toString(),
+    required: true,
+    index: true,
+  },
+
+  accitendType: String,
+  accidentDate: Date,
+  hourAccident: String,
+  accidentLocation: String,
+  witnesses: [WitnessSchema],
+  vehicles: [VehicleReportSchema], // Tableau permettant de gérer plusieurs véhicules
+  accidentSketch: String,
+
+  // vehicleDamage: Boolean,
+  vehicleDamageDescription: String,
+  injured: Boolean,
+  injuredDescription: String,
+  damageComments: String,
+  towed: Boolean,
+  driverSignature: String,
+  photos: [
+    {
+      type: String,
     },
-
-    accitendType: String,
-    accidentDate: Date,
-    hourAccident: String,
-    accidentLocation: String,
-    witnesses: [WitnessSchema],
-    vehicles: [VehicleReportSchema],  // Tableau permettant de gérer plusieurs véhicules
-    accidentSketch: String,
-
-    // vehicleDamage: Boolean,
-    vehicleDamageDescription: String,
-    injured: Boolean,
-    injuredDescription: String,
-    damageComments: String,
-    towed: Boolean,
-    driverSignature: String,
-    photos: [{
-        type: String
-    }]
-
+  ],
 });
 
-
-const Accident = mongoose.model('AccidentReport', AccidentSchema);
+const Accident = mongoose.model("AccidentReport", AccidentSchema);
 module.exports = Accident;

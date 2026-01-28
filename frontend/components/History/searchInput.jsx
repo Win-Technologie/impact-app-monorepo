@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
+import React, { useState } from "react";
+import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { AntDesign } from "@expo/vector-icons";
 
 export default function SearchInput() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   const handleClear = () => {
-    setQuery('');
+    setQuery("");
   };
 
   return (
     <View style={styles.container}>
-      <AntDesign name="search1" size={20} color="grey" style={styles.iconLeft} />
+      <AntDesign
+        name="search1"
+        size={20}
+        color="grey"
+        style={styles.iconLeft}
+      />
       <TextInput
         style={styles.input}
         onChangeText={setQuery}
@@ -29,37 +34,35 @@ export default function SearchInput() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#F1F1F1",
+    borderRadius: 5,
+    marginTop: 15,
+    shadowColor: "grey",
+    shadowOpacity: 0.5,
+    shadowOffset: { width: 2, height: 2 },
+    width: "100%",
+  },
 
-    container: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#F1F1F1',
-        borderRadius: 5,
-        marginTop: 15,
-        shadowColor: 'grey',
-        shadowOpacity: 0.5,
-        shadowOffset: { width: 2, height: 2 },
-        width:'100%'
-    },
+  input: {
+    height: 50,
+    paddingVertical: 10,
+    paddingLeft: 30,
+    paddingRight: 10,
+    fontSize: 16,
+    marginLeft: 10,
+  },
 
-    input: {
-        height:50,
-        paddingVertical: 10,
-        paddingLeft: 30, 
-        paddingRight: 10, 
-        fontSize: 16,
-        marginLeft: 10
-    },
+  iconLeft: {
+    position: "absolute",
+    left: 10,
+  },
 
-    iconLeft: {
-        position: 'absolute',
-        left: 10,
-    },
-
-    iconRight: {
-        position: 'absolute',
-        right: 10,
-    },
-
+  iconRight: {
+    position: "absolute",
+    right: 10,
+  },
 });

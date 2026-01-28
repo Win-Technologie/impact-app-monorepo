@@ -1,17 +1,11 @@
 import React, { useState } from "react";
-import {
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  View,
-  Modal,
-} from "react-native";
+import { Text, TouchableOpacity, StyleSheet, View, Modal } from "react-native";
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import Icon from "react-native-vector-icons/MaterialIcons"; // Assurez-vous d'avoir installé cette bibliothèque
 import { Picker } from "@react-native-picker/picker";
-import DropDownPicker from 'react-native-dropdown-picker';
+import DropDownPicker from "react-native-dropdown-picker";
 
 export default function DeclarationPage() {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -20,15 +14,14 @@ export default function DeclarationPage() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(null);
   const [items, setItems] = useState([
-    {label: '2 individus', value: '2'},
-    {label: '3 individus', value: '3'},
-    {label: '4 individus', value: '4'},
-    {label: '5 individus', value: '5'}
+    { label: "2 individus", value: "2" },
+    { label: "3 individus", value: "3" },
+    { label: "4 individus", value: "4" },
+    { label: "5 individus", value: "5" },
   ]);
 
   return (
     <SafeAreaView style={styles.container}>
-    
       {/*<Text style={styles.mainTitle}>
         Nous récoltons vos informations pour vous aider
       </Text>
@@ -39,7 +32,7 @@ export default function DeclarationPage() {
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.buttonStyle}>
-          <Icon name='person' size={30} color='#FFFFFF' />
+          <Icon name="person" size={30} color="#FFFFFF" />
           <Text style={styles.buttonText}>
             Je suis le seul individu impliqué
           </Text>
@@ -52,7 +45,7 @@ export default function DeclarationPage() {
             setOpen(!open); // Basculer l'état open ici permet d'ouvrir ou de fermer le menu
           }}
         >
-          <Icon name='people' size={30} color='#FFFFFF' />
+          <Icon name="people" size={30} color="#FFFFFF" />
           <Text style={styles.buttonText}>
             Nous sommes plusieurs individus impliqués
           </Text>
@@ -77,7 +70,7 @@ export default function DeclarationPage() {
             }}
           />
         )}
-      
+
         {/* <Modal
           animationType='slide'
           transparent={true}
@@ -112,16 +105,15 @@ export default function DeclarationPage() {
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     padding: 20,
   },
 
   mainTitle: {
     fontSize: 22,
-    fontFamily:'bold',
+    fontFamily: "bold",
     textAlign: "left",
     width: "100%",
     marginBottom: 20,
@@ -131,7 +123,7 @@ const styles = StyleSheet.create({
   subTitle: {
     fontSize: 16,
     textAlign: "left",
-    fontFamily:'regular',
+    fontFamily: "regular",
     marginBottom: 20,
     width: "100%",
     paddingHorizontal: 20, // Largeur complète pour le centrage
@@ -151,7 +143,6 @@ const styles = StyleSheet.create({
     width: "100%", // Largeur complète pour une taille uniforme
     flexWrap: "wrap",
     paddingHorizontal: 20,
-
   },
   buttonText: {
     color: "#FFFFFF",
@@ -163,13 +154,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 20,
     // left: 25,
-     right: 36,
+    right: 36,
     backgroundColor: "#0B8BA8",
     paddingVertical: 15,
     borderRadius: 5,
     width: "90.5%", // Utilise presque toute la largeur avec un petit padding
     alignItems: "center",
-    
   },
   continueButtonText: {
     color: "#FFFFFF",
@@ -196,11 +186,11 @@ const styles = StyleSheet.create({
     height: 150,
   },
   dropdown: {
-    backgroundColor: '#ffffff',
-    borderBottomColor: '#dfdfdf',
+    backgroundColor: "#ffffff",
+    borderBottomColor: "#dfdfdf",
     borderBottomWidth: 1,
   },
   dropdownContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
 });
