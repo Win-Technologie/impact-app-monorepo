@@ -23,6 +23,7 @@
     "express-session": "^1.18.0",
     "express-validator": "^7.0.1",
     "got": "^11.8.6",
+    "impactapp": "file:..",
     "jsonwebtoken": "^9.0.2",
     "jsqr": "^1.4.0",
     "mongodb": "^6.3.0",
