@@ -11,6 +11,39 @@ import { MenuProvider } from "react-native-popup-menu";
 import { fr, en, registerTranslation } from "react-native-paper-dates";
 import { Stack } from "expo-router";
 
+function applyRecoilReact19Compat() {
+  const reactClientInternals =
+    React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+
+  if (
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED ||
+    !reactClientInternals
+  ) {
+    return;
+  }
+
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
+    ReactCurrentDispatcher: {
+      get current() {
+        return reactClientInternals.H;
+      },
+      set current(value) {
+        reactClientInternals.H = value;
+      },
+    },
+    ReactCurrentOwner: {
+      get currentDispatcher() {
+        return reactClientInternals.H;
+      },
+      set currentDispatcher(value) {
+        reactClientInternals.H = value;
+      },
+    },
+  };
+}
+
+applyRecoilReact19Compat();
+
 //registerTranslation('fr', fr)
 //registerTranslation('en-GB', enGB)
 registerTranslation("en", en);

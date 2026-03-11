@@ -42,50 +42,10 @@ export default function MainScreen() {
       const token = await AsyncStorage.getItem("userToken");
       const user = await AsyncStorage.getItem("user");
 
-      //router.push('signup/signUpLanding');
-
-      //router.push('(tabs)');
-
-      //router.push('/signup/verifyEmail');
-
-      //router.push('declarations/onePersonne/otherSpecification');
-
-      //router.push('declarations/onePersonne/submitDeclaration');
-
-      // router.push('declarations/onePersonne/placeOfAccident');
-      // router.push('(tabs)');
-
       if (user) {
         router.navigate("(tabs)");
       } else if (token && token.length > 0) {
         router.navigate("signup/signUpLanding");
-      }
-
-      //router.push('/signup/personalInfoSteps/phoneAndAddress')
-      //router.navigate('signup/signUpLanding');
-
-      // alert(token);
-
-      if (token && token.length > 0) {
-        //  router.push('(tabs)');
-        //router.push('/signup/verifyEmail');
-        //router.push('/signIn')
-        //router.push('declarations/twoPersonnes/InfoPersons/otherInfo')
-        //router.push('declarations/twoPersonnes/InfoPersons/myInfo/personalInfo')
-        //router.push('declarations/twoPersonnes/InfoPersons/myInfo')
-        // router.push('declarations/twoPersonnes/infoDebase');
-        // router.push('declarations/onePersonne/hourOfAccident');
-        //   router.push('declarations/onePersonne/otherSpecification');
-        //router.push('declarations/onePersonne/submitDeclaration');
-        // router.push('declarations/onePersonne/typeOfAccident');
-        //router.push('declarations/onePersonne/placeOfAccident');
-        // router.push('declarations/onePersonne/placeOfAccident');
-        // router.push('(home)');
-        // router.push('signup/personalInfoSteps/dateOfBirth');
-        // router.push('signup/signUpLanding');
-        // router.push('signup/personalInfoSteps/phoneAndAdress');
-        //  router.push('/signup/personalInfoSteps/driverLicense');
-        //  router.push('/signup/personalInfoSteps/idValidation');
       }
     };
 

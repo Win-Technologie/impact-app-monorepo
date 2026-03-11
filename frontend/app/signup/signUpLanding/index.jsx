@@ -29,7 +29,7 @@ export default function SignUpLandingPage() {
   const { t } = useTranslation();
   const loginUrl = "user/login/token";
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
-  const LOGIN_URL = `http://172.25.32.1:8000/api/users/user/login/token`;
+  const LOGIN_URL = `${API_URL}users/${loginUrl}`;
   const navigation = useNavigation();
 
   async function confirmSignout() {
@@ -236,9 +236,14 @@ export default function SignUpLandingPage() {
         });
 
         const responseData = await response.json();
+        const userPayload = responseData?.user ?? null;
 
         await AsyncStorage.setItem("userToken", token);
-        await AsyncStorage.setItem("user", JSON.stringify(responseData.user));
+        if (userPayload === null) {
+          await AsyncStorage.removeItem("user");
+        } else {
+          await AsyncStorage.setItem("user", JSON.stringify(userPayload));
+        }
         router.push("(tabs)");
       } catch (error) {
         console.error("Error submitting data:", error);

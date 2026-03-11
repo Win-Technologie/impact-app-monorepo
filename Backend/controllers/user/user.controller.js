@@ -52,6 +52,9 @@ const USER_ROUTER_IMG_PROFILE_PATH = process.env.USER_ROUTER_IMG_PROFILE_PATH;
 const USER_ROUTER_IMG_IDS_PATH = process.env.USER_ROUTER_IMG_IDS_PATH;
 
 const SECRETKEY_IDQR = process.env.SECRETKEY_IDQR;
+const SKIP_EMAIL_VERIFICATION =
+  String(process.env.SKIP_EMAIL_VERIFICATION || "false").toLowerCase() ===
+  "true";
 
 const path = require("path");
 const fs = require("fs");
@@ -198,11 +201,26 @@ async function validateRegisterUserFields(req) {
 
     body("password")
       .notEmpty()
-      .isLength({ min: 8 })
-      .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/)
-      .withMessage(
-        "Le mot de passe est requis et doit contenir au moins 8 caractères",
-      )
+      .withMessage("Le mot de passe est requis")
+      .custom((value) => {
+        const errors = [];
+        if (value.length < 8) {
+          errors.push("au moins 8 caractères");
+        }
+        if (!/\d/.test(value)) {
+          errors.push("un chiffre");
+        }
+        if (!/[a-z]/.test(value)) {
+          errors.push("une minuscule");
+        }
+        if (!/[A-Z]/.test(value)) {
+          errors.push("une majuscule");
+        }
+        if (errors.length > 0) {
+          throw new Error(`Votre mot de passe doit contenir : ${errors.join(", ")}`);
+        }
+        return true;
+      })
       .run(req),
 
     body("phone")
@@ -494,8 +512,6 @@ async function RegisterUserSendCode(req, res) {
     // Extraction des données de la requête
     const { email, password } = req.body;
 
-    const emailLowerCase = email.toLowerCase();
-
     // Validation des champs
     await validateRegisterUserFields(req);
     const validationErrors = validationResult(req);
@@ -504,12 +520,114 @@ async function RegisterUserSendCode(req, res) {
       return res.status(400).json({ errors: validationErrors.array() });
     }
 
+    const emailLowerCase = String(email || "").trim().toLowerCase();
+
+    if (SKIP_EMAIL_VERIFICATION) {
+      // Local dev mode: skip real SMTP but preserve the full navigation flow.
+      // We create the user with a dummy code so the verify-email screen can be
+      // navigated normally (any code will be accepted by RegisterUserVerifyCode).
+      const userExisting = await userCollection.findOne({ email: emailLowerCase });
+
+      if (userExisting && userExisting.emailVerified) {
+        return res.status(400).json({ msg: "Cet utilisateur existe déjà" });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      const dummyExpiration = new Date(new Date().getTime() + 60 * 60000); // 1 hour
+
+      if (userExisting) {
+        // Update the existing user
+        await userCollection.updateOne(
+          { _id: userExisting._id },
+          {
+            $set: {
+              password: hashedPassword,
+              active: true,
+              emailVerified: true,
+              verificationAttempts: 0,
+            },
+            $unset: {
+              verificationCode: "",
+              verificationCodeExpiration: "",
+            },
+          },
+        );
+        // Fetch the updated user document
+        const updatedUser = await userCollection.findOne({ _id: userExisting._id });
+        const temporalToken = jwt.createTemporalToken(updatedUser);
+        return res.status(201).json({ msg: "Code envoyé avec succès", TA7: temporalToken });
+      }
+
+      const newUser = new User({
+        active: true,
+        driverLicense: "pending",
+        email: emailLowerCase,
+        emailVerified: true,
+        name: "pending",
+        lastName: "pending",
+        password: hashedPassword,
+        phone: "pending",
+        address: "pending",
+        postalCode: "pending",
+        province: "pending",
+        city: "pending",
+        country: "pending",
+        gender: "pending",
+        birthdate: "pending",
+        typeAccount: "free",
+      });
+
+      newUser.set("documents", undefined);
+      newUser.set("verificationCodeExpiration", undefined);
+      newUser.set("verificationAttempts", undefined);
+      newUser.set("verificationCode", undefined);
+      newUser.set("accidentReports", undefined);
+
+      const insertResult = await userCollection.insertOne(newUser.toObject());
+
+      if (!insertResult.acknowledged) {
+        return res
+          .status(500)
+          .json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
+      }
+
+      const temporalToken = jwt.createTemporalToken(newUser);
+      return res.status(201).json({ msg: "Code envoyé avec succès", TA7: temporalToken });
+    }
+
+    const verificationCode = generateVerificationCode();
+    const verificationCodeExpiration = new Date(new Date().getTime() + 15 * 60000);
+
     // Vérification si l'utilisateur existe déjà
     const userExisting = await userCollection.findOne({
       email: emailLowerCase,
     });
+
     if (userExisting) {
-      return res.status(400).json({ msg: "Cet utilisateur existe déjà" });
+      if (userExisting.emailVerified) {
+        return res.status(400).json({ msg: "Cet utilisateur existe déjà" });
+      }
+
+      // Si le compte existe mais n'est pas encore vérifié, on régénère simplement le code.
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      await userCollection.updateOne(
+        { _id: userExisting._id },
+        {
+          $set: {
+            password: hashedPassword,
+            active: true,
+            verificationCode,
+            verificationCodeExpiration,
+            verificationAttempts: 0,
+          },
+        },
+      );
+
+      await sendVerificationEmail(emailLowerCase, verificationCode);
+      return res.status(201).json({ msg: "Code envoyé avec succès" });
     }
 
     // Hash password
@@ -534,16 +652,16 @@ async function RegisterUserSendCode(req, res) {
       gender: "pending",
       birthdate: "pending",
       typeAccount: "free",
+      verificationCode,
+      verificationCodeExpiration,
+      verificationAttempts: 0,
     });
 
     newUser.set("documents", undefined);
-    newUser.set("verificationCodeExpiration", undefined);
-    newUser.set("verificationAttempts", undefined);
-    newUser.set("verificationCode", undefined);
     newUser.set("accidentReports", undefined);
 
     // Enregistrer le nouvel utilisateur dans la collection « users ».
-    const insertResult = await userCollection.insertOne(newUser);
+    const insertResult = await userCollection.insertOne(newUser.toObject());
 
     if (!insertResult.acknowledged) {
       return res
@@ -551,24 +669,13 @@ async function RegisterUserSendCode(req, res) {
         .json({ msg: "Erreur lors de l'ajout d'un nouvel utilisateur" });
     }
 
-    // Générer le code de vérification
-    const verificationCode = generateVerificationCode();
-
-    // Mettre à jour l'utilisateur avec le code de vérification
-    await userCollection.updateOne(
-      { _id: newUser._id },
-      {
-        $set: {
-          verificationCode,
-          verificationCodeExpiration: new Date(
-            new Date().getTime() + 15 * 60000,
-          ), // délai d'expiration de 15 minutes
-        },
-      },
-    );
-
     // Envoyer le code de vérification par courrier électronique
-    await sendVerificationEmail(newUser.email, verificationCode);
+    try {
+      await sendVerificationEmail(newUser.email, verificationCode);
+    } catch (mailError) {
+      await userCollection.deleteOne({ _id: newUser._id });
+      throw mailError;
+    }
 
     res.status(201).json({ msg: "Code envoyé avec succès" });
   } catch (error) {
@@ -588,6 +695,27 @@ async function RegisterUserVerifyCode(req, res) {
 
     if (!user) {
       return res.status(404).json({ msg: "Utilisateur non trouvé" });
+    }
+
+    // Local dev bypass: accept any code without validation
+    if (SKIP_EMAIL_VERIFICATION) {
+      await userCollection.updateOne(
+        { _id: user._id },
+        {
+          $set: { emailVerified: true },
+          $unset: {
+            verificationCode: "",
+            verificationCodeExpiration: "",
+            verificationAttempts: "",
+          },
+        },
+      );
+      const temporalToken = jwt.createTemporalToken(user);
+      return res.status(201).json({
+        msg: "Le code de vérification a été validé avec succès",
+        user: user._id,
+        TA7: temporalToken,
+      });
     }
 
     // Vérifier que le code de vérification est correct et qu'il n'a pas expiré

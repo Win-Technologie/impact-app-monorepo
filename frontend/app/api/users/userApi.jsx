@@ -2,6 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSetRecoilState } from "recoil";
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
+export default function UserApiRoutePlaceholder() {
+  return null;
+}
+
 export async function authenticateUser(loginUser, endPoint) {
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
