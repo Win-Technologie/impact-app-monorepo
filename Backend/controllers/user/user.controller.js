@@ -204,7 +204,7 @@ async function validateRegisterUserFields(req) {
       .isLength({ min: 8 })
       .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/)
       .withMessage(
-        "Le mot de passe est requis et doit contenir au moins 8 caractères",
+        "Votre mot de passe doit contenir au moins 8 caractères, un chiffre, une minuscule et une majuscule",
       )
       .run(req),
 
@@ -522,6 +522,7 @@ async function RegisterUserSendCode(req, res) {
       const dummyExpiration = new Date(new Date().getTime() + 60 * 60000); // 1 hour
 
       if (userExisting) {
+        // Update the existing user
         await userCollection.updateOne(
           { _id: userExisting._id },
           {
@@ -537,6 +538,7 @@ async function RegisterUserSendCode(req, res) {
             },
           },
         );
+        // Fetch the updated user document
         const updatedUser = await userCollection.findOne({ _id: userExisting._id });
         const temporalToken = jwt.createTemporalToken(updatedUser);
         return res.status(201).json({ msg: "Code envoyé avec succès", TA7: temporalToken });

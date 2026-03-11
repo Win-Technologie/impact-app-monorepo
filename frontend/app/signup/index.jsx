@@ -135,7 +135,14 @@ export default function SignUp() {
         } else {
           setTimeout(() => {
             setModalVisible(false);
-            showErrorMessage(responseData.msg || t("signUpPage.alreadyuseEmail"));
+            // Check for validation errors first
+            if (responseData.errors && Array.isArray(responseData.errors)) {
+              showErrorMessage(responseData.errors[0].msg || "Erreur de validation");
+            } else if (responseData.msg) {
+              showErrorMessage(responseData.msg);
+            } else {
+              showErrorMessage(t("signUpPage.alreadyuseEmail"));
+            }
           }, 1000);
         }
       } catch (error) {
