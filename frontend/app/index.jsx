@@ -37,6 +37,19 @@ export default function MainScreen() {
         i18n.changeLanguage(val);
       }
     });
+
+    const getTokenFromAsyncSto = async () => {
+      const token = await AsyncStorage.getItem("userToken");
+      const user = await AsyncStorage.getItem("user");
+
+      if (user) {
+        router.navigate("(tabs)");
+      } else if (token && token.length > 0) {
+        router.navigate("signup/signUpLanding");
+      }
+    };
+
+    getTokenFromAsyncSto();
   }, []);
 
   useEffect(() => {

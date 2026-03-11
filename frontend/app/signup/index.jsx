@@ -48,10 +48,25 @@ export default function SignUp() {
   });
 
   const password = watch("password");
+  const confirmPassword = watch("confirmPassword");
   const [passwordVisible, setPasswordVisible] = useState(true);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(true);
   const [errorMessage, setErrorMessage] = useState();
   const [modalVisible, setModalVisible] = React.useState(false);
+
+  // Real-time password validation
+  const getPasswordErrors = () => {
+    if (!password) return [];
+    const errors = [];
+    if (password.length < 8) errors.push("au moins 8 caractères");
+    if (!/\d/.test(password)) errors.push("un chiffre");
+    if (!/[a-z]/.test(password)) errors.push("une minuscule");
+    if (!/[A-Z]/.test(password)) errors.push("une majuscule");
+    return errors;
+  };
+
+  const passwordErrors = getPasswordErrors();
+  const passwordsMatch = confirmPassword && password !== confirmPassword;
 
   useEffect(() => {
     navigation.addListener("beforeRemove", (e) => {
@@ -205,15 +220,8 @@ export default function SignUp() {
                 control={control}
                 name="password"
                 rules={{
-                  required: t("signUpPage.emailplaceholder"),
-                  minLength: {
-                    value: 8,
-                    message: t("signUpPage.minpasswordchar"),
-                  },
-                  pattern: {
-                    value: /^(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,}$/,
-                    message: t("signUpPage.passwordcharrequired"),
-                  },
+                  required: "Le mot de passe est requis",
+                  validate: () => passwordErrors.length === 0 || "Mot de passe invalide",
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
@@ -237,8 +245,10 @@ export default function SignUp() {
                 />
               </TouchableOpacity>
             </View>
-            {errors.password && (
-              <Text style={styles.errorText}>{errors.password.message}</Text>
+            {password && passwordErrors.length > 0 && (
+              <Text style={styles.errorText}>
+                Votre mot de passe doit contenir : {passwordErrors.join(", ")}
+              </Text>
             )}
           </View>
 
@@ -273,9 +283,9 @@ export default function SignUp() {
                 />
               </TouchableOpacity>
             </View>
-            {errors.confirmPassword && (
+            {passwordsMatch && (
               <Text style={styles.errorText}>
-                {errors.confirmPassword.message}
+                Les mots de passe ne correspondent pas
               </Text>
             )}
             {errorMessage && (

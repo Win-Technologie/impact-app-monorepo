@@ -201,11 +201,26 @@ async function validateRegisterUserFields(req) {
 
     body("password")
       .notEmpty()
-      .isLength({ min: 8 })
-      .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/)
-      .withMessage(
-        "Votre mot de passe doit contenir au moins 8 caractères, un chiffre, une minuscule et une majuscule",
-      )
+      .withMessage("Le mot de passe est requis")
+      .custom((value) => {
+        const errors = [];
+        if (value.length < 8) {
+          errors.push("au moins 8 caractères");
+        }
+        if (!/\d/.test(value)) {
+          errors.push("un chiffre");
+        }
+        if (!/[a-z]/.test(value)) {
+          errors.push("une minuscule");
+        }
+        if (!/[A-Z]/.test(value)) {
+          errors.push("une majuscule");
+        }
+        if (errors.length > 0) {
+          throw new Error(`Votre mot de passe doit contenir : ${errors.join(", ")}`);
+        }
+        return true;
+      })
       .run(req),
 
     body("phone")
