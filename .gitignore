@@ -31,6 +31,12 @@ yarn-error.*
 # local env files
 .env*.local
 
+# env files (keep real secrets out of git)
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env*.example
+
 # typescript
 *.tsbuildinfo
 
