@@ -107,7 +107,7 @@ export default function VerifyEmail() {
           }, 500);
         }
       } catch (error) {
-        setModalVisible(true);
+        setModalVisible(false);
         // alert();
         console.log(error);
       }
@@ -136,7 +136,7 @@ export default function VerifyEmail() {
       console.log(responseData);
       setModalVisible(false);
     } catch (error) {
-      setModalVisible(true);
+      setModalVisible(false);
       // alert();
       console.log(error);
     }

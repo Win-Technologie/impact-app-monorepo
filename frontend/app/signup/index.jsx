@@ -10,6 +10,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
   ToastAndroid,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -69,19 +70,30 @@ export default function SignUp() {
     setConfirmPasswordVisible(!confirmPasswordVisible);
   };
 
-  const showToastErrorToast = () => {
-    ToastAndroid.showWithGravityAndOffset(
-      t("signUpPage.alreadyuseEmail"),
-      ToastAndroid.LONG,
-      ToastAndroid.BOTTOM,
-      25,
-      50,
-    );
+  const showErrorMessage = (message) => {
+    if (Platform.OS === "android") {
+      ToastAndroid.showWithGravityAndOffset(
+        message,
+        ToastAndroid.LONG,
+        ToastAndroid.BOTTOM,
+        25,
+        50,
+      );
+      return;
+    }
+
+    Alert.alert("Erreur", message);
   };
 
   const onSubmit = (data) => {
     const registerUser = async (data) => {
       try {
+        if (!API_URL) {
+          setModalVisible(false);
+          showErrorMessage("Configuration API manquante (EXPO_PUBLIC_API_URL).");
+          return;
+        }
+
         const newUser = {
           email: data.email,
           password: data.password,
@@ -89,15 +101,32 @@ export default function SignUp() {
 
         setModalVisible(true);
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+
         const response = await fetch(`${API_URL}users/user/register/code`, {
           method: "POST",
           body: JSON.stringify(newUser),
           headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
         });
 
-        const responseData = await response.json();
+        clearTimeout(timeoutId);
 
-        if (responseData.msg == "Code envoyé avec succès") {
+        let responseData = {};
+        try {
+          responseData = await response.json();
+        } catch (parseError) {
+          setModalVisible(false);
+          showErrorMessage("Réponse serveur invalide.");
+          return;
+        }
+
+        if (responseData.TA7) {
+          await AsyncStorage.setItem("userToken", responseData.TA7);
+          setModalVisible(false);
+          router.push("/signup/signUpLanding");
+        } else if (responseData.msg == "Code envoyé avec succès") {
           setModalVisible(false);
           router.push({
             pathname: "/signup/verifyEmail",
@@ -106,12 +135,17 @@ export default function SignUp() {
         } else {
           setTimeout(() => {
             setModalVisible(false);
-            showToastErrorToast();
+            showErrorMessage(responseData.msg || t("signUpPage.alreadyuseEmail"));
           }, 1000);
         }
       } catch (error) {
-        setModalVisible(true);
-        //console.log(error);
+        setModalVisible(false);
+        if (error?.name === "AbortError") {
+          showErrorMessage("Le serveur met trop de temps à répondre.");
+          return;
+        }
+
+        showErrorMessage("Impossible de joindre le serveur.");
       }
     };
 
