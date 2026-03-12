@@ -18,7 +18,7 @@ export default function HeaderBox({ name, email, selfie, setSelfie }) {
   const [visible, setVisible] = React.useState(false);
   const { t } = useTranslation();
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
-  const HOST_URL = (result = API_URL.replace("api/", ""));
+  const HOST_URL = API_URL.replace("api/", "");
   const navigation = useNavigation();
 
   const createFormData = (photo, body = {}) => {

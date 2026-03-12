@@ -14,7 +14,6 @@ import Stepper from "../../../components/SignUp/stepper";
 import TextInputLarge from "../../../components/SignUp/textInputLarge";
 import { SimpleLineIcons, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import Modal from "react-native-modal";
 import ImagePickerModal from "../../../components/ImagePickerModal";
 import { DeclarationState } from "../../../GlobalState/DeclarationState";
 import { useRecoilState } from "recoil";

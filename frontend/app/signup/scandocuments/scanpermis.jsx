@@ -9,13 +9,13 @@ import {
   Alert,
   ActivityIndicator,
   ToastAndroid,
+  Modal,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import DualOptionButtonStep from "../../../components/SignUp/dualBottomButtonsSteps";
 import { router } from "expo-router";
 import { SimpleLineIcons } from "@expo/vector-icons";
 import ImagePickerModal from "../../../components/ImagePickerModal";
-import Modal from "react-native-modal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRecoilState } from "recoil";
 import {
@@ -328,20 +328,18 @@ export default function ScanPermis() {
       />
 
       <Modal
-        backdropOpacity={0.7}
-        isVisible={loadingModalVisible}
+        transparent={true}
+        visible={loadingModalVisible}
+        animationType="fade"
         onRequestClose={() => {
           setLoadingModalVisible(!loadingModalVisible);
         }}
       >
-        <View style={styles.modal}>
-          <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-          >
-            <ActivityIndicator size="small" color="#1B6878" />
-            <Text style={{ marginTop: 10, fontSize: 12, color: "#fff" }}>
-              {" "}
-              {t("pleasewait")}{" "}
+        <View style={styles.modalOverlay}>
+          <View style={styles.modal}>
+            <ActivityIndicator size="large" color="#1B6878" />
+            <Text style={{ marginTop: 10, fontSize: 14, color: "#fff" }}>
+              {t("pleasewait")}
             </Text>
           </View>
         </View>
@@ -414,5 +412,20 @@ const styles = StyleSheet.create({
   image: {
     width: 200,
     height: 200,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  modal: {
+    backgroundColor: "#1B6878",
+    padding: 30,
+    borderRadius: 10,
+    alignItems: "center",
+    minWidth: 200,
   },
 });

@@ -1,9 +1,8 @@
 /* eslint-disable eol-last */
 /* eslint-disable prettier/prettier */
 import React from "react";
-import { SafeAreaView, Text, Pressable, StyleSheet } from "react-native";
+import { SafeAreaView, Text, Pressable, StyleSheet, Modal, View } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import Modal from "react-native-modal";
 import * as ImagePicker from "expo-image-picker";
 
 export default function ImagePickerModal({ isVisible, onClose, setImage }) {
@@ -43,12 +42,13 @@ export default function ImagePickerModal({ isVisible, onClose, setImage }) {
 
   return (
     <Modal
-      isVisible={isVisible}
-      onBackButtonPress={onClose}
-      onBackdropPress={onClose}
-      style={styles.modal}
+      visible={isVisible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.buttons}>
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <SafeAreaView style={styles.buttons}>
         <Pressable
           style={styles.button}
           onPress={() => {
@@ -78,14 +78,16 @@ export default function ImagePickerModal({ isVisible, onClose, setImage }) {
           <Text style={styles.buttonText}>Camera</Text>
         </Pressable>
       </SafeAreaView>
+      </Pressable>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  modal: {
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "flex-end",
-    margin: 0,
   },
 
   buttonIcon: {
