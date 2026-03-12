@@ -31,7 +31,7 @@ export default function SignIn() {
   const navigation = useNavigation();
   const endPoint = "users/user/login";
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
-  const HOST_URL = (result = API_URL.replace("api/", ""));
+  const HOST_URL = API_URL.replace("api/", "");
 
   const {
     register,

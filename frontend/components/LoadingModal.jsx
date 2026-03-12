@@ -8,22 +8,22 @@ const LoadingModal = ({ modalVisible, setModalVisible }) => {
   return (
     <Modal
       transparent={true}
-      visible={modalVisible}
       animationType="fade"
+      visible={modalVisible}
       onRequestClose={() => {
         setModalVisible(!modalVisible);
       }}
     >
-      <View style={styles.overlay}>
+      <View style={styles.modalOverlay}>
         <View style={styles.modal}>
           <View
             style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
           >
-          <ActivityIndicator size="small" color="#1B6878" />
-          <Text style={{ marginTop: 10, fontSize: 12, color: "#fff" }}>
-            {" "}
-            {t("pleasewait")}{" "}
-          </Text>
+            <ActivityIndicator size="small" color="#1B6878" />
+            <Text style={{ marginTop: 10, fontSize: 12, color: "#fff" }}>
+              {" "}
+              {t("pleasewait")}{" "}
+            </Text>
           </View>
         </View>
       </View>
@@ -32,11 +32,11 @@ const LoadingModal = ({ modalVisible, setModalVisible }) => {
 };
 
 const styles = StyleSheet.create({
-  overlay: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   modal: {
     height: 30,
