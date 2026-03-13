@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSetRecoilState } from "recoil";
+import { router } from "expo-router";
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function UserApiRoutePlaceholder() {

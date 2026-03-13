@@ -16,16 +16,24 @@ const mainDb = getDb(MAINDB);
 const userCollection = mainDb.collection(USERSCOLLECTION);
 const vehicleCollection = mainDb.collection(VEHICLES_COLLECTION);
 
-const transporter = nodemailer.createTransport({
-  service: COMPANY_SERVICE,
-  auth: {
-    user: COMPANY_MAIL,
-    pass: COMP_MAIL_PASS,
-  },
-});
+// Only create transporter if email credentials are configured
+let transporter = null;
+if (COMPANY_SERVICE && COMPANY_MAIL && COMP_MAIL_PASS) {
+  transporter = nodemailer.createTransport({
+    service: COMPANY_SERVICE,
+    auth: {
+      user: COMPANY_MAIL,
+      pass: COMP_MAIL_PASS,
+    },
+  });
+}
 
 // Envoyer les codes de vérification par courrier électronique
 async function sendVerificationEmail(email, code) {
+  if (!transporter) {
+    console.warn('Email not sent: Email credentials not configured in .env');
+    return;
+  }
   const mailOptions = {
     from: COMPANY_MAIL,
     to: email,
@@ -36,6 +44,10 @@ async function sendVerificationEmail(email, code) {
 }
 
 async function sendNotificationMail(email, subject, msg) {
+  if (!transporter) {
+    console.warn('Email not sent: Email credentials not configured in .env');
+    return;
+  }
   const mailOptions = {
     from: COMPANY_MAIL,
     to: email,
@@ -46,6 +58,10 @@ async function sendNotificationMail(email, subject, msg) {
 }
 
 async function sendExpirationEmail(email, plate) {
+  if (!transporter) {
+    console.warn('Email not sent: Email credentials not configured in .env');
+    return;
+  }
   try {
     const mailOptions = {
       from: COMPANY_MAIL,
@@ -61,6 +77,10 @@ async function sendExpirationEmail(email, plate) {
 }
 
 async function sendAccidentReportByEmail(emails, pdfBytes, photoPaths) {
+  if (!transporter) {
+    console.warn('Email not sent: Email credentials not configured in .env');
+    return;
+  }
   const attachments = [
     {
       filename: "constat_amiable.pdf",
