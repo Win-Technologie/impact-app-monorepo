@@ -46,3 +46,4 @@ test.rest
 #VARIABLES BACKEND
 #vars.js
 node_modules 
+*.pdf
