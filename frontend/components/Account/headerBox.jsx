@@ -12,7 +12,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import ImagePickerModal from "../ImagePickerModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation, router } from "expo-router";
+import { useNavigation } from "expo-router";
 export default function HeaderBox({ name, email, selfie, setSelfie }) {
   const [filePath, setFilePath] = React.useState(null);
   const [visible, setVisible] = React.useState(false);
@@ -127,10 +127,7 @@ export default function HeaderBox({ name, email, selfie, setSelfie }) {
       <Text style={styles.name}>{name}</Text>
       <Text style={styles.email}>{email}</Text>
 
-      <TouchableOpacity 
-        style={styles.editButton}
-        onPress={() => router.push("profile/editProfile")}
-      >
+      <TouchableOpacity style={styles.editButton}>
         <MaterialCommunityIcons name="account-edit" size={34} color="white" />
         <Text style={styles.editButtonText}>
           {t("account.modifyyourprofil")}

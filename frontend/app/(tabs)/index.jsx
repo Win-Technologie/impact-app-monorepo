@@ -27,12 +27,6 @@ export default function index() {
     Linking.openURL("tel:911");
   };
 
-  const callAssurance = () => {
-    // Add your insurance contact logic here
-    // For example: Linking.openURL("tel:YOUR_INSURANCE_NUMBER");
-    console.log("Insurance button pressed");
-  };
-
   const callRemorcage = () => {
     Linking.openURL(
       "https://www.google.com/search?q=remorqueur&oq=remorqueur+&gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBCDY1MjNqMGoxqAIAsAIA&sourceid=chrome&ie=UTF-8",
@@ -88,42 +82,40 @@ export default function index() {
           <Text style={{ marginBottom: 10, color: "gray" }}>Bienvenue</Text>
         </HomeHeader>
 
-        <TouchableOpacity onPress={() => router.push("subscription")}>
-          <BoxComponent
-            height={150}
+        <BoxComponent
+          height={150}
+          style={{
+            borderRadius: 5,
+            borderWidth: 1,
+            borderColor: "grey",
+            padding: 15,
+            backgroundColor: "#19363C",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
             style={{
-              borderRadius: 5,
-              borderWidth: 1,
-              borderColor: "grey",
-              padding: 15,
-              backgroundColor: "#19363C",
-              alignItems: "center",
-              justifyContent: "center",
+              color: "white",
+              textAlign: "center",
+              fontFamily: "bold",
+              fontSize: 18,
             }}
           >
-            <Text
-              style={{
-                color: "white",
-                textAlign: "center",
-                fontFamily: "bold",
-                fontSize: 18,
-              }}
-            >
-              {t("home.promotion")}
-            </Text>
-            <Text
-              style={{
-                marginTop: 15,
-                textAlign: "center",
-                textDecorationLine: "underline",
-                color: "white",
-                fontSize: 14,
-              }}
-            >
-              {t("home.monthlySubscription")}
-            </Text>
-          </BoxComponent>
-        </TouchableOpacity>
+            {t("home.promotion")}
+          </Text>
+          <Text
+            style={{
+              marginTop: 15,
+              textAlign: "center",
+              textDecorationLine: "underline",
+              color: "white",
+              fontSize: 14,
+            }}
+          >
+            {t("home.monthlySubscription")}
+          </Text>
+        </BoxComponent>
 
         <BoxComponent height={131} style={styles.box}>
           <View style={{ flexDirection: "row", height: 131 }}>
