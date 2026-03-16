@@ -36,6 +36,14 @@ const nameAndGender = ({ onNext }) => {
     mode: "onChange",
   });
 
+  const validateNameInput = (text) => {
+    if (/\d/.test(text)) {
+      return t("nameAndGenderScreen.nameCannotContainNumbers");
+    }
+
+    return true;
+  };
+
   const handleSelectGender = (gender) => {
     setUserDetails({ ...userDetails, gender });
   };
@@ -106,10 +114,7 @@ const nameAndGender = ({ onNext }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stepper
-        currentStep={progressData[0].actualstep}
-        totalSteps={totalSteps}
-      />
+      <Stepper currentStep={1} totalSteps={totalSteps} displayStep={1} />
 
       <ScrollView style={styles.content}>
         <Text style={styles.title}>{t("nameAndGenderScreen.pageTitle")}</Text>
@@ -118,10 +123,16 @@ const nameAndGender = ({ onNext }) => {
           <Controller
             control={control}
             name="name"
-            rules={{ required: t("nameAndGenderScreen.firstNameRequired") }}
+            rules={{
+              required: t("nameAndGenderScreen.firstNameRequired"),
+              validate: validateNameInput,
+            }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInputLarge
                 placeholder={t("nameAndGenderScreen.firstNamePlaceholder")}
+                autoCorrect={false}
+                autoCapitalize="words"
+                keyboardType="default"
                 onBlur={onBlur}
                 onChangeText={(text) => {
                   onChange(text);
@@ -140,11 +151,16 @@ const nameAndGender = ({ onNext }) => {
           <Controller
             control={control}
             name="lastName"
-            rules={{ required: t("nameAndGenderScreen.lastNameRequired") }}
+            rules={{
+              required: t("nameAndGenderScreen.lastNameRequired"),
+              validate: validateNameInput,
+            }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInputLarge
-                style={styles.textInput}
                 placeholder={t("nameAndGenderScreen.lastNamePlaceholder")}
+                autoCorrect={false}
+                autoCapitalize="words"
+                keyboardType="default"
                 onBlur={onBlur}
                 onChangeText={(text) => {
                   onChange(text);
@@ -221,6 +237,7 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     padding: 20,
     paddingTop: 0,
+    backgroundColor: "white",
   },
 
   content: {

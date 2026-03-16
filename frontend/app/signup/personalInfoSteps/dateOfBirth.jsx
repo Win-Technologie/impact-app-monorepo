@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React from "react";
+import { View, Text, StyleSheet, Keyboard } from "react-native";
 import { router } from "expo-router";
 import { useRecoilState } from "recoil";
 import { userDetailsState } from "../../../GlobalState/userDetailState";
@@ -12,28 +12,19 @@ import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Dob() {
-  const [currentStep, setCurrentStep] = useState(2);
   const totalSteps = 4;
   const [userDetails, setUserDetails] = useRecoilState(userDetailsState);
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
-  const [date, setDate] = useState(undefined);
-  const [inputDate, setInputDate] = React.useState(undefined);
   const { t } = useTranslation();
-
-  const handleDateChange = (date) => {
-    setUserDetails((prevDetails) => ({ ...prevDetails, birthDay: date }));
-  };
+  const today = new Date();
 
   const handleInputChange = (field, value) => {
     setUserDetails((prev) => ({ ...prev, [field]: value }));
   };
 
   const handlePressBack = () => {
-    setCurrentStep(currentStep - 1);
     router.back();
   };
-
-  dateArray = userDetails.birthDay.split("-");
 
   const {
     control,
@@ -46,20 +37,7 @@ export default function Dob() {
     mode: "onChange",
   });
 
-  function formatDate(val) {
-    if (Number(val) > 9) {
-      return val;
-    } else {
-      return "0" + val;
-    }
-  }
-
-  const handlePressContinue = handleSubmit((data) => {
-    //console.log(data.date);
-    //let birthDate = data.date.getFullYear() + '-' + formatDate(data.date.getMonth()+1) + '-' + formatDate(data.date.getDate());
-
-    //console.log(birthDate);
-
+  const handlePressContinue = handleSubmit(() => {
     if (progressData[0].actualstep == 1) {
       const array = progressData.map((item) => {
         if (item.id == 0) {
@@ -79,17 +57,12 @@ export default function Dob() {
       setProgressData(array);
     }
 
-    setCurrentStep(currentStep + 1);
-    //setUserDetails({ ...userDetails, birthDay: birthDate });
     router.push("/signup/personalInfoSteps/phoneAndAddress");
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stepper
-        currentStep={progressData[0].actualstep}
-        totalSteps={totalSteps}
-      />
+      <Stepper currentStep={2} totalSteps={totalSteps} displayStep={2} />
 
       <View style={styles.content}>
         <Text style={styles.title}>{t("dobScreen.title")}</Text>
@@ -100,33 +73,45 @@ export default function Dob() {
             name="date"
             rules={{
               required: t("dobScreen.dateOfBirthRequired"),
-              pattern: {
-                value: /^\d{4}-\d{2}-\d{2}$/,
-                message: t("dobScreen.dateFormatError"),
+              validate: (value) => {
+                if (!value) {
+                  return t("dobScreen.dateOfBirthRequired");
+                }
+
+                const selectedDate = value instanceof Date ? value : new Date(value);
+
+                if (Number.isNaN(selectedDate.getTime())) {
+                  return t("dobScreen.dateFormatError");
+                }
+
+                if (selectedDate > today) {
+                  return t("dobScreen.futureDateError");
+                }
+
+                return true;
               },
             }}
-            render={({ field: { onChange, onBlur, value } }) => (
+            render={({ field: { onChange, value } }) => (
               <DatePickerInput
                 locale="en"
                 underlineColor="transparent"
                 mode="outlined"
                 activeOutlineColor="gray"
                 style={styles.input}
-                date={date}
-                /*onChangeText={(text) => {
-                                    onChange(text);
-                                    setDate(text);
-                                  //  console.log(text)
-                                }}*/
+                keyboardType="default"
+                validRange={{ endDate: today }}
                 onChange={(d) => {
-                  //console.log(d);
+                  if (!d) {
+                    return;
+                  }
+
                   onChange(d);
                   handleInputChange("birthDay", d.toISOString().split("T")[0]);
-                  //setInputDate(d);
+                  Keyboard.dismiss();
                 }}
+                onFocus={() => Keyboard.dismiss()}
                 value={value ? new Date(value) : null}
                 inputMode="start"
-                //value={inputDate}
               />
             )}
           />
@@ -153,6 +138,7 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     padding: 20,
     paddingTop: 0,
+    backgroundColor: "white",
   },
 
   content: {
@@ -174,7 +160,9 @@ const styles = StyleSheet.create({
   },
 
   input: {
-    backgroundColor: "#ffff",
+    backgroundColor: "#fff",
+    height: 51,
+    fontSize: 16,
   },
 
   errorText: {

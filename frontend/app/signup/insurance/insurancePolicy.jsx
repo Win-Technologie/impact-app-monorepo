@@ -259,6 +259,7 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     padding: 20,
     paddingTop: 0,
+    backgroundColor: "white",
   },
 
   content: {

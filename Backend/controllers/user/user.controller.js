@@ -1199,11 +1199,6 @@ async function EditUser(req, res) {
       { _id: id }, // Filtre pour trouver la propriété par son ID
       { $set: foundUser }, // Données actualisées souhaitées
     );
-    // Verifier si la mise à jour s'est déroulée avec succès
-    if (result.modifiedCount === 0) {
-      // La mise à jour a échoué
-      return res.status(400).json({ msg: "Aucun changement n'a été effectué" });
-    }
 
     return res.status(200).json({ msg: "user has been modified" });
   } catch (error) {

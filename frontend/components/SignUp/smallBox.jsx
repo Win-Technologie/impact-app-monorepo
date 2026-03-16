@@ -17,8 +17,15 @@ export default function SmallBox({
   return (
     <TouchableOpacity style={styles.option} onPress={onPress}>
       <View style={styles.contentContainer}>
-        <View style={styles.progressCircle}>
-          <Text style={styles.progressText}>
+        <View
+          style={[
+            styles.progressCircle,
+            isCompleted && styles.completedProgressCircle,
+          ]}
+        >
+          <Text
+            style={[styles.progressText, isCompleted && styles.completedProgressText]}
+          >
             {isCompleted ? "✓" : `${((actualstep / nbstep) * 100).toFixed(0)}%`}
           </Text>
         </View>
@@ -62,6 +69,14 @@ const styles = StyleSheet.create({
   progressText: {
     color: "#19363C",
     fontSize: 14,
+  },
+  completedProgressCircle: {
+    backgroundColor: "#CF8C58",
+    borderColor: "#CF8C58",
+  },
+  completedProgressText: {
+    color: "#fff",
+    fontWeight: "700",
   },
   textContainer: {
     justifyContent: "center",

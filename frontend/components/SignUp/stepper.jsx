@@ -2,16 +2,15 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
-const Stepper = ({ currentStep, totalSteps }) => {
-  const progress = (currentStep / totalSteps) * 100;
+const Stepper = ({ currentStep, totalSteps, displayStep }) => {
+  const visibleStep = displayStep ?? currentStep;
+  const normalizedStep = Math.min(Math.max(visibleStep, 0), totalSteps);
+  const progress = (normalizedStep / totalSteps) * 100;
   //console.log(`Progress width: ${progress}%`);
 
   return (
     <View style={styles.container}>
-      <Text>
-        Étape {currentStep == totalSteps ? currentStep : currentStep + 1} sur{" "}
-        {totalSteps}
-      </Text>
+      <Text>Étape {visibleStep} sur {totalSteps}</Text>
       <View style={styles.progressBarBackground}>
         <View
           style={[styles.progressBarForeground, { width: `${progress}%` }]}
