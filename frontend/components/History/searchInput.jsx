@@ -2,11 +2,21 @@ import React, { useState } from "react";
 import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 
-export default function SearchInput() {
+export default function SearchInput({ onQueryChange }) {
   const [query, setQuery] = useState("");
+
+  const handleChange = (text) => {
+    setQuery(text);
+    if (onQueryChange) {
+      onQueryChange(text);
+    }
+  };
 
   const handleClear = () => {
     setQuery("");
+    if (onQueryChange) {
+      onQueryChange("");
+    }
   };
 
   return (
@@ -19,7 +29,7 @@ export default function SearchInput() {
       />
       <TextInput
         style={styles.input}
-        onChangeText={setQuery}
+        onChangeText={handleChange}
         value={query}
         placeholder="Chercher une date d'accident"
         placeholderTextColor="grey"

@@ -1,5 +1,5 @@
 ﻿import { View, Text, StyleSheet, FlatList, StatusBar } from "react-native";
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { AntDesign } from "@expo/vector-icons";
 import BoxComponent from "../../components/Home/boxComponent";
 import SearchInput from "../../components/History/searchInput";
@@ -41,11 +41,28 @@ const historyData = [
 
   {
     key: "3",
-    date: "22 Mar 2023",
-    description: "Collision arrière avec dommages matériels",
+    date: "10 Jan 2024",
+    description: "Accident de stationnement",
     people: [
       {
-        name: "Alice Brown",
+        name: "Bob Smith",
+        imageUri: "../../../assets/google.png",
+      },
+    ],
+    accidentImageUri: "../../../assets/facebook.png",
+  },
+
+  {
+    key: "4",
+    date: "05 Jul 2023",
+    description: "Collision latérale",
+    people: [
+      {
+        name: "Charlie Wilson",
+        imageUri: "../../../assets/splashscreen.png",
+      },
+      {
+        name: "Diana Prince",
         imageUri: "../../../assets/google.png",
       },
     ],
@@ -55,6 +72,15 @@ const historyData = [
 
 export default function HistoryPage() {
   const { t } = useTranslation();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredData = useMemo(() => {
+    if (!searchQuery) return historyData;
+    return historyData.filter(item =>
+      item.date.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -68,7 +94,7 @@ export default function HistoryPage() {
         <View style={styles.textContainer}>
           <Text style={styles.text}>{t("historyPage.title")}</Text>
           <Text style={styles.text2}>
-            {historyData.length} {t("historyPage.accidents")}
+            {filteredData.length} {t("historyPage.accidents")}
           </Text>
         </View>
         <AntDesign
@@ -79,20 +105,28 @@ export default function HistoryPage() {
         />
       </BoxComponent>
 
-      <SearchInput />
+      <SearchInput onQueryChange={setSearchQuery} />
 
-      <FlatList
-        data={historyData}
-        renderItem={({ item }) => (
-          <HistoryBoxComponent
-            date={item.date}
-            description={item.description}
-            people={item.people}
-            accidentImageUri={item.accidentImageUri}
-          />
-        )}
-        keyExtractor={(item) => item.key}
-      />
+      {filteredData.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>
+            {searchQuery ? "Aucun accident trouvé pour cette recherche" : "Aucun accident dans l'historique"}
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredData}
+          renderItem={({ item }) => (
+            <HistoryBoxComponent
+              date={item.date}
+              description={item.description}
+              people={item.people}
+              accidentImageUri={item.accidentImageUri}
+            />
+          )}
+          keyExtractor={(item) => item.key}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -132,5 +166,16 @@ const styles = StyleSheet.create({
     right: 30,
     top: "50%",
     marginTop: -5,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "grey",
+    textAlign: "center",
   },
 });
