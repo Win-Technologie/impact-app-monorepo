@@ -8,433 +8,398 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
-import { useTranslation } from "react-i18next";
-import { useRecoilState } from "recoil";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage to get the token
-import { SelectedVehicleState } from "../../GlobalState/SelectedVehiclesState";
-import { UserInfoState } from "../../GlobalState/UserInfoState";
-import { VehicleUserInfoState } from "../../GlobalState/VehicleUserInfoState";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AntDesign } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useSetRecoilState } from "recoil";
+import { SelectedVehicleState } from "../../GlobalState/SelectedVehiclesState";
 
 const VehicleList = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedVehicleId, setSelectedVehicleId] =
-    useRecoilState(SelectedVehicleState);
-  const [vehicleDetails, setVehicleDetails] =
-    useRecoilState(VehicleUserInfoState);
-  const [userDetails, setUserDetails] = useRecoilState(UserInfoState);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const setGlobalSelectedVehicleId = useSetRecoilState(SelectedVehicleState);
   const router = useRouter();
-  const { t } = useTranslation();
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-  const fetchUserDataAndVehicles = async () => {
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
+
+  const fetchVehicles = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
       if (!token) {
         console.error("No token provided");
+        setLoading(false);
         return;
       }
 
-      // Fetch vehicle information
-      console.log("Fetching vehicle information...");
-      const vehicleResponse = await fetch(`${API_URL}vehicles`, {
+      const response = await fetch(`${API_URL}vehicles`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      // const errorData1 = await vehicleResponse.json();
-
-      // console.log(errorData1);
-
-      if (!vehicleResponse.ok) {
-        const errorData = await vehicleResponse.json();
-        console.error("Vehicle response error:", errorData);
-        throw new Error("Network response for vehicles was not ok");
+      if (response.ok) {
+        const data = await response.json();
+        // Backend returns {car, insurance} objects - extract car data only
+        // Filter out invalid vehicles: must have _id AND valid brand/model (not empty strings)
+        const validVehicles = (data.carsWithInsurances || [])
+          .filter(item => {
+            if (!item.car || !item.car._id) return false;
+            const brand = item.car.brand?.trim();
+            const model = item.car.model?.trim();
+            // Must have at least brand OR model with actual content
+            return (brand && brand.length > 0) || (model && model.length > 0);
+          })
+          .map(item => item.car); // Extract just the car object
+        setVehicles(validVehicles);
+        // Set first vehicle as selected by default
+        if (validVehicles.length > 0) {
+          setSelectedVehicleId(validVehicles[0]._id);
+        }
+      } else {
+        console.error("Failed to fetch vehicles");
+        setVehicles([]);
       }
-
-      const vehicleData = await vehicleResponse.json();
-      console.log("Fetched vehicles:", vehicleData);
-
-      setVehicles(vehicleData.carsWithInsurances); // Ensure to set the array of cars correctly
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching vehicles:", error);
+      setVehicles([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUserDataAndVehicles();
-  }, []);
-
-  const handleSelect = async (id) => {
-    const updatedVehicles = vehicles.map((vehicle) =>
-      vehicle._id === id
-        ? { ...vehicle, selected: true }
-        : { ...vehicle, selected: false },
-    );
-    setVehicles(updatedVehicles);
-    setSelectedVehicleId(id); // Set the selected vehicle ID
-
-    // Fetch selected vehicle details
-    try {
-      const token = await AsyncStorage.getItem("userToken");
-      if (!token) {
-        console.error("No token provided");
-        return;
-      }
-
-      // Fetch vehicle details
-      const vehicleResponse = await fetch(`${API_URL}vehicles/${id}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!vehicleResponse.ok) {
-        throw new Error("Network response for vehicle details was not ok");
-      }
-
-      const vehicleData = await vehicleResponse.json();
-      console.log("Fetched vehicle details:", vehicleData); // Log the fetched vehicle details
-      setVehicleDetails(vehicleData);
-
-      // Fetch user information related to the vehicle
-      const userResponse = await fetch(
-        `${API_URL}users/user/vehicle/info/${id}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!userResponse.ok) {
-        throw new Error("Network response for user information was not ok");
-      }
-
-      const userData = await userResponse.json();
-      console.log("Fetched user details:", userData);
-      setUserDetails(userData);
-    } catch (error) {
-      console.error("Error fetching vehicle or user details:", error);
-    }
+  const handleSelectVehicle = (vehicleId) => {
+    setSelectedVehicleId(vehicleId);
   };
 
-  const handleDelete = async (car) => {
-    console.log(car);
+  const handleDeleteVehicle = async (vehicleId, vehicleName) => {
     Alert.alert(
-      t("vehicleList.deleteAlertTitle"),
-      t("vehicleList.deleteAlertMessage"),
+      "Retirer",
+      `Voulez-vous vraiment retirer ${vehicleName}?`,
       [
+        { text: "Annuler", style: "cancel" },
         {
-          text: t("vehicleList.deleteAlertCancel"),
-          style: "cancel",
-        },
-        {
-          text: t("vehicleList.deleteAlertConfirm"),
+          text: "Retirer",
+          style: "destructive",
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem("userToken");
               if (!token) {
-                console.error("No token provided");
+                Alert.alert("Erreur", "Session expirée");
                 return;
               }
 
-              const response = await fetch(
-                `${API_URL}vehicles/delete/${car._id}`,
-                {
-                  method: "DELETE",
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
+              const response = await fetch(`${API_URL}vehicles/delete/${vehicleId}`, {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
                 },
-              );
+              });
 
-              if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Delete response error:", errorData);
-                throw new Error("Network response was not ok");
+              if (response.ok) {
+                // Remove from local state
+                const updatedVehicles = vehicles.filter(v => v._id !== vehicleId);
+                setVehicles(updatedVehicles);
+                // If deleted vehicle was selected, select first remaining vehicle
+                if (selectedVehicleId === vehicleId && updatedVehicles.length > 0) {
+                  setSelectedVehicleId(updatedVehicles[0]._id);
+                } else if (updatedVehicles.length === 0) {
+                  setSelectedVehicleId(null);
+                }
+              } else {
+                Alert.alert("Erreur", "Impossible de retirer le véhicule");
               }
-
-              fetchUserDataAndVehicles();
             } catch (error) {
               console.error("Error deleting vehicle:", error);
+              Alert.alert("Erreur", "Une erreur est survenue");
             }
           },
         },
-      ],
+      ]
     );
+  };
+
+  const handleNavigateToVehicleInfo = (vehicleId) => {
+    console.log("Navigating to VehicleInfo with ID:", vehicleId);
+    setSelectedVehicleId(vehicleId);
+    setGlobalSelectedVehicleId(vehicleId);
+    router.push("vehicleOptions/VehicleInfo");
+  };
+
+  const handleNavigateToInsurance = (vehicleId) => {
+    console.log("Navigating to Insurance with ID:", vehicleId);
+    setSelectedVehicleId(vehicleId);
+    setGlobalSelectedVehicleId(vehicleId);
+    router.push("vehicleOptions/VehicleInsurance");
   };
 
   const handleAddVehicle = () => {
-    router.push("./AddVehicle"); // Adjust this path based on your routing structure
+    router.push("vehicleOptions/AddVehicle");
   };
 
-  const renderVehicle = ({ item }) => {
-    const handleVehicleInfo = (car) => {
-      handleSelect(car.car._id);
-      router.push(`vehicleOptions/VehicleInfo`);
-    };
-
-    const handleVehicleInsurance = (car) => {
-      if (car.insurance != null) {
-        handleSelect(car.car._id);
-        router.push(`vehicleOptions/VehicleInsurance`);
-      } else {
-        //alert("no assurance")
-      }
-    };
-
-    // console.log('Rendering vehicle:', item); // Log the item being rendered
+  const renderVehicleCard = ({ item }) => {
+    const isSelected = item._id === selectedVehicleId;
+    const vehicleName = `${item.brand || ""} ${item.model || ""} ${item.year || ""}`.trim() || "Véhicule";
 
     return (
-      <View style={{ marginBottom: 40 }}>
-        <View>
-          <View style={styles.vehicleHeader}>
-            <Text
-              style={[
-                styles.vehicleName,
-                item.selected && styles.vehicleNameSelected,
-              ]}
-            >
-              {item.car.brand} {item.car.model} {item.car.year}
+      <View style={styles.vehicleCard}>
+        {/* Vehicle Header */}
+        <View style={[styles.vehicleHeader, isSelected && styles.vehicleHeaderSelected]}>
+          <TouchableOpacity 
+            style={{ flex: 1 }}
+            onPress={() => handleSelectVehicle(item._id)}
+          >
+            <Text style={[styles.vehicleName, isSelected && styles.vehicleNameSelected]}>
+              {vehicleName}
             </Text>
+          </TouchableOpacity>
+          {isSelected ? (
+            <View style={styles.selectedBadge}>
+              <MaterialIcons name="check-circle" size={20} color="white" />
+              <Text style={styles.selectedText}>Sélectionné</Text>
+            </View>
+          ) : (
+            <TouchableOpacity 
+              style={styles.deleteButton}
+              onPress={() => handleDeleteVehicle(item._id, vehicleName)}
+            >
+              <Text style={styles.deleteText}>Retirer</Text>
+              <MaterialIcons name="delete-outline" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
+        </View>
 
-            {!item.selected && (
-              <TouchableOpacity
-                onPress={() => handleDelete(item.car)}
-                style={styles.deleteButton}
-              >
-                <Text style={styles.deleteButtonText}>
-                  {t("vehicleList.remove")}
-                </Text>
-                <Icon name="delete" size={20} color="#000" />
-              </TouchableOpacity>
-            )}
-
-            {item.selected && (
-              <View style={styles.selectedBadge}>
-                <Text style={styles.selectedText}>
-                  {t("vehicleList.selected")}
-                </Text>
-                <Icon name="check-circle" size={20} color="white" />
-              </View>
-            )}
+        {/* Vehicle Details Sections - CLICKABLE */}
+        <TouchableOpacity
+          style={styles.detailRow}
+          onPress={() => handleNavigateToVehicleInfo(item._id)}
+        >
+          <View>
+            <Text style={styles.detailTitle}>Informations du véhicule</Text>
+            <Text style={styles.detailSubtitle}>
+              Modèle, année, numéro de plaque...
+            </Text>
           </View>
-        </View>
+          <MaterialIcons name="chevron-right" size={24} color="#666" />
+        </TouchableOpacity>
 
-        <View style={styles.infoContainer}>
-          <TouchableOpacity
-            style={styles.infoBox}
-            onPress={() => handleVehicleInfo(item)}
-          >
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoTitle}>
-                {t("vehicleList.vehicleInfo")}
-              </Text>
-              <Text style={styles.infoSubtitle}>
-                {t("vehicleList.vehicleInfoSubtitle")}
-              </Text>
-            </View>
-            <Icon name="chevron-right" size={20} color="#000" />
-          </TouchableOpacity>
+        <View style={styles.divider} />
 
-          <TouchableOpacity
-            style={[styles.infoBox, styles.insuranceBox]}
-            onPress={() => handleVehicleInsurance(item)}
-          >
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoTitle}>
-                {t("vehicleList.insuranceInfo")}
-              </Text>
-              <Text style={styles.infoSubtitle}>
-                {t("vehicleList.insuranceInfoSubtitle")}
-              </Text>
-            </View>
-            <Icon name="chevron-right" size={20} color="#000" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.detailRow}
+          onPress={() => handleNavigateToInsurance(item._id)}
+        >
+          <View>
+            <Text style={styles.detailTitle}>Informations d'assurances</Text>
+            <Text style={styles.detailSubtitle}>
+              Nom de la société, numéro d'assurance...
+            </Text>
+          </View>
+          <MaterialIcons name="chevron-right" size={24} color="#666" />
+        </TouchableOpacity>
       </View>
     );
   };
 
-  return (
-    <SafeAreaView style={styles.vehicleContainer}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginBottom: 20,
-          alignItems: "center",
-        }}
-      >
-        <TouchableOpacity
-          style={{ flexDirection: "row" }}
-          onPress={() => {
-            router.back();
-          }}
-        >
-          <AntDesign
-            name="arrowleft"
-            size={20}
-            color="#19363C"
-            style={{ fontWeight: "200" }}
-          />
-          <Text style={{ color: "#19363C" }}>{"   "}Retour</Text>
-        </TouchableOpacity>
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0B8BA8" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={{ flexDirection: "row", alignItems: "center" }} 
+          onPress={() => router.back()}
+        >
+          <MaterialIcons name="arrow-back" size={20} color="#19363C" />
+          <Text style={{ color: "#19363C", marginLeft: 8 }}>Retour</Text>
+        </TouchableOpacity>
         <View>
-          <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            {t("vehicleList.title")}
-          </Text>
+          <Text style={styles.headerTitle}>Gestion des véhicules</Text>
         </View>
       </View>
 
-      {loading ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <ActivityIndicator size="large" color="#0B8BA8" />
-        </View>
-      ) : (
-        <FlatList
-          data={vehicles}
-          //keyExtractor={(item) => item._id.toString()}
-          renderItem={renderVehicle}
-          contentContainerStyle={styles.listContainer}
-          ListHeaderComponent={
-            <Text style={styles.subtitle}>{t("vehicleList.myVehicles")}</Text>
-          }
-          ListFooterComponent={
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={handleAddVehicle}
-            >
-              <Text style={styles.addButtonText}>
-                {t("vehicleList.addVehicle")}
-              </Text>
-            </TouchableOpacity>
-          }
-        />
+      {vehicles.length > 0 && (
+        <Text style={styles.sectionTitle}>Mes véhicules</Text>
       )}
+
+      <FlatList
+        data={vehicles}
+        renderItem={renderVehicleCard}
+        keyExtractor={(item) => item._id || Math.random().toString()}
+        contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <MaterialIcons name="directions-car" size={64} color="#CCC" />
+            <Text style={styles.emptyText}>Aucun véhicule</Text>
+            <Text style={styles.emptySubtext}>
+              Ajoutez votre premier véhicule
+            </Text>
+          </View>
+        }
+      />
+
+      {/* Add Vehicle Button */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.addButton} onPress={handleAddVehicle}>
+          <Text style={styles.addButtonText}>Ajouter un véhicule</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  vehicleContainer: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#FFFFFF",
-  },
-
-  listContainer: {
-    paddingHorizontal: 0,
-  },
-
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
   },
-
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   header: {
     flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
     alignItems: "center",
-    padding: 20,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "white",
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  backButton: {
-    marginRight: 10,
+    borderBottomColor: "#E0E0E0",
   },
   headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#19363C",
+  },
+  sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
+    color: "#19363C",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 15,
   },
-
-  subtitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    paddingTop: 10,
-    paddingBottom: 20,
+  listContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 100,
   },
-
+  vehicleCard: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+    marginBottom: 15,
+    overflow: "hidden",
+  },
   vehicleHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    padding: 15,
+    backgroundColor: "#E8E8E8",
+  },
+  vehicleHeaderSelected: {
+    backgroundColor: "#CF8C58",
   },
   vehicleName: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#19363C",
+    flex: 1,
   },
   vehicleNameSelected: {
-    color: "#000",
+    color: "white",
   },
   selectedBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#d4a373",
-    borderRadius: 5,
-    padding: 5,
+    gap: 5,
   },
   selectedText: {
-    color: "#fff",
-    marginRight: 5,
-  },
-  infoContainer: {
-    borderTopWidth: 1,
-    borderColor: "#ccc",
-    paddingTop: 10,
-  },
-  infoBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-  },
-  infoTitle: {
-    fontWeight: "bold",
-  },
-  infoTextContainer: {
-    flexShrink: 1,
-  },
-  infoSubtitle: {
-    color: "#777",
-  },
-  insuranceBox: {
-    backgroundColor: "#f8f8f8",
+    color: "white",
+    fontSize: 14,
+    fontWeight: "500",
   },
   deleteButton: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 5,
+    gap: 5,
   },
-  deleteButtonText: {
-    marginLeft: 5,
+  deleteText: {
+    color: "#666",
+    fontSize: 14,
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#F5F5F5",
+  },
+  detailTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#19363C",
+    marginBottom: 4,
+  },
+  detailSubtitle: {
+    fontSize: 12,
+    color: "#999",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#E0E0E0",
+    marginHorizontal: 15,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#666",
+    marginTop: 15,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#999",
+    marginTop: 5,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "white",
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
   },
   addButton: {
     backgroundColor: "#0B8BA8",
     padding: 20,
-    borderRadius: 5,
     alignItems: "center",
-    marginTop: 20,
-    marginBottom: 15,
   },
   addButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

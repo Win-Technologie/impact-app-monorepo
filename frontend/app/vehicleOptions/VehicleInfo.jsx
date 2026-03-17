@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -17,88 +18,175 @@ import { VehicleUserInfoState } from "../../GlobalState/VehicleUserInfoState";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AntDesign } from "@expo/vector-icons";
 
+const API_URL = "http://192.168.2.21:8000/api/";
+
 const VehicleInfo = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const selectedVehicleId = useRecoilValue(SelectedVehicleState);
-  const vehicleDetails = useRecoilValue(VehicleUserInfoState);
   const ownerDetails = useRecoilValue(UserInfoState);
+  const [vehicle, setVehicle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(null);
 
-  console.log(ownerDetails);
+  useEffect(() => {
+    // Fetch logged-in user's profile data
+    const fetchUserProfile = async () => {
+      try {
+        const userData = JSON.parse(await AsyncStorage.getItem("user"));
+        if (userData?.user) {
+          setUserProfile(userData.user);
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+    
+    fetchUserProfile();
+  }, []);
 
-  if (!vehicleDetails || !ownerDetails) {
-    return <Text>Loading...</Text>;
+  useEffect(() => {
+    const fetchVehicleDetails = async () => {
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+        const response = await fetch(`${API_URL}vehicles`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Fetched vehicles data:", data);
+          // Find the selected vehicle from the carsWithInsurances array
+          const selectedVehicleData = data.carsWithInsurances?.find(
+            item => item.car?._id === selectedVehicleId
+          );
+          
+          console.log("Selected vehicle data:", selectedVehicleData);
+          
+          if (selectedVehicleData?.car) {
+            setVehicle(selectedVehicleData.car);
+          } else {
+            console.log("Vehicle not found for ID:", selectedVehicleId);
+          }
+        } else {
+          console.error("Failed to fetch vehicles:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching vehicle details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (selectedVehicleId) {
+      fetchVehicleDetails();
+    } else {
+      console.log("No vehicle selected");
+      setLoading(false);
+    }
+  }, [selectedVehicleId]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Loading...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (!vehicle) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <Text>Véhicule non trouvé</Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={{color: '#19363C', marginTop: 20}}>Retour</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!ownerDetails) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Loading owner details...</Text>
+      </SafeAreaView>
+    );
   }
 
   const vehicleInfo = [
     {
       style: "column",
       label: t("vehicleInfo.brand"),
-      value: ownerDetails.vehicle.brand || "N/A",
+      value: vehicle.brand || "N/A",
     },
     {
       style: "column",
       label: t("vehicleInfo.model"),
-      value: ownerDetails.vehicle.model || "N/A",
+      value: vehicle.model || "N/A",
     },
     {
       style: "column",
       label: t("vehicleInfo.year"),
-      value: ownerDetails.vehicle.year
-        ? ownerDetails.vehicle.year.toString()
-        : "N/A",
+      value: vehicle.year ? vehicle.year.toString() : "N/A",
     },
     {
       style: "column",
       label: t("vehicleInfo.color"),
-      value: ownerDetails.vehicle.color || "N/A",
+      value: vehicle.color || "N/A",
     },
     {
       style: "column",
       label: t("vehicleInfo.plate"),
-      value: ownerDetails.vehicle.plate || "N/A",
+      value: vehicle.plate || "N/A",
     },
     {
       style: "column",
       label: t("vehicleInfo.serialNumber"),
-      value: ownerDetails.vehicle.serialNumber || "N/A",
+      value: vehicle.serialNumber || "N/A",
     },
   ];
 
+  // If vehicle has ownerInfo (meaning user is NOT the owner), use that. Otherwise use user's profile.
+  const displayOwner = (vehicle?.isOwner === false && vehicle?.ownerInfo) ? vehicle.ownerInfo : userProfile;
+  
   const ownerInfo = [
     {
       style: "column",
       label: t("vehicleInfo.ownerFirstName"),
-      value: ownerDetails.owner.name || "N/A",
+      value: displayOwner?.firstName || displayOwner?.name || "N/A",
     },
     {
       style: "column",
       label: t("vehicleInfo.ownerLastName"),
-      value: ownerDetails.owner.lastName || "N/A",
+      value: displayOwner?.lastName || "N/A",
     },
     {
       style: "column",
       label: t("vehicleInfo.ownerPhone"),
-      value: ownerDetails.owner.phone || "N/A",
+      value: displayOwner?.phone || "N/A",
     },
     {
       style: "column",
       label: t("vehicleInfo.ownerAddress"),
-      value: ownerDetails.owner.address || "N/A",
+      value: displayOwner?.address || "N/A",
     },
     {
       style: "row",
       firstLabel: t("vehicleInfo.ownerCity"),
-      valueFirstLabel: ownerDetails.owner.city || "N/A",
+      valueFirstLabel: displayOwner?.city || "N/A",
       secondLabel: t("vehicleInfo.ownerPostalCode"),
-      valueSecondLabel: ownerDetails.owner.postalCode || "N/A",
+      valueSecondLabel: displayOwner?.postalCode || "N/A",
     },
     {
       style: "row",
       firstLabel: t("vehicleInfo.ownerCountry"),
-      valueFirstLabel: ownerDetails.owner.country || "N/A",
+      valueFirstLabel: displayOwner?.country || "N/A",
       secondLabel: t("vehicleInfo.ownerProvince"),
-      valueSecondLabel: ownerDetails.owner.province || "N/A",
+      valueSecondLabel: displayOwner?.province || "N/A",
     },
   ];
 
@@ -119,7 +207,7 @@ const VehicleInfo = () => {
           }}
         >
           <AntDesign
-            name="arrowleft"
+            name="left"
             size={20}
             color="#19363C"
             style={{ fontWeight: "200" }}

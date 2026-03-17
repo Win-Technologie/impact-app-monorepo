@@ -31,10 +31,10 @@ export default function GetVehicleInformation() {
    */ /*
     const infoVehicle = [
 
-        { style: 'column', label: 'Numéro du certificat d’immatriculation', value: personalInformation.vehicle.serialNumber || 'non disponible' },
-        { style: 'column', label: 'Numéro de plaque', value: personalInformation.vehicle.plate|| 'non disponible'  },
-        { style: 'row', firstLabel: 'Modèle du véhicule', valueFirstLabel: personalInformation.vehicle.model|| 'non disponible' , secondLabel: 'Année', valueSecondLabel: personalInformation.vehicle.year.toString()|| 'non disponible'  },
-        { style: 'column', label: 'Couleur du véhicule', value: personalInformation.vehicle.color|| 'non disponible'  },
+        { style: 'column', label: 'Numéro du certificat d'immatriculation', value: personalInformation?.vehicle?.serialNumber || 'non disponible' },
+        { style: 'column', label: 'Numéro de plaque', value: personalInformation?.vehicle?.plate|| 'non disponible'  },
+        { style: 'row', firstLabel: 'Modèle du véhicule', valueFirstLabel: personalInformation?.vehicle?.model|| 'non disponible' , secondLabel: 'Année', valueSecondLabel: personalInformation?.vehicle?.year?.toString()|| 'non disponible'  },
+        { style: 'column', label: 'Couleur du véhicule', value: personalInformation?.vehicle?.color|| 'non disponible'  },
     ]
 
     */ /**
