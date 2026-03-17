@@ -34,7 +34,7 @@ export const userInfoGatherState = atom({
   default: [
     {
       id: 0,
-      title: "Information personnelles",
+      title: "Informations personnelles",
       subtitle: "4 minutes",
       completion: 0,
       actualstep: 0,
@@ -42,11 +42,11 @@ export const userInfoGatherState = atom({
     },
     {
       id: 1,
-      title: "Information du vehicules",
+      title: "Informations du véhicule",
       subtitle: "8 minutes",
       completion: 0,
       actualstep: 0,
-      nbstep: 4,
+      nbstep: 3,
     },
     {
       id: 2,

@@ -165,6 +165,7 @@
     "countryTitle": "Country",
     "countryRequired": "Country is required",
     "countryPlaceholder": "Select a country",
+    "selectCountryBeforeProvince": "Select a country first",
     "provinceTitle": "Province",
     "provinceRequired": "Province is required",
     "provincePlaceholder": "Select a province",

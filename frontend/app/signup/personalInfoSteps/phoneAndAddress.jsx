@@ -79,6 +79,9 @@ const phoneAndAddress = () => {
     mode: "onChange",
   });
 
+  const selectedCountryCode = country || userDetails.country || "";
+  const hasCountrySelected = !!selectedCountryCode;
+
   const onSelectCountry = (selectedItem, index) => {
     const selectedCountry = countries[index].value;
     setCountry(selectedCountry);
@@ -321,7 +324,7 @@ const phoneAndAddress = () => {
                         ? indexOfDefautCountryProvinces()
                         : null
                     }
-                    data={countryProvinces[country || userDetails.country] || []}
+                    data={countryProvinces[selectedCountryCode] || []}
                     onSelect={(selectedItem, index) => {
                       onChange(selectedItem);
                       handleInputChange("province", selectedItem);
@@ -341,11 +344,17 @@ const phoneAndAddress = () => {
                     dropdownStyle={styles.dropdown1DropdownStyle}
                     rowStyle={styles.dropdown1RowStyle}
                     rowTextStyle={styles.dropdown1RowTxtStyle}
+                    disabled={!hasCountrySelected}
                     onBlur={() => {
                       onBlur();
                     }}
                     value={value}
                   />
+                  {!hasCountrySelected && (
+                    <Text style={styles.helperText}>
+                      {t("phoneAndAddress.selectCountryBeforeProvince")}
+                    </Text>
+                  )}
                   {errors.province && (
                     <Text style={styles.errorText}>
                       {errors.province.message}
@@ -408,6 +417,13 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     paddingVertical: 3,
+    paddingLeft: 5,
+  },
+
+  helperText: {
+    color: "#6B7280",
+    fontSize: 12,
+    paddingTop: 6,
     paddingLeft: 5,
   },
 

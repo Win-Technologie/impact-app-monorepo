@@ -7,7 +7,8 @@ import {
   Button,
   TouchableOpacity,
   ScrollView,
-  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
@@ -20,13 +21,11 @@ import { DatePickerInput } from "react-native-paper-dates";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function VehicleDetails() {
-  const [keyboardIsOpen, setKeyboardIsOpen] = React.useState(false);
+function VehicleDetails() {
+  // KeyboardAvoidingView will handle keyboard avoidance
   const actuaYear = "2024";
-  const [vehicleDetails, setVehicleDetails] =
-    useRecoilState(vehicleDetailsState);
+  const [vehicleDetails, setVehicleDetails] = useRecoilState(vehicleDetailsState);
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
-  const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
   const { t } = useTranslation();
 
@@ -45,16 +44,19 @@ export default function VehicleDetails() {
     mode: "onChange",
   });
 
-  Keyboard.addListener("keyboardDidShow", () => {
-    setKeyboardIsOpen(true);
-  });
-
-  Keyboard.addListener("keyboardDidHide", () => {
-    setKeyboardIsOpen(false);
-  });
-
   const handlePressBack = () => {
-    setCurrentStep(currentStep - 1);
+    // Always decrement actualstep (min 0)
+    const array = progressData.map((item) => {
+      if (item.id === 1) {
+        return {
+          ...item,
+          actualstep: Math.max(0, item.actualstep - 1),
+        };
+      } else {
+        return item;
+      }
+    });
+    setProgressData(array);
     router.back();
   };
 
@@ -67,39 +69,36 @@ export default function VehicleDetails() {
   };
 
   const handlePressContinue = handleSubmit((data) => {
-    if (progressData[1].actualstep == 0) {
-      const array = progressData.map((item) => {
-        if (item.id == 1) {
-          return {
-            id: 1,
-            title: "Information du vehicules",
-            subtitle: "8 minutes",
-            completion: 0,
-            actualstep: 1,
-            nbstep: 3,
-          };
-        } else {
-          return item;
-        }
-      });
-
-      setProgressData(array);
-    }
-
+    // Always increment actualstep (max 2)
+    const array = progressData.map((item) => {
+      if (item.id === 1) {
+        return {
+          ...item,
+          actualstep: Math.min(2, item.actualstep + 1),
+        };
+      } else {
+        return item;
+      }
+    });
+    setProgressData(array);
     router.push("/signup/vehiculesSteps/licensePlate");
   });
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Stepper
-        currentStep={progressData[1].actualstep}
-        totalSteps={totalSteps}
-      />
-
-      <ScrollView style={styles.content}>
-        <Text style={styles.title}>{t("vehicleDetails.modelTitle")}</Text>
-        <View style={styles.inputSection}>
-          <Controller
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <SafeAreaView style={styles.container}>
+        <Stepper
+          currentStep={(progressData[1]?.actualstep ?? 0) + 1}
+          totalSteps={totalSteps}
+        />
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>{t("vehicleDetails.modelTitle")}</Text>
+          <View style={styles.inputSection}>
+            <Controller
             control={control}
             rules={{ required: t("vehicleDetails.brandRequired") }}
             render={({ field: { onChange, onBlur, value } }) => (
@@ -154,6 +153,18 @@ export default function VehicleDetails() {
                 name="annee"
                 rules={{
                   required: t("vehicleDetails.yearRequired"),
+                  maxLength: {
+                    value: 4,
+                    message: t("vehicleDetails.yearRequired") + " (4 chiffres)",
+                  },
+                  minLength: {
+                    value: 4,
+                    message: t("vehicleDetails.yearRequired") + " (4 chiffres)",
+                  },
+                  pattern: {
+                    value: /^\d{4}$/,
+                    message: t("vehicleDetails.yearRequired") + " (4 chiffres)",
+                  },
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
@@ -162,9 +173,12 @@ export default function VehicleDetails() {
                     keyboardType="numeric"
                     onBlur={onBlur}
                     value={value}
+                    maxLength={4}
                     onChangeText={(text) => {
-                      handleInputChange("vehicleYear", text);
-                      onChange(text);
+                      // Only allow up to 4 digits
+                      const numeric = text.replace(/[^0-9]/g, "").slice(0, 4);
+                      handleInputChange("vehicleYear", numeric);
+                      onChange(numeric);
                     }}
                   />
                 )}
@@ -243,19 +257,19 @@ export default function VehicleDetails() {
         {/*<TouchableOpacity onPress={nextPage}>
           <Text>next</Text>
         </TouchableOpacity>*/}
-      </ScrollView>
-
-      {!keyboardIsOpen && (
+        </ScrollView>
         <View style={styles.absoluteButtonContainer}>
           <DualOptionButton
             onPressBack={handlePressBack}
             onPressContinue={handlePressContinue}
           />
         </View>
-      )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
+
+export default VehicleDetails;
 
 const styles = StyleSheet.create({
   container: {

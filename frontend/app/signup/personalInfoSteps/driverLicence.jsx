@@ -80,6 +80,36 @@ export default function Insurance() {
         "signupUserDetailsDraft",
         JSON.stringify(nextUserDetails),
       );
+
+      const storedUserRaw = await AsyncStorage.getItem("user");
+
+      if (storedUserRaw) {
+        const storedUserData = JSON.parse(storedUserRaw);
+        const userNode = storedUserData?.user ?? storedUserData;
+
+        if (userNode && typeof userNode === "object") {
+          const updatedUserNode = {
+            ...userNode,
+            name: nextUserDetails.name || userNode.name,
+            lastName: nextUserDetails.lastName || userNode.lastName,
+            phone: nextUserDetails.phone || userNode.phone,
+            address: nextUserDetails.address || userNode.address,
+            postalCode: nextUserDetails.postalCode || userNode.postalCode,
+            city: nextUserDetails.city || userNode.city,
+            province: nextUserDetails.province || userNode.province,
+            country: nextUserDetails.country || userNode.country,
+            gender: nextUserDetails.gender || userNode.gender,
+            birthdate: nextUserDetails.birthDay || userNode.birthdate,
+          };
+
+          const updatedStoredUser = storedUserData?.user
+            ? { ...storedUserData, user: updatedUserNode }
+            : updatedUserNode;
+
+          await AsyncStorage.setItem("user", JSON.stringify(updatedStoredUser));
+        }
+      }
+
       setUserDetails(nextUserDetails);
 
       const array = progressData.map((item) => {
@@ -498,6 +528,7 @@ export default function Insurance() {
         <DualOptionButton
           onPressBack={handlePressBack}
           onPressContinue={handlePressContinue}
+          continueLabel="Compléter"
         />
       </View>
     </SafeAreaView>

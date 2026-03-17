@@ -41,19 +41,19 @@ export default function SignUpLandingPage() {
     setProgressData([
       {
         id: 0,
-        title: "Information personnelles",
+        title: "Informations personnelles",
         subtitle: "4 minutes",
         completion: 0,
         actualstep: 0,
-        nbstep: 4,
+        nbstep: 3,
       },
       {
         id: 1,
-        title: "Information du vehicules",
+        title: "Informations du véhicule",
         subtitle: "8 minutes",
         completion: 0,
         actualstep: 0,
-        nbstep: 4,
+        nbstep: 3,
       },
       {
         id: 2,
@@ -61,7 +61,7 @@ export default function SignUpLandingPage() {
         subtitle: "8 minutes",
         completion: 0,
         actualstep: 0,
-        nbstep: 4,
+        nbstep: 3,
       },
     ]);
 
@@ -123,17 +123,10 @@ export default function SignUpLandingPage() {
         break;
 
       case t("signUpLandingPage.vehicleInformation"):
-        if (lastVehicle == null) {
+        setProgressData((prev) => prev.map((step) => step.id === 1 ? { ...step, actualstep: 0 } : step));
+        setTimeout(() => {
           router.push("/signup/vehiculesSteps/vehiculesDetails");
-        } else {
-          Alert.alert(t("Info"), t("signUpLandingPage.addInsuranceInfo"), [
-            {
-              text: "Ok",
-              onPress: () => console.log("Cancel Pressed"),
-              style: "Cancel",
-            },
-          ]);
-        }
+        }, 0);
         break;
 
       case t("signUpLandingPage.insuranceInformation"):
@@ -168,19 +161,19 @@ export default function SignUpLandingPage() {
       setProgressData([
         {
           id: 0,
-          title: "Information personnelles",
+          title: "Informations personnelles",
           subtitle: "4 minutes",
           completion: 0,
           actualstep: 0,
-          nbstep: 4,
+          nbstep: 3,
         },
         {
           id: 1,
-          title: "Information du vehicules",
+          title: "Informations du véhicule",
           subtitle: "8 minutes",
           completion: 0,
           actualstep: 0,
-          nbstep: 4,
+          nbstep: 3,
         },
         {
           id: 2,
@@ -188,7 +181,7 @@ export default function SignUpLandingPage() {
           subtitle: "8 minutes",
           completion: 0,
           actualstep: 0,
-          nbstep: 4,
+          nbstep: 3,
         },
       ]);
 
