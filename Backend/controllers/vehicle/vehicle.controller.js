@@ -111,7 +111,7 @@ async function addCar(req, res) {
     const ownerId = myToken.user_id;
 
     // Extraction des données de la voiture depuis le corps de la requête
-    const { brand, model, year, color, plate, serialNumber } = req.body;
+    const { brand, model, year, color, plate, serialNumber, isOwner, ownerInfo } = req.body;
     const immatriculationData = req.body.immatriculation; // Ajout des informations d'immatriculation
 
     // Exécution des validations
@@ -174,6 +174,8 @@ async function addCar(req, res) {
       plate,
       serialNumber,
       owner: ownerId,
+      isOwner: isOwner !== undefined ? isOwner : true,
+      ...(ownerInfo && { ownerInfo }),
     });
 
     // Insère la nouvelle voiture dans la collection et met à jour les informations du propriétaire
@@ -185,8 +187,10 @@ async function addCar(req, res) {
       ),
     ]);
 
-    // Ajoute les informations d'immatriculation à la voiture
-    await addImmatriculationV2(ownerId, newCar._id, immatriculationData);
+    // Ajoute les informations d'immatriculation à la voiture (si fournies)
+    if (immatriculationData && immatriculationData.certificateNumber) {
+      await addImmatriculationV2(ownerId, newCar._id, immatriculationData);
+    }
 
     // Répondre avec un message JSON indiquant le succès de l'ajout de la voiture
     return res

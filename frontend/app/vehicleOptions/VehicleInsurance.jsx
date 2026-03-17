@@ -36,71 +36,152 @@ const InsuranceInfo = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const [insuranceDetails, setInsuranceDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
   const selectedVehicleId = useRecoilValue(SelectedVehicleState);
   const ownerDetails = useRecoilValue(UserInfoState);
+  const [userProfile, setUserProfile] = useState(null);
+  const [vehicleData, setVehicleData] = useState(null);
 
-  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.2.21:8000/api/";
+
+  useEffect(() => {
+    // Fetch logged-in user's profile data
+    const fetchUserProfile = async () => {
+      try {
+        const userData = JSON.parse(await AsyncStorage.getItem("user"));
+        if (userData?.user) {
+          setUserProfile(userData.user);
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+    
+    fetchUserProfile();
+  }, []);
+
+  useEffect(() => {
+    const fetchInsuranceDetails = async () => {
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+        const response = await fetch(`${API_URL}vehicles`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Fetched insurance data:", data);
+          // Find the selected vehicle's insurance from the carsWithInsurances array
+          const selectedVehicleData = data.carsWithInsurances?.find(
+            item => item.car?._id === selectedVehicleId
+          );
+          
+          console.log("Selected vehicle insurance data:", selectedVehicleData);
+          
+          if (selectedVehicleData?.car) {
+            setVehicleData(selectedVehicleData.car);
+          }
+          
+          if (selectedVehicleData?.insurance) {
+            setInsuranceDetails(selectedVehicleData.insurance);
+          } else {
+            console.log("No insurance found for vehicle ID:", selectedVehicleId);
+          }
+        } else {
+          console.error("Failed to fetch vehicles:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching insurance details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (selectedVehicleId) {
+      fetchInsuranceDetails();
+    } else {
+      console.log("No vehicle selected for insurance");
+      setLoading(false);
+    }
+  }, [selectedVehicleId]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Loading...</Text>
+      </SafeAreaView>
+    );
+  }
 
   if (!ownerDetails) {
-    return <Text>Loading...</Text>;
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text>Loading owner details...</Text>
+      </SafeAreaView>
+    );
   }
 
   const insuranceInfo = [
     {
       style: "column",
       label: t("insuranceInfo.companyName"),
-      value: ownerDetails?.insurance?.insuranceCompany || "N/A",
+      value: insuranceDetails?.insuranceCompany || "N/A",
     },
     {
       style: "row",
       firstLabel: t("insuranceInfo.policyNumber"),
-      valueFirstLabel: ownerDetails?.insurance?.policyNumber || "N/A",
+      valueFirstLabel: insuranceDetails?.policyNumber || "N/A",
       secondLabel: t("insuranceInfo.expirationDate"),
-      valueSecondLabel: ownerDetails?.insurance?.expirationDate
-        ? formatDate(ownerDetails?.insurance?.expirationDate, "year/mm/dd")
+      valueSecondLabel: insuranceDetails?.expirationDate
+        ? formatDate(insuranceDetails?.expirationDate, "year/mm/dd")
         : "N/A",
     },
   ];
+
+  // If vehicle has ownerInfo (meaning user is NOT the owner), use that. Otherwise use user's profile.
+  const displayOwner = (vehicleData?.isOwner === false && vehicleData?.ownerInfo) ? vehicleData.ownerInfo : userProfile;
 
   const ownerInfo = [
     {
       style: "column",
       label: t("insuranceInfo.ownerFirstName"),
-      value: ownerDetails?.owner?.name || "N/A",
+      value: displayOwner?.firstName || displayOwner?.name || "N/A",
     },
     {
       style: "column",
       label: t("insuranceInfo.ownerLastName"),
-      value: ownerDetails?.owner?.lastName || "N/A",
+      value: displayOwner?.lastName || "N/A",
     },
     {
       style: "column",
       label: t("insuranceInfo.ownerEmail"),
-      value: ownerDetails?.owner?.email || "N/A",
+      value: displayOwner?.email || "N/A",
     },
     {
       style: "column",
       label: t("insuranceInfo.ownerPhone"),
-      value: ownerDetails?.owner?.phone || "N/A",
+      value: displayOwner?.phone || "N/A",
     },
     {
       style: "column",
       label: t("insuranceInfo.ownerAddress"),
-      value: ownerDetails?.owner?.address || "N/A",
+      value: displayOwner?.address || "N/A",
     },
     {
       style: "row",
       firstLabel: t("insuranceInfo.ownerCity"),
-      valueFirstLabel: ownerDetails?.owner?.city || "N/A",
+      valueFirstLabel: displayOwner?.city || "N/A",
       secondLabel: t("insuranceInfo.ownerPostalCode"),
-      valueSecondLabel: ownerDetails?.owner?.postalCode || "N/A",
+      valueSecondLabel: displayOwner?.postalCode || "N/A",
     },
     {
       style: "row",
       firstLabel: t("insuranceInfo.ownerCountry"),
-      valueFirstLabel: ownerDetails?.owner?.country || "N/A",
+      valueFirstLabel: displayOwner?.country || "N/A",
       secondLabel: t("insuranceInfo.ownerProvince"),
-      valueSecondLabel: ownerDetails?.owner?.province || "N/A",
+      valueSecondLabel: displayOwner?.province || "N/A",
     },
   ];
 
@@ -121,7 +202,7 @@ const InsuranceInfo = () => {
           }}
         >
           <AntDesign
-            name="arrowleft"
+            name="left"
             size={20}
             color="#19363C"
             style={{ fontWeight: "200" }}

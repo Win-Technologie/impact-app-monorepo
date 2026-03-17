@@ -120,7 +120,7 @@ const vehicleSchema = new mongoose.Schema({
   },
   immatriculation: {
     type: immatriculationSchema,
-    required: true,
+    required: false,
   },
   brand: {
     type: String,
@@ -168,6 +168,20 @@ const vehicleSchema = new mongoose.Schema({
   // documents: {
   //   type: Array
   // },
+  isOwner: {
+    type: Boolean,
+    default: true,
+  },
+  ownerInfo: {
+    firstName: String,
+    lastName: String,
+    phone: String,
+    address: String,
+    city: String,
+    postalCode: String,
+    country: String,
+    province: String,
+  },
   isActive: {
     type: Boolean,
     required: true,

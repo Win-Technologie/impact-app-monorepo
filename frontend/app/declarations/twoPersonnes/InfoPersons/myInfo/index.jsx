@@ -84,8 +84,8 @@ const MyInfo = () => {
   };
 
   const handleVehicleSelect = (selectedItem) => {
-    // Using selectedItem._id since the object uses _id as shown in your error log
-    const vehicleId = selectedItem._id;
+    // Backend returns {car, insurance} - access car._id
+    const vehicleId = selectedItem?.car?._id || selectedItem._id;
     if (vehicleId) {
       setSelectedVehicleId(vehicleId);
       setVehiculeState(vehicleId);
