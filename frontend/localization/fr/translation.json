@@ -293,7 +293,7 @@
 
   "insurance": {
     "selectVehicle": "Sélectionnez votre véhicule",
-    "chooseVehicle": "Choisir une véhicule",
+    "chooseVehicle": "Choisir un véhicule",
     "vehicleRequired": "Vous devez choisir un véhicule",
     "policyTitle": "Quel est votre police d'assurance ?",
     "policyNumberRequired": "Le numéro d'assurance est requis",

@@ -66,11 +66,9 @@ export default function InsuranceStageTwo() {
     const selectedCountry = countries[index].value;
     setCountry(selectedCountry);
     handleInputChange("insuranceFirmCountry", selectedCountry);
-
-    // Set the initial province based on the newly selected country
-    const initialProvince = countryProvinces[selectedCountry]?.[0] || "";
-    setProvince(initialProvince);
-    handleInputChange("insuranceFirmProvince", initialProvince);
+    // Do not auto-select province, just clear it
+    setProvince("");
+    handleInputChange("insuranceFirmProvince", "");
   };
 
   const indexOfDefautContry = () => {
@@ -101,9 +99,7 @@ export default function InsuranceStageTwo() {
     router.back();
   };
 
-  useEffect(() => {
-    setProvince(countryProvinces[country]?.[0] || "");
-  }, [country]);
+
 
   const next = () => {
     router.push("/signup/insurance/insuranceOwner");
@@ -143,11 +139,16 @@ export default function InsuranceStageTwo() {
   return (
     <SafeAreaView style={styles.container}>
       <Stepper
-        currentStep={progressData[2].actualstep}
+        currentStep={2}
         totalSteps={totalSteps}
       />
 
-      <ScrollView style={styles.content}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={80}
+      >
+        <ScrollView style={styles.content}>
         <Text style={styles.title}>{t("insuranceFirm.firmTitle")}</Text>
         <View style={styles.inputSection}>
           <Controller
@@ -232,14 +233,23 @@ export default function InsuranceStageTwo() {
                 name="postalCode"
                 rules={{
                   required: t("insuranceFirm.firmPostalCodeRequired"),
+                  maxLength: { value: 6, message: t("insuranceFirm.firmPostalCodeMaxLength") },
+                  pattern: {
+                    value: /^[A-Za-z0-9]{0,6}$/,
+                    message: t("insuranceFirm.firmPostalCodePattern"),
+                  },
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     style={styles.textInput}
                     onBlur={onBlur}
+                    maxLength={6}
+                    autoCapitalize="characters"
                     onChangeText={(text) => {
-                      handleInputChange("insuranceFirmPostalCode", text);
-                      onChange(text);
+                      // Only allow alphanumeric, max 6 chars
+                      const filtered = text.replace(/[^A-Za-z0-9]/g, "").slice(0, 6);
+                      handleInputChange("insuranceFirmPostalCode", filtered);
+                      onChange(filtered);
                     }}
                     value={value}
                     placeholder={t("insuranceFirm.firmPostalCodePlaceholder")}
@@ -276,7 +286,7 @@ export default function InsuranceStageTwo() {
                       data={countries.map((country) => country.label)}
                       onSelect={onSelectCountry}
                       buttonTextAfterSelection={(selectedItem, index) => {
-                        onChange(countries[index].label);
+                        // Only return the label, do not set state here
                         return selectedItem;
                       }}
                       rowTextForSelection={(item, index) => {
@@ -306,66 +316,67 @@ export default function InsuranceStageTwo() {
               />
             </View>
 
-            <View style={{ flex: 1 }}>
-              <Controller
-                control={control}
-                name="province"
-                rules={{ required: t("insuranceFirm.firmProvinceRequired") }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View>
-                    <SelectDropdown
-                      defaultButtonText={t(
-                        "insuranceFirm.firmProvincePlaceholder",
-                      )}
-                      defaultValueByIndex={
-                        insuranceDetails.insuranceFirmProvince
-                          ? indexOfDefautCountryProvinces()
-                          : null
-                      }
-                      data={countryProvinces[country] || []}
-                      onSelect={(selectedItem, index) => {
-                        handleInputChange(
-                          " insuranceFirmProvince",
-                          selectedItem,
-                        );
-                      }}
-                      buttonTextAfterSelection={(selectedItem, index) => {
-                        onChange(countries[index].label);
-                        return selectedItem;
-                      }}
-                      rowTextForSelection={(item, index) => {
-                        return item;
-                      }}
-                      buttonStyle={styles.dropdown2BtnStyle}
-                      buttonTextStyle={styles.dropdown1BtnTxtStyle}
-                      renderDropdownIcon={() => {
-                        return <Text>▼</Text>;
-                      }}
-                      dropdownIconPosition={"right"}
-                      dropdownStyle={styles.dropdown1DropdownStyle}
-                      rowStyle={styles.dropdown1RowStyle}
-                      rowTextStyle={styles.dropdown1RowTxtStyle}
-                      onBlur={() => {
-                        onBlur();
-                      }}
-                      value={value}
-                    />
-                    {errors.province && (
-                      <Text style={styles.errorText}>
-                        {errors.province.message}
-                      </Text>
+                <View style={{ flex: 1 }}>
+                  <Controller
+                    control={control}
+                    name="province"
+                    rules={{ required: t("insuranceFirm.firmProvinceRequired") }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <View>
+                        <SelectDropdown
+                          defaultButtonText={t("insuranceFirm.firmProvincePlaceholder")}
+                          defaultValueByIndex={
+                            insuranceDetails.insuranceFirmProvince
+                              ? indexOfDefautCountryProvinces()
+                              : undefined
+                          }
+                          data={country ? countryProvinces[country] : []}
+                          onSelect={(selectedItem, index) => {
+                            // Only update state here, not in render
+                            setProvince(selectedItem);
+                            handleInputChange("insuranceFirmProvince", selectedItem);
+                            onChange(selectedItem);
+                          }}
+                          buttonTextAfterSelection={(selectedItem, index) => {
+                            // Only return the label, do not set state here
+                            return selectedItem;
+                          }}
+                          rowTextForSelection={(item, index) => {
+                            return item;
+                          }}
+                          buttonStyle={styles.dropdown2BtnStyle}
+                          buttonTextStyle={styles.dropdown1BtnTxtStyle}
+                          renderDropdownIcon={() => {
+                            return <Text>▼</Text>;
+                          }}
+                          dropdownIconPosition={"right"}
+                          dropdownStyle={styles.dropdown1DropdownStyle}
+                          rowStyle={styles.dropdown1RowStyle}
+                          rowTextStyle={styles.dropdown1RowTxtStyle}
+                          onBlur={() => {
+                            onBlur();
+                          }}
+                          value={value}
+                          disabled={!country}
+                        />
+                        {!country && (
+                          <Text style={styles.errorText}>{t("insuranceFirm.selectCountryFirst")}</Text>
+                        )}
+                        {errors.province && (
+                          <Text style={styles.errorText}>{errors.province.message}</Text>
+                        )}
+                      </View>
                     )}
-                  </View>
-                )}
-              />
-            </View>
+                  />
+                </View>
           </View>
         </View>
 
         {/*<TouchableOpacity onPress={next} style={{ marginTop: 30 }}>
                     <Text>{t('insuranceFirm.nextButton')}</Text>
                 </TouchableOpacity>*/}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <View style={styles.absoluteButtonContainer}>
         <DualOptionButtonStep

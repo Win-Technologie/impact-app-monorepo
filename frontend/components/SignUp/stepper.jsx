@@ -3,8 +3,10 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
 const Stepper = ({ currentStep, totalSteps, displayStep }) => {
-  const visibleStep = displayStep ?? currentStep;
-  const normalizedStep = Math.min(Math.max(visibleStep, 0), totalSteps);
+  // Always show step as 1-based (never 0)
+  let visibleStep = displayStep ?? currentStep;
+  if (!visibleStep || visibleStep < 1) visibleStep = 1;
+  const normalizedStep = Math.min(Math.max(visibleStep, 1), totalSteps);
   const progress = (normalizedStep / totalSteps) * 100;
   //console.log(`Progress width: ${progress}%`);
 

@@ -135,6 +135,7 @@ export default function Insurance() {
               setSubmit(false);
             }}
             buttonTextAfterSelection={(selectedItem, index) => {
+              // Just return the selected item, do not set state here
               return selectedItem;
             }}
             rowTextForSelection={(item, index) => {
@@ -174,17 +175,22 @@ export default function Insurance() {
                     value: /^\d+$/,
                     message: t("insurance.policyNumberNumeric"),
                   },
+                  maxLength: { value: 20, message: t("insurance.policyNumberMaxLength") },
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     style={styles.input}
                     onBlur={onBlur}
+                    keyboardType="numeric"
                     onChangeText={(text) => {
-                      handleInputChange("insuranceNumber", text);
-                      onChange(text);
+                      // Only allow digits
+                      const numeric = text.replace(/[^0-9]/g, "");
+                      handleInputChange("insuranceNumber", numeric);
+                      onChange(numeric);
                     }}
                     value={value}
                     placeholder={t("insurance.policyNumberPlaceholder")}
+                    maxLength={20}
                   />
                 )}
               />

@@ -130,7 +130,7 @@ export default function SignUpLandingPage() {
         break;
 
       case t("signUpLandingPage.insuranceInformation"):
-        if (lastVehicle == null) {
+        if (progressData[1]?.completion !== 1) {
           Alert.alert(t("Info"), t("signUpLandingPage.addVehicleFirst"), [
             {
               text: "Ok",
