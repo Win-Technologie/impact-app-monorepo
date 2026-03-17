@@ -110,10 +110,10 @@ export default function InsuranceStageThree() {
 
 
   const handlePressContinue = () => {
-    // console.log(insuranceDetails);
-
     if (!isOwner) {
-      validateForm();
+      handleSubmit(() => {
+        addInsurance();
+      })();
     } else {
       addInsurance();
     }
@@ -396,33 +396,29 @@ export default function InsuranceStageThree() {
                     control={control}
                     name="country"
                     rules={{ required: t("insurance.countryRequired") }}
-                    render={({ field: { onChange, onBlur, value } }) => (
+                    render={({ field: { onChange, value } }) => (
                       <View>
                         <SelectDropdown
+                          data={countries}
                           defaultButtonText={t("insurance.countryPlaceholder")}
                           defaultValueByIndex={
-                            value
-                              ? countries.findIndex((c) => c.value === value)
-                              : undefined
+                            value ? countries.findIndex((c) => c.value === value) : null
                           }
-                          data={countries.map((country) => country.label)}
                           onSelect={(selectedItem, index) => {
-                            const selectedCountry = countries[index].value;
-                            onChange(selectedCountry); // update react-hook-form value
-                            handleInputChange("insuranceOwnerCountry", selectedCountry);
+                            onChange(selectedItem.value);
+                            handleInputChange("insuranceOwnerCountry", selectedItem.value);
                             setProvince("");
                             handleInputChange("insuranceOwnerProvince", "");
                           }}
-                          buttonTextAfterSelection={(selectedItem, index) => selectedItem}
-                          rowTextForSelection={(item, index) => item}
+                          buttonTextAfterSelection={(selectedItem) => selectedItem.label}
+                          rowTextForSelection={(item) => item.label}
                           buttonStyle={styles.dropdown1BtnStyle}
                           buttonTextStyle={styles.dropdown1BtnTxtStyle}
                           renderDropdownIcon={() => <Text>▼</Text>}
                           dropdownIconPosition={"right"}
                           dropdownStyle={styles.dropdown1DropdownStyle}
                           rowTextStyle={styles.dropdown1RowTxtStyle}
-                          onBlur={onBlur}
-                          value={value}
+                          value={countries.find((c) => c.value === value) || null}
                         />
                         {errors.country && (
                           <Text style={styles.errorText}>
@@ -496,11 +492,10 @@ export default function InsuranceStageThree() {
         <DualOptionButton
           onPressBack={handlePressBack}
           onPressContinue={handlePressContinue}
-          continueLabel={t("insurance.continue")}
-          // Only enable continue if owner is selected, or if not owner and all required fields are filled and valid
+          continueLabel={t("insurance.continue") === "insurance.continue" ? "Continuer" : t("insurance.continue")}
+          // Enable continue if owner is selected, or if not owner and form is valid
           disabled={
-            (!isOwner) ||
-            (!isOwner && Object.keys(errors).length > 0)
+            (!isOwner && Object.keys(errors).length > 0) || (!isOwner && Object.keys(errors).length > 0)
           }
         />
       </View>
