@@ -348,10 +348,34 @@ export default function SignUpLandingPage() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.bottomButton, styles.registerButton]}
-            onPress={handlePressRegister}
+              style={[
+                styles.bottomButton,
+                styles.registerButton,
+                progressData.some(
+                  (step) => step.completion !== 1 || step.actualstep !== step.nbstep
+                )
+                  ? { backgroundColor: 'rgba(27, 104, 120, 0.15)' }
+                  : { backgroundColor: '#1B6878' }
+              ]}
+              onPress={handlePressRegister}
+              disabled={
+                progressData.some(
+                  (step) => step.completion !== 1 || step.actualstep !== step.nbstep
+                )
+              }
           >
-            <Text style={styles.buttonText}>{t("signUpLandingPage.end")}</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                progressData.some(
+                  (step) => step.completion !== 1 || step.actualstep !== step.nbstep
+                )
+                  ? { color: '#1B6878', opacity: 0.5 }
+                  : { color: 'white', opacity: 1 }
+              ]}
+            >
+              {t("signUpLandingPage.end")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
