@@ -165,6 +165,16 @@ function VehicleDetails() {
                     value: /^\d{4}$/,
                     message: t("vehicleDetails.yearRequired") + " (4 chiffres)",
                   },
+                  validate: (val) => {
+                    if (val && val.length === 4) {
+                      const year = parseInt(val, 10);
+                      const currentYear = new Date().getFullYear();
+                      if (year < 1900 || year > currentYear) {
+                        return t("vehicleDetails.yearRange", { min: 1900, max: currentYear });
+                      }
+                    }
+                    return true;
+                  },
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
@@ -262,6 +272,7 @@ function VehicleDetails() {
           <DualOptionButton
             onPressBack={handlePressBack}
             onPressContinue={handlePressContinue}
+            disabled={Object.keys(errors).length > 0}
           />
         </View>
       </SafeAreaView>

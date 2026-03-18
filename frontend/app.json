@@ -16,13 +16,15 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "This app uses the camera to scan QR codes."
+        "NSCameraUsageDescription": "This app uses the camera to take photos.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images."
       },
       "bundleIdentifier": "com.anonymous.impact11"
     },
     "android": {
       "permissions": [
         "CAMERA",
+        "READ_EXTERNAL_STORAGE",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],

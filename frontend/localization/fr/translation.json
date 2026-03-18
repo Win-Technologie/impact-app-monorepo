@@ -230,6 +230,7 @@
     "serialNumberRequired": "Le numéro de série est requis",
     "serialNumberPlaceholder": "Numéro de série",
     "serialNumberMinLength": "5 caratères au minimum",
+    "yearRange": "L'année doit être comprise entre 1900 et {{max}}.",
     "nextButton": "Suivant",
     "backButton": "Retour"
   },

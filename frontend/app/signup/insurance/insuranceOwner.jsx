@@ -396,33 +396,33 @@ export default function InsuranceStageThree() {
                     control={control}
                     name="country"
                     rules={{ required: t("insurance.countryRequired") }}
-                    render={({ field: { onChange, value } }) => (
+                    render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
                       <View>
                         <SelectDropdown
-                          data={countries}
+                          data={countries.map((country) => country.label)}
                           defaultButtonText={t("insurance.countryPlaceholder")}
                           defaultValueByIndex={
-                            value ? countries.findIndex((c) => c.value === value) : null
+                            insuranceDetails.insuranceOwnerCountry ? indexOfDefautContry() : null
                           }
                           onSelect={(selectedItem, index) => {
-                            onChange(selectedItem.value);
-                            handleInputChange("insuranceOwnerCountry", selectedItem.value);
+                            onChange(countries[index].value);
+                            handleInputChange("insuranceOwnerCountry", countries[index].value);
                             setProvince("");
                             handleInputChange("insuranceOwnerProvince", "");
                           }}
-                          buttonTextAfterSelection={(selectedItem) => selectedItem.label}
-                          rowTextForSelection={(item) => item.label}
+                          buttonTextAfterSelection={(selectedItem, index) => selectedItem}
+                          rowTextForSelection={(item, index) => item}
                           buttonStyle={styles.dropdown1BtnStyle}
                           buttonTextStyle={styles.dropdown1BtnTxtStyle}
                           renderDropdownIcon={() => <Text>▼</Text>}
                           dropdownIconPosition={"right"}
                           dropdownStyle={styles.dropdown1DropdownStyle}
                           rowTextStyle={styles.dropdown1RowTxtStyle}
-                          value={countries.find((c) => c.value === value) || null}
+                          onBlur={onBlur}
                         />
-                        {errors.country && (
+                        {error && (
                           <Text style={styles.errorText}>
-                            {errors.country.message}
+                            {error.message}
                           </Text>
                         )}
                       </View>

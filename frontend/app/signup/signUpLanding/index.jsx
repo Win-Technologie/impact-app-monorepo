@@ -267,21 +267,7 @@ export default function SignUpLandingPage() {
   };
 
   const goToVeriff = () => {
-    if (progressData[2].completion == 1) {
-      router.push("signup/scandocuments/scanpermis");
-    } else {
-      Alert.alert(
-        "Info",
-        t("signUpPage.youmusthavecompletedalltheinformationcollectionsteps"),
-        [
-          {
-            text: "Ok",
-            onPress: () => console.log("Cancel Pressed"),
-            style: "cancel",
-          },
-        ],
-      );
-    }
+    router.push("signup/scandocuments/scanpermis");
   };
 
   const footer = () => {
@@ -315,7 +301,7 @@ export default function SignUpLandingPage() {
 
           <TouchableOpacity
             style={{ flex: 1, marginLeft: 10 }}
-            onPress={() => console.log("Pressed")}
+            onPress={() => router.push("/signup/scandocuments/scanassurance")}
           >
             <View style={styles.innerBox}>
               <Ionicons name="document-text" size={45} color="#CF8C58" />
