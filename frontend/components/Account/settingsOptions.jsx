@@ -10,7 +10,6 @@ import {
 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { signout } from "../../app/api/users/userApi";
 
 export default function SettingsOptions({ currentLanguage, appVersion }) {
   const [filePath, setFilePath] = React.useState(null);
@@ -19,7 +18,7 @@ export default function SettingsOptions({ currentLanguage, appVersion }) {
   const router = useRouter();
 
   const handlePressAbonnement = () => {
-    //router.push('/abonnement');
+    router.push("subscription");
   };
 
   const handlePressVehicules = () => {
@@ -48,10 +47,6 @@ export default function SettingsOptions({ currentLanguage, appVersion }) {
 
   const handlePressMisesAJour = () => {
     //router.push('/misesajour');
-  };
-
-  const handleLogout = async () => {
-    await signout();
   };
 
   return (
@@ -84,12 +79,6 @@ export default function SettingsOptions({ currentLanguage, appVersion }) {
           "notifications",
           Ionicons,
           () => handlePressNotifications(),
-        )}
-        {renderSettingOption(
-          t("account.Login"),
-          "logout",
-          MaterialIcons,
-          () => handleLogout(),
         )}
       </View>
 
