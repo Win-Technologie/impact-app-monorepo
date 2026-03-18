@@ -37,19 +37,34 @@ export default function InsuranceStageThree() {
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
   const [insuranceDetails, setInsuranceDetail] = useRecoilState(insuranceState);
   const [lastVehicle, setlastVehicle] = useRecoilState(lastVehicleState);
-  const [isOwner, setIsOwner] = useState(true);
-  const totalSteps = 3;
-  const [currentStep, setCurrentStep] = useState(3);
-  const ENDPOINT = "insurances/add/";
-  const [country, setCountry] = useState("CA");
-  const [province, setProvince] = useState("");
-  const { t } = useTranslation();
-
-  const countries = [
-    { label: "🇨🇦 Canada", value: "CA" },
-    { label: "🇫🇷 France", value: "FR" },
-    { label: "🇺🇸 États-Unis", value: "US" },
-  ];
+    const totalSteps = 3;
+    const [currentStep, setCurrentStep] = useState(3);
+    const ENDPOINT = "insurances/add/";
+    const [province, setProvince] = useState("");
+    const [isOwner, setIsOwner] = useState(false);
+    const { t } = useTranslation();
+    const countries = [
+      { label: "🇨🇦 Canada", value: "CA" },
+      { label: "🇫🇷 France", value: "FR" },
+      { label: "🇺🇸 États-Unis", value: "US" },
+    ];
+    const {
+      control,
+      handleSubmit,
+      formState: { errors },
+      watch,
+    } = useForm({
+      defaultValues: {
+        firstName: "",
+        lastName: "",
+        phone: "",
+        address: "",
+        postalCode: "",
+        city: "",
+        country: "",
+      },
+    });
+    const country = watch('country');
 
   const countryProvinces = {
     CA: ["Ontario", "Québec", "Colombie-Britannique"],
@@ -65,30 +80,8 @@ export default function InsuranceStageThree() {
     }
   };
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      phone: "",
-      address: "",
-      postalCode: "",
-      city: "",
-    },
-  });
-
   const onSelectCountry = (selectedItem, index) => {
-    const selectedCountry = countries[index].value;
-    setCountry(selectedCountry);
-    handleInputChange("vehicleOwnerCountry", selectedCountry);
-
-    // Set the initial province based on the newly selected country
-    const initialProvince = countryProvinces[selectedCountry]?.[0] || "";
-    setProvince(initialProvince);
-    handleInputChange("vehicleOwnerProvince", initialProvince);
+    // No longer needed, logic moved to Controller
   };
 
   const indexOfDefautContry = () => {
@@ -100,34 +93,27 @@ export default function InsuranceStageThree() {
   };
 
   const indexOfDefautCountryProvinces = () => {
-    for (
-      var i = 0;
-      i < countryProvinces[insuranceDetails.vehicleOwnerCountry].length;
-      i++
-    ) {
-      if (
-        countryProvinces[insuranceDetails.vehicleOwnerCountry][i] ==
-        insuranceDetails.vehicleOwnerProvince
-      ) {
-        //  alert(i)
+    const provinces = countryProvinces[insuranceDetails.vehicleOwnerCountry];
+    if (!provinces) return undefined;
+    for (let i = 0; i < provinces.length; i++) {
+      if (provinces[i] === insuranceDetails.vehicleOwnerProvince) {
         return i;
       }
     }
+    return undefined;
   };
 
   const handlePressBack = () => {
     router.back();
   };
 
-  useEffect(() => {
-    setProvince(countryProvinces[country]?.[0] || "");
-  }, [country]);
+
 
   const handlePressContinue = () => {
-    // console.log(insuranceDetails);
-
     if (!isOwner) {
-      validateForm();
+      handleSubmit(() => {
+        addInsurance();
+      })();
     } else {
       addInsurance();
     }
@@ -197,32 +183,28 @@ export default function InsuranceStageThree() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stepper
-        currentStep={progressData[2].actualstep}
-        totalSteps={totalSteps}
-      />
-
-      <ScrollView style={styles.content}>
-        <Text style={styles.title}>{t("insurance.ownerTitle")}</Text>
-
-        <View style={styles.inputSection}>
-          <TouchableOpacity
-            onPress={() => {
-              chooseOption(1);
-            }}
-            style={isOwner ? styles.selectedButton : styles.unSelectedButton}
-          >
-            <Text
-              style={
-                isOwner
-                  ? styles.selectedButtonText
-                  : styles.unSelectedButtonText
-              }
+      {/* Stepper header restored */}
+      <Stepper currentStep={3} totalSteps={3} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={80}
+      >
+        <ScrollView style={styles.content}>
+          <View style={styles.inputSection}>
+            <TouchableOpacity
+              onPress={() => {
+                chooseOption(1);
+              }}
+              style={isOwner ? styles.selectedButton : styles.unSelectedButton}
             >
-              {t("insurance.ownerOption")}
-            </Text>
-          </TouchableOpacity>
-        </View>
+              <Text
+                style={isOwner ? styles.selectedButtonText : styles.unSelectedButtonText}
+              >
+                {t("insurance.ownerOption")}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
         <View style={styles.inputSection}>
           <TouchableOpacity
@@ -293,17 +275,22 @@ export default function InsuranceStageThree() {
               )}
             </View>
 
+            {/* Phone number field, only max length and digit filtering, no required or pattern validation */}
             <View style={styles.inputSection}>
               <Controller
                 control={control}
-                rules={{ required: t("insurance.phoneRequired") }}
+                rules={{ maxLength: { value: 10, message: t("insurance.phoneMaxLength") } }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     style={styles.textInput}
                     onBlur={onBlur}
+                    keyboardType="phone-pad"
+                    maxLength={10}
                     onChangeText={(text) => {
-                      handleInputChange("insuranceOwnerPhone", text);
-                      onChange(text);
+                      // Only allow digits
+                      const numeric = text.replace(/[^0-9]/g, "").slice(0, 10);
+                      handleInputChange("insuranceOwnerPhone", numeric);
+                      onChange(numeric);
                     }}
                     value={value}
                     placeholder={t("insurance.phonePlaceholder")}
@@ -319,7 +306,7 @@ export default function InsuranceStageThree() {
             <View style={styles.inputSection}>
               <Controller
                 control={control}
-                rules={{ required: t("insurance.phoneRequired") }}
+                rules={{ required: t("insurance.addressRequired") }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     style={styles.textInput}
@@ -329,7 +316,7 @@ export default function InsuranceStageThree() {
                       onChange(text);
                     }}
                     value={value}
-                    placeholder={t("insurance.phonePlaceholder")}
+                    placeholder={t("insurance.addressPlaceholder")}
                   />
                 )}
                 name="address"
@@ -368,14 +355,25 @@ export default function InsuranceStageThree() {
                   <Controller
                     control={control}
                     name="postalCode"
-                    rules={{ required: t("insurance.postalCodeRequired") }}
+                    rules={{
+                      required: t("insurance.postalCodeRequired"),
+                      maxLength: { value: 6, message: t("insurance.postalCodeMaxLength") },
+                      pattern: {
+                        value: /^[A-Za-z0-9]{0,6}$/,
+                        message: t("insurance.postalCodePattern"),
+                      },
+                    }}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextInput
                         style={styles.textInput}
                         onBlur={onBlur}
+                        maxLength={6}
+                        autoCapitalize="characters"
                         onChangeText={(text) => {
-                          handleInputChange("insuranceOwnerPostalCode", text);
-                          onChange(text);
+                          // Only allow alphanumeric, max 6 chars
+                          const filtered = text.replace(/[^A-Za-z0-9]/g, "").slice(0, 6);
+                          handleInputChange("insuranceOwnerPostalCode", filtered);
+                          onChange(filtered);
                         }}
                         value={value}
                         placeholder={t("insurance.postalCodePlaceholder")}
@@ -398,41 +396,33 @@ export default function InsuranceStageThree() {
                     control={control}
                     name="country"
                     rules={{ required: t("insurance.countryRequired") }}
-                    render={({ field: { onChange, onBlur, value } }) => (
+                    render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
                       <View>
                         <SelectDropdown
+                          data={countries.map((country) => country.label)}
                           defaultButtonText={t("insurance.countryPlaceholder")}
                           defaultValueByIndex={
-                            insuranceDetails.insuranceOwnerCountry
-                              ? indexOfDefautContry()
-                              : null
+                            insuranceDetails.insuranceOwnerCountry ? indexOfDefautContry() : null
                           }
-                          data={countries.map((country) => country.label)}
-                          onSelect={onSelectCountry}
-                          buttonTextAfterSelection={(selectedItem, index) => {
-                            onChange(countries[index].label);
-                            return selectedItem;
+                          onSelect={(selectedItem, index) => {
+                            onChange(countries[index].value);
+                            handleInputChange("insuranceOwnerCountry", countries[index].value);
+                            setProvince("");
+                            handleInputChange("insuranceOwnerProvince", "");
                           }}
-                          rowTextForSelection={(item, index) => {
-                            return item;
-                          }}
+                          buttonTextAfterSelection={(selectedItem, index) => selectedItem}
+                          rowTextForSelection={(item, index) => item}
                           buttonStyle={styles.dropdown1BtnStyle}
                           buttonTextStyle={styles.dropdown1BtnTxtStyle}
-                          renderDropdownIcon={() => {
-                            return <Text>▼</Text>;
-                          }}
+                          renderDropdownIcon={() => <Text>▼</Text>}
                           dropdownIconPosition={"right"}
                           dropdownStyle={styles.dropdown1DropdownStyle}
-                          // rowStyle={styles.dropdown1RowStyle}
                           rowTextStyle={styles.dropdown1RowTxtStyle}
-                          onBlur={() => {
-                            onBlur();
-                          }}
-                          value="CA"
+                          onBlur={onBlur}
                         />
-                        {errors.country && (
+                        {error && (
                           <Text style={styles.errorText}>
-                            {errors.country.message}
+                            {error.message}
                           </Text>
                         )}
                       </View>
@@ -452,17 +442,14 @@ export default function InsuranceStageThree() {
                           defaultValueByIndex={
                             insuranceDetails.insuranceOwnerProvince
                               ? indexOfDefautCountryProvinces()
-                              : null
+                              : undefined
                           }
-                          data={countryProvinces[country] || []}
+                          data={country && countryProvinces[country] ? countryProvinces[country] : []}
                           onSelect={(selectedItem, index) => {
-                            handleInputChange(
-                              "insuranceOwnerProvince",
-                              selectedItem,
-                            );
+                            handleInputChange("insuranceOwnerProvince", selectedItem);
+                            onChange(selectedItem);
                           }}
                           buttonTextAfterSelection={(selectedItem, index) => {
-                            onChange(countries[index].label);
                             return selectedItem;
                           }}
                           rowTextForSelection={(item, index) => {
@@ -481,11 +468,10 @@ export default function InsuranceStageThree() {
                             onBlur();
                           }}
                           value={value}
+                          disabled={!(country && countryProvinces[country])}
                         />
                         {errors.province && (
-                          <Text style={styles.errorText}>
-                            {errors.province.message}
-                          </Text>
+                          <Text style={styles.errorText}>{errors.province.message}</Text>
                         )}
                       </View>
                     )}
@@ -499,17 +485,24 @@ export default function InsuranceStageThree() {
                         </TouchableOpacity>*/}
           </>
         )}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <View style={styles.absoluteButtonContainer}>
         <DualOptionButton
           onPressBack={handlePressBack}
           onPressContinue={handlePressContinue}
+          continueLabel={t("insurance.continue") === "insurance.continue" ? "Continuer" : t("insurance.continue")}
+          // Enable continue if owner is selected, or if not owner and form is valid
+          disabled={
+            (!isOwner && Object.keys(errors).length > 0) || (!isOwner && Object.keys(errors).length > 0)
+          }
         />
       </View>
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -517,30 +510,26 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     padding: 20,
     paddingTop: 0,
+    backgroundColor: "white",
   },
-
   content: {
     paddingTop: 20,
   },
-
   absoluteButtonContainer: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
   },
-
   stepper: {
     marginHorizontal: 15,
   },
-
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
     marginTop: 20,
   },
-
   selectedButton: {
     padding: 10,
     borderRadius: 5,
@@ -551,11 +540,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#0B8BA8",
     height: 51,
   },
-
   selectedButtonText: {
     color: "#fff",
   },
-
   unSelectedButton: {
     padding: 10,
     borderRadius: 5,
@@ -566,15 +553,12 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     height: 51,
   },
-
   unSelectedButtonText: {
     color: "black",
   },
-
   inputSection: {
     marginBottom: 20,
   },
-
   textInput: {
     height: 51,
     borderColor: "gray",
@@ -582,17 +566,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
   },
-
-  inputSection: {
-    marginBottom: 20,
-  },
-
   errorText: {
     color: "red",
     marginTop: 5,
     fontSize: 12,
   },
-
   dropdown1BtnStyle: {
     width: "100%",
     height: 51,
@@ -602,7 +580,6 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     marginBottom: 0,
   },
-
   dropdown2BtnStyle: {
     width: "100%",
     height: 51,
@@ -612,33 +589,27 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     marginBottom: 0,
   },
-
   dropdown1BtnTxtStyle: {
     color: "#444",
     textAlign: "left",
     fontSize: 16,
   },
-
   dropdown1DropdownStyle: {
     backgroundColor: "#EFEFEF",
   },
-
   dropdown1RowStyle: {
     backgroundColor: "#EFEFEF",
     borderBottomColor: "#C5C5C5",
   },
-
   dropdown1RowTxtStyle: {
     color: "#444",
     textAlign: "left",
   },
-
   outerContainer: {
     flex: 1,
     backgroundColor: "#FFFFFF",
     justifyContent: "space-between",
   },
-
   stepper: {
     marginHorizontal: 15,
     marginTop: 10,

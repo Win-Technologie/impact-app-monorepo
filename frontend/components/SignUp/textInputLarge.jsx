@@ -1,7 +1,12 @@
 import { View, TextInput, StyleSheet } from "react-native";
 import React from "react";
 
-export default function textInputLarge({ placeholder, onChangeText, value }) {
+export default function textInputLarge({
+  placeholder,
+  onChangeText,
+  value,
+  ...textInputProps
+}) {
   return (
     <View style={styles.inputContainer}>
       <TextInput
@@ -9,6 +14,7 @@ export default function textInputLarge({ placeholder, onChangeText, value }) {
         placeholder={placeholder}
         value={value}
         onChangeText={onChangeText}
+        {...textInputProps}
       ></TextInput>
     </View>
   );

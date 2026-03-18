@@ -99,6 +99,7 @@
     "firstNameRequired": "Le prénom est requis",
     "lastNamePlaceholder": "Nom",
     "lastNameRequired": "Le nom est requis",
+    "nameCannotContainNumbers": "Le prénom et le nom ne peuvent pas contenir de chiffres",
     "genderQuestion": "Quel est votre genre?",
     "genderRequired": "Le genre est requis",
     "male": "Homme",
@@ -154,15 +155,18 @@
     "cityPlaceholder": "Ville",
     "postalCodeTitle": "Code Postal",
     "postalCodeRequired": "Code postal requis",
+    "postalCodeMaxLength": "Le code postal doit contenir au maximum 6 caractères",
     "postalCodePlaceholder": "Code postal",
     "countryTitle": "Pays",
     "countryRequired": "Pays requis",
     "countryPlaceholder": "Sélectionnez un pays",
+    "selectCountryBeforeProvince": "Sélectionnez d'abord un pays",
     "provinceTitle": "Province",
     "provinceRequired": "Province requise",
     "provincePlaceholder": "Sélectionnez une province",
     "phoneonlynumber": "Valeur numérique uniquement accepté",
-    "fourcarminimum": "4 charatère au  minimum"
+    "fourcarminimum": "4 charatère au  minimum",
+    "phoneTenDigits": "Le numéro de téléphone doit contenir exactement 10 chiffres"
   },
 
   "passwordResetVerification": {
@@ -182,7 +186,8 @@
   "dobScreen": {
     "title": "Date de naissance",
     "dateOfBirthRequired": "La date de naissance est requise",
-    "dateFormatError": "Le format de la date doit être AAAA-MM-JJ"
+    "dateFormatError": "Le format de la date doit être AAAA-MM-JJ",
+    "futureDateError": "La date de naissance ne peut pas être dans le futur"
   },
 
   "signUpLandingPage": {
@@ -197,8 +202,8 @@
     "scanButton": "Scanner",
     "cancelButton": "Annuler",
     "registerButton": "M'inscrire",
-    "personalInformation": "Information personnelles",
-    "vehicleInformation": "Information du vehicules",
+    "personalInformation": "Informations personnelles",
+    "vehicleInformation": "Informations du véhicule",
     "insuranceInformation": "Informations d'assurances",
     "addInsuranceInfo": "Vous devez d'abords ajouter les information de l'assurance du précédant véhicule",
     "addVehicleFirst": "Vous devez au préalable ajouter un véhicule",
@@ -225,6 +230,7 @@
     "serialNumberRequired": "Le numéro de série est requis",
     "serialNumberPlaceholder": "Numéro de série",
     "serialNumberMinLength": "5 caratères au minimum",
+    "yearRange": "L'année doit être comprise entre 1900 et {{max}}.",
     "nextButton": "Suivant",
     "backButton": "Retour"
   },
@@ -288,7 +294,7 @@
 
   "insurance": {
     "selectVehicle": "Sélectionnez votre véhicule",
-    "chooseVehicle": "Choisir une véhicule",
+    "chooseVehicle": "Choisir un véhicule",
     "vehicleRequired": "Vous devez choisir un véhicule",
     "policyTitle": "Quel est votre police d'assurance ?",
     "policyNumberRequired": "Le numéro d'assurance est requis",

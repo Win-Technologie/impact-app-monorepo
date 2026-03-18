@@ -6,8 +6,9 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Keyboard,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import Stepper from "../../../components/SignUp/stepper";
@@ -17,14 +18,14 @@ import { vehicleDetailsState } from "../../../GlobalState/vehiculeState";
 import { userInfoGatherState } from "../../../GlobalState/userDetailState";
 import { useTranslation } from "react-i18next";
 import { DatePickerInput } from "react-native-paper-dates";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function LicencePlate() {
+function LicencePlate() {
+
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
-  const [vehicleDetails, setVehicleDetails] =
-    useRecoilState(vehicleDetailsState);
-  const [keyboardIsOpen, setKeyboardIsOpen] = React.useState(false);
-  const [currentStep, setCurrentStep] = useState(2);
+  const [vehicleDetails, setVehicleDetails] = useRecoilState(vehicleDetailsState);
+  // KeyboardAvoidingView will handle keyboard avoidance
   const totalSteps = 3;
   const { t } = useTranslation();
 
@@ -47,40 +48,35 @@ export default function LicencePlate() {
     },
   });
 
-  Keyboard.addListener("keyboardDidShow", () => {
-    setKeyboardIsOpen(true);
-  });
-
-  Keyboard.addListener("keyboardDidHide", () => {
-    setKeyboardIsOpen(false);
-  });
-
   const handlePressBack = () => {
-    setCurrentStep(currentStep - 1);
+    // Always decrement actualstep (min 0)
+    const array = progressData.map((item) => {
+      if (item.id === 1) {
+        return {
+          ...item,
+          actualstep: Math.max(0, item.actualstep - 1),
+        };
+      } else {
+        return item;
+      }
+    });
+    setProgressData(array);
     router.back();
   };
 
   const handlePressContinue = handleSubmit((data) => {
-    //console.log(data)
-    if (progressData[1].actualstep == 1) {
-      const array = progressData.map((item) => {
-        if (item.id == 1) {
-          return {
-            id: 1,
-            title: "Information du vehicules",
-            subtitle: "8 minutes",
-            completion: 0,
-            actualstep: 2,
-            nbstep: 3,
-          };
-        } else {
-          return item;
-        }
-      });
-
-      setProgressData(array);
-    }
-
+    // Always increment actualstep (max 2)
+    const array = progressData.map((item) => {
+      if (item.id === 1) {
+        return {
+          ...item,
+          actualstep: Math.min(2, item.actualstep + 1),
+        };
+      } else {
+        return item;
+      }
+    });
+    setProgressData(array);
     router.push("/signup/vehiculesSteps/ownerPage");
   });
 
@@ -88,35 +84,23 @@ export default function LicencePlate() {
     setVehicleDetails((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handlePressback = () => {
-    setCurrentStep(currentStep - 1);
-    router.back();
-  };
-
-  const onSubmit = (data) => {
-    setCurrentStep(currentStep + 1);
-    // router.push("./ownerPage");
-    router.push("/signup/vehiculesSteps/ownerPag");
-  };
-
-  const nextPage = () => {
-    router.push("/signup/vehiculesSteps/ownerPage");
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <Stepper
-        currentStep={progressData[1].actualstep}
-        totalSteps={totalSteps}
-      />
-
-      <ScrollView style={styles.content}>
-        <Text style={styles.title}>
-          {t("vehicleRegistration.plateNumberTitle")}
-        </Text>
-
-        <View style={styles.inputSection}>
-          <Controller
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <SafeAreaView style={styles.container}>
+        <Stepper
+          currentStep={(progressData[1]?.actualstep ?? 0) + 1}
+          totalSteps={totalSteps}
+        />
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>
+            {t("vehicleRegistration.plateNumberTitle")}
+          </Text>
+          <View style={styles.inputSection}>
+            <Controller
             control={control}
             name="plaque"
             rules={{
@@ -124,6 +108,10 @@ export default function LicencePlate() {
               maxLength: {
                 value: 7,
                 message: t("vehicleRegistration.plateNumberMaxLength"),
+              },
+              minLength: {
+                value: 7,
+                message: t("vehicleRegistration.plateNumberExactLength"),
               },
               validate: (value) =>
                 value.length === 7 ||
@@ -140,8 +128,10 @@ export default function LicencePlate() {
                     onBlur={onBlur}
                     value={value} // Utiliser 'value' du contrôleur ici
                     onChangeText={(text) => {
-                      handleInputChange("vehiclePlateNumber", text);
-                      onChange(text); // Mettre à jour la valeur dans 'react-hook-form'
+                      if (text.length <= 7) {
+                        handleInputChange("vehiclePlateNumber", text);
+                        onChange(text); // Mettre à jour la valeur dans 'react-hook-form'
+                      }
                     }}
                   />
                   <Text style={{ padding: 10 }}>{`${value?.length}/7`}</Text>
@@ -169,6 +159,10 @@ export default function LicencePlate() {
                 value: 13,
                 message: t("vehicleRegistration.certificateMaxLength"),
               },
+              minLength: {
+                value: 13,
+                message: t("vehicleRegistration.certificateExactLength"),
+              },
               validate: (value) =>
                 value.length === 13 ||
                 t("vehicleRegistration.certificateExactLength"),
@@ -184,8 +178,10 @@ export default function LicencePlate() {
                     onBlur={onBlur}
                     value={value} // Utiliser 'value' du contrôleur ici
                     onChangeText={(text) => {
-                      handleInputChange("vehicleNumeroCertificat", text);
-                      onChange(text); // Mettre à jour la valeur dans 'react-hook-form'
+                      if (text.length <= 13) {
+                        handleInputChange("vehicleNumeroCertificat", text);
+                        onChange(text); // Mettre à jour la valeur dans 'react-hook-form'
+                      }
                     }}
                   />
                   <Text style={{ padding: 10 }}>{`${value?.length}/13`}</Text>
@@ -252,10 +248,11 @@ export default function LicencePlate() {
                         onChange(date);
                         handleInputChange(
                           "vehicleCerticateDeliveryDate",
-                          date.toISOString().split("T")[0],
+                          date ? date.toISOString().split("T")[0] : null,
                         );
                       }}
                       inputMode="start"
+                      maxDate={new Date()}
                     />
                   )}
                 />
@@ -325,6 +322,7 @@ export default function LicencePlate() {
                       style={styles.textInput}
                       onBlur={onBlur}
                       value={value}
+                      keyboardType="numeric"
                       onChangeText={(text) => {
                         handleInputChange("vehicleNetWeight", text);
                         onChange(text);
@@ -358,6 +356,7 @@ export default function LicencePlate() {
                       style={styles.textInput}
                       onBlur={onBlur}
                       value={value}
+                      keyboardType="numeric"
                       onChangeText={(text) => {
                         handleInputChange("vehicleCylinder", text);
                         onChange(text);
@@ -428,9 +427,12 @@ export default function LicencePlate() {
                       )}
                       onBlur={onBlur}
                       value={value}
+                      keyboardType="numeric"
                       onChangeText={(text) => {
-                        handleInputChange("vehicleEssieux", text);
-                        onChange(text);
+                        // Only allow numbers
+                        const numeric = text.replace(/[^0-9]/g, "");
+                        handleInputChange("vehicleEssieux", numeric);
+                        onChange(numeric);
                       }}
                     />
                     {errors.numeroEssieux && (
@@ -448,19 +450,19 @@ export default function LicencePlate() {
         {/*<TouchableOpacity onPress={nextPage}>
                     <Text>next</Text>
                 </TouchableOpacity>*/}
-      </ScrollView>
-
-      {!keyboardIsOpen && (
+        </ScrollView>
         <View style={styles.absoluteButtonContainer}>
           <DualOptionButton
             onPressBack={handlePressBack}
             onPressContinue={handlePressContinue}
           />
         </View>
-      )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
+
+export default LicencePlate;
 
 const styles = StyleSheet.create({
   container: {
@@ -469,6 +471,7 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     padding: 20,
     paddingTop: 0,
+    backgroundColor: "white",
   },
 
   content: {

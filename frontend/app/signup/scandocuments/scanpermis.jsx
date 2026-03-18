@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   ToastAndroid,
   Modal,
+  Image,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import DualOptionButtonStep from "../../../components/SignUp/dualBottomButtonsSteps";
@@ -26,6 +27,35 @@ import {
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function ScanPermis() {
+  // Add missing navigation handlers
+  const handlePressBack = () => {
+    router.back();
+  };
+  const handlePressContinue = async () => {
+    // Save images to local storage (AsyncStorage) for later use in user settings
+    try {
+      await AsyncStorage.setItem('user_selfie', selfie || '');
+      await AsyncStorage.setItem('user_recto', rectoImage || '');
+      await AsyncStorage.setItem('user_verso', versoImage || '');
+      Alert.alert('Succès', 'Informations enregistrées');
+      router.replace('/signup/signUpLanding');
+    } catch (e) {
+      Alert.alert('Erreur', "Impossible d'enregistrer les informations");
+    }
+  };
+
+  // Add missing openPickupImage function
+  const openPickupImage = (nber) => {
+    if (nber === 1) {
+      setVisible1(true);
+    } else if (nber === 2) {
+      setVisible2(true);
+    } else if (nber === 3) {
+      setVisible3(true);
+    }
+    setCameraNumber(nber);
+    setImage(null);
+  };
   const { t } = useTranslation();
   const [rectoImage, setRectoImage] = React.useState(null);
   const [versoImage, setVersoImage] = React.useState(null);
@@ -66,239 +96,92 @@ export default function ScanPermis() {
     typeAccount: "free",
   };
 
-  const openPickupImage = (nber) => {
-    if (nber == 1) {
-      setVisible1(true);
-    } else if (nber == 2) {
-      setVisible2(true);
-    } else if (nber == 3) {
-      setVisible3(true);
-    }
-
-    setCameraNumber(nber);
-    setImage(null);
-  };
-
-  const handlePressBack = () => {
-    router.back();
-  };
-
-  const showToastSuccesToast = () => {
-    ToastAndroid.showWithGravityAndOffset(
-      t("signUpLandingPage.drivenlicencesave"),
-      ToastAndroid.LONG,
-      ToastAndroid.BOTTOM,
-      25,
-      50,
-    );
-  };
-
-  const handlePressContinue = async () => {
-    if (!rectoImage || !versoImage || !selfie) {
-      Alert.alert(
-        "Incomplet",
-        "Vous devez uploader toutes les photos requises avant de continuer.",
-        [
-          {
-            text: "Ok",
-            onPress: () => {},
-            style: "cancel",
-          },
-        ],
-      );
-    } else {
-      let requestData = {
-        /*"number": "C6126-140989-03",
-                "birthdate": "1989/09/14",
-                "address": "1530 Av.Filion",
-                "appartment": "302",
-                "province": "QC",
-                "postalCode": "J4R1W4",
-                "licenseClass": "5",
-                "sex": "m",
-                "rest": "non",
-                "mention": "non",
-                "referenceNumber": "PF8181RM1",
-                "height": "1.82",
-                "weight": "87",
-                "issued": "2021/12/09",
-                "expires": "2029/09/14",
-                "city": "Saint-Lambert",
-                "country": "Canada",*/
-
-        number: userDetails.licenseNumber, // "C6126-140989-03",
-        birthdate: userDetails.birthDay.replaceAll("-", "/"), // "1989/09/14",
-        address: userDetails.address, //"1530 Av.Filion",
-        //appartment: "302",
-        province: "QC",
-        postalCode: userDetails.postalCode.trim(), //"J4R1W4",
-        licenseClass: userDetails.licenseCategory, // "5"
-        sex: userDetails.gender.toLowerCase(), //"m",
-        rest: "non",
-        mention: "non",
-        referenceNumber: "PF8181RM1",
-        height: "1.82",
-        weight: "87",
-
-        issued: userDetails.licenseDelivery.replaceAll("-", "/"), // "2021/12/09",
-        expires: userDetails.licenseExpiration.replaceAll("-", "/"), // "2029/09/14",
-        city: userDetails.city, // "Saint-Lambert",
-        country: "Canada", // userDetails.country,// Pas le code mais nom du pays avec au moins 4 char*/
-        photoRecto: rectoImage,
-        photoVerso: versoImage, // "rwweqopkpkqewf49", //versoImage,
-        photoSelfie: versoImage, // selfie,
-      };
-
-      try {
-        // Send user details
-        // console.log(userDetailsPayload);
-
-        const token = await AsyncStorage.getItem("userToken");
-
-        if (!token) {
-          console.error("No token provided");
-          return;
-        }
-
-        setLoadingModalVisible(true);
-        const userDetailsUrl = `${API_URL}dl/user/license`;
-
-        const userResponse = await fetch(userDetailsUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(requestData),
-        });
-
-        //console.log(userResponse);
-        // const userData = await userResponse.json();
-        // console.log(userData);
-
-        setLoadingModalVisible(false);
-        setLicenceScan(true);
-        router.push("/signup/signUpLanding");
-        showToastSuccesToast();
-
-        //console.log(userData);
-        /*if (userData.msg == "Nouvelle licence ajout�e avec succ�s") {
-
-                    console.log("okay")
-                } else {
-
-                    console.log("echec");
-                }*/
-      } catch (error) {
-        console.error("Error submitting data:", error);
-      }
-    }
-  };
-
-  /*useEffect(() => {
-
-        if (!visible) {
-
-            if (cameraNber == 1) {
-
-                setRectoImage(image);
-
-            } else if (cameraNber == 2) {
-
-                setVersoImage(image);
-
-            } else {
-
-                setSelfie(image);
-
-            }
-
-        }
-
-    }, [visible]);*/
-
   return (
     <View style={styles.container}>
-      <ScrollView>
-        <Text style={styles.titleText}>
-          Veuilez Scanner et faire verifier votre permis de conduire
+      <ScrollView contentContainerStyle={styles.scrollviewContainer}>
+        <Text style={[styles.titleText, { marginTop: 40, textAlign: 'center' }]}> 
+          Veuillez scanner et faire vérifier votre permis de conduire
         </Text>
 
-        <View
-          style={{ padding: 2, alignItems: "center", justifyContent: "center" }}
-        >
+        <View style={styles.uploadSection}>
           <TouchableOpacity
             style={styles.UploadButton}
-            onPress={() => {
-              openPickupImage(1);
-            }}
+            onPress={() => openPickupImage(1)}
           >
             {!rectoImage ? (
-              <SimpleLineIcons name="cloud-upload" size={24} color="#1B6878" />
+              <SimpleLineIcons name="cloud-upload" size={28} color="#1B6878" />
             ) : (
-              <SimpleLineIcons name="check" size={24} color="green" />
+              <SimpleLineIcons name="check" size={28} color="green" />
             )}
-
-            <Text style={styles.text}>
-              Telecharger une photo du{" "}
-              <Text style={{ color: "#0B7BA8" }}>recto</Text> de votre
-              permis{" "}
+            <Text style={styles.uploadLabel}>
+              Télécharger une photo du <Text style={{ color: "#0B7BA8" }}>recto</Text> de votre permis
             </Text>
           </TouchableOpacity>
+          {/* Preview for recto */}
+          {rectoImage && (
+            <View style={{ marginTop: 10, alignItems: 'center' }}>
+              <Text style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Aperçu</Text>
+              <Image
+                source={{ uri: rectoImage }}
+                style={{ width: 180, height: 120, borderRadius: 8, borderWidth: 1, borderColor: '#ccc' }}
+                resizeMode="cover"
+              />
+            </View>
+          )}
         </View>
 
-        <View
-          style={{
-            padding: 2,
-            alignItems: "center",
-            marginVertical: 20,
-            justifyContent: "center",
-          }}
-        >
+        <View style={styles.uploadSection}>
           <TouchableOpacity
             style={styles.UploadButton}
-            onPress={() => {
-              openPickupImage(2);
-            }}
+            onPress={() => openPickupImage(2)}
           >
             {!versoImage ? (
-              <SimpleLineIcons name="cloud-upload" size={24} color="#1B6878" />
+              <SimpleLineIcons name="cloud-upload" size={28} color="#1B6878" />
             ) : (
-              <SimpleLineIcons name="check" size={24} color="green" />
+              <SimpleLineIcons name="check" size={28} color="green" />
             )}
-
-            <Text style={styles.text}>
-              Telecharger une photo du{" "}
-              <Text style={{ color: "#0B7BA8" }}>verso</Text> de votre
-              permis{" "}
+            <Text style={styles.uploadLabel}>
+              Télécharger une photo du <Text style={{ color: "#0B7BA8" }}>verso</Text> de votre permis
             </Text>
           </TouchableOpacity>
+          {/* Preview for verso */}
+          {versoImage && (
+            <View style={{ marginTop: 10, alignItems: 'center' }}>
+              <Text style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Aperçu</Text>
+              <Image
+                source={{ uri: versoImage }}
+                style={{ width: 180, height: 120, borderRadius: 8, borderWidth: 1, borderColor: '#ccc' }}
+                resizeMode="cover"
+              />
+            </View>
+          )}
         </View>
 
-        <View
-          style={{
-            padding: 2,
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-          }}
-        >
+        <View style={styles.uploadSectionLast}>
           <TouchableOpacity
             style={styles.UploadButton}
-            onPress={() => {
-              openPickupImage(3);
-            }}
+            onPress={() => openPickupImage(3)}
           >
             {!selfie ? (
-              <SimpleLineIcons name="cloud-upload" size={24} color="#1B6878" />
+              <SimpleLineIcons name="cloud-upload" size={28} color="#1B6878" />
             ) : (
-              <SimpleLineIcons name="check" size={24} color="green" />
+              <SimpleLineIcons name="check" size={28} color="green" />
             )}
-            <Text style={styles.text}>
-              Telecharger votre{" "}
-              <Text style={{ color: "#0B7BA8" }}>selfie</Text>{" "}
+            <Text style={styles.uploadLabel}>
+              Télécharger votre <Text style={{ color: "#0B7BA8" }}>selfie</Text>
             </Text>
           </TouchableOpacity>
+          {/* Preview for selfie */}
+          {selfie && (
+            <View style={{ marginTop: 10, alignItems: 'center' }}>
+              <Text style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Aperçu</Text>
+              <Image
+                source={{ uri: selfie }}
+                style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 1, borderColor: '#ccc' }}
+                resizeMode="cover"
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -309,41 +192,22 @@ export default function ScanPermis() {
         />
       </View>
 
+      {/* Add ImagePickerModals for recto, verso, and selfie */}
       <ImagePickerModal
         isVisible={visible1}
         onClose={() => setVisible1(false)}
         setImage={setRectoImage}
       />
-
       <ImagePickerModal
         isVisible={visible2}
         onClose={() => setVisible2(false)}
         setImage={setVersoImage}
       />
-
       <ImagePickerModal
         isVisible={visible3}
         onClose={() => setVisible3(false)}
         setImage={setSelfie}
       />
-
-      <Modal
-        transparent={true}
-        visible={loadingModalVisible}
-        animationType="fade"
-        onRequestClose={() => {
-          setLoadingModalVisible(!loadingModalVisible);
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <ActivityIndicator size="large" color="#1B6878" />
-            <Text style={{ marginTop: 10, fontSize: 14, color: "#fff" }}>
-              {t("pleasewait")}
-            </Text>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -389,7 +253,30 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  scrollviewContainer: {},
+  scrollviewContainer: {
+    paddingBottom: 120,
+  },
+  uploadSection: {
+    marginBottom: 30,
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  uploadSectionLast: {
+    marginBottom: 40,
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  uploadLabel: {
+    marginTop: 12,
+    fontSize: 16,
+    textAlign: "center",
+    color: "#19363C",
+    lineHeight: 22,
+  },
 
   safeAreaContainer: {
     flex: 1,

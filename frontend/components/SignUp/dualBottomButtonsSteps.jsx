@@ -2,20 +2,25 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
-const DualOptionButton = ({ onPressBack, onPressContinue }) => {
+const DualOptionButton = ({
+  onPressBack,
+  onPressContinue,
+  continueLabel = "Continuer",
+}) => {
   return (
     <View style={styles.bottomButtonContainer}>
       <TouchableOpacity
         style={[styles.bottomButton, styles.backButton]}
         onPress={onPressBack}
+        accessibilityLabel="Retour"
       >
-        <Text style={styles.buttonText}>retour</Text>
+        <Text style={styles.backArrowText}>←</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.bottomButton, styles.continueButton]}
         onPress={onPressContinue}
       >
-        <Text style={styles.buttonText}>Continuer</Text>
+        <Text style={styles.buttonText}>{continueLabel}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -46,6 +51,11 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     //fontWeight: 'bold',
+  },
+  backArrowText: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "700",
   },
 });
 

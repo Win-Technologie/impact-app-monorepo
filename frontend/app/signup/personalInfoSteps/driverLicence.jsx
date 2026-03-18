@@ -7,6 +7,8 @@
   Platform,
   ScrollView,
   TextInput,
+  Alert,
+  Keyboard,
 } from "react-native";
 import React, { useState } from "react";
 import { router } from "expo-router";
@@ -30,14 +32,12 @@ export default function Insurance() {
   const [userDetails, setUserDetails] = useRecoilState(userDetailsState);
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
   const [differentAddress, setDifferentAddress] = useState(false);
-  const API_URL = process.env.EXPO_PUBLIC_API_URL;
   const [currentStep, setCurrentStep] = useState(4);
   const totalSteps = 4;
-  const [dateDe, setDateDe] = useState(undefined);
   const [inputDateDe, setInputDateDe] = React.useState(undefined);
-  const [dateEx, setDateEx] = useState(undefined);
   const [inputDateEx, setInputDateEx] = React.useState(undefined);
   const { t } = useTranslation();
+  const today = new Date();
 
   const handleInputChange = (field, value) => {
     setUserDetails((prev) => ({ ...prev, [field]: value }));
@@ -72,145 +72,70 @@ export default function Insurance() {
     mode: "onChange",
   });
 
-  const lauchrequest = async () => {
-    const token = await AsyncStorage.getItem("userToken");
-
-    if (!token) {
-      console.error("No token provided");
-      return;
-    }
-
-    console.log(token);
-
-    const userDetailsUrl = `${API_URL}users/user/`;
-    const licenseDetailsUrl = `${API_URL}users/user/license`;
-
-    const {
-      name,
-      lastName,
-      gender,
-      phone,
-      address,
-      city,
-      postalCode,
-      country,
-      birthDay,
-      province,
-      licenseNumber,
-      licenseCategory,
-      licenseExpiration,
-      licenseMention,
-      alternateAddress,
-      alternateCity,
-      alternatePostalCode,
-      alternateCountry,
-      alternateProvince,
-      typeAccount,
-    } = userDetails;
-
-    const userDetailsPayload = {
-      name,
-      lastName,
-      phone,
-      address,
-      postalCode,
-      city,
-      province,
-      country,
-      gender,
-      typeAccount: "free",
-    };
-
-    const licenseDetailsPayload = {
-      number: licenseNumber,
-      birthdate: birthDay,
-      /*address: differentAddress ? alternateAddress : address,
-            country: differentAddress ? alternateCountry : country,
-            province: differentAddress ? alternateProvince : province,
-            postalCode: differentAddress ? alternatePostalCode : postalCode,*/
-      address: address,
-      country: country,
-      province: province,
-      postalCode: postalCode,
-      city: city,
-      licenseClass: licenseCategory,
-      expires: "2026-09-09",
-      mention: licenseMention,
-      sex: gender,
-    };
-
-    console.log("licence payload", licenseDetailsPayload);
+  const lauchrequest = async (overrides = {}) => {
+    const nextUserDetails = { ...userDetails, ...overrides };
 
     try {
-      // Send user details
-      // console.log(userDetailsPayload);
+      await AsyncStorage.setItem(
+        "signupUserDetailsDraft",
+        JSON.stringify(nextUserDetails),
+      );
 
-      const userResponse = await fetch(userDetailsUrl, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(userDetailsPayload),
+      const storedUserRaw = await AsyncStorage.getItem("user");
+
+      if (storedUserRaw) {
+        const storedUserData = JSON.parse(storedUserRaw);
+        const userNode = storedUserData?.user ?? storedUserData;
+
+        if (userNode && typeof userNode === "object") {
+          const updatedUserNode = {
+            ...userNode,
+            name: nextUserDetails.name || userNode.name,
+            lastName: nextUserDetails.lastName || userNode.lastName,
+            phone: nextUserDetails.phone || userNode.phone,
+            address: nextUserDetails.address || userNode.address,
+            postalCode: nextUserDetails.postalCode || userNode.postalCode,
+            city: nextUserDetails.city || userNode.city,
+            province: nextUserDetails.province || userNode.province,
+            country: nextUserDetails.country || userNode.country,
+            gender: nextUserDetails.gender || userNode.gender,
+            birthdate: nextUserDetails.birthDay || userNode.birthdate,
+          };
+
+          const updatedStoredUser = storedUserData?.user
+            ? { ...storedUserData, user: updatedUserNode }
+            : updatedUserNode;
+
+          await AsyncStorage.setItem("user", JSON.stringify(updatedStoredUser));
+        }
+      }
+
+      setUserDetails(nextUserDetails);
+
+      const array = progressData.map((item) => {
+        if (item.id == 0) {
+          return {
+            id: 0,
+            title: "Information personnelles",
+            subtitle: "4 minutes",
+            completion: 1,
+            actualstep: 4,
+            nbstep: 4,
+          };
+        } else {
+          return item;
+        }
       });
 
-      //console.log(userResponse);
+      setProgressData(array);
 
-      if (!userResponse.ok) {
-        console.error(
-          "Failed to submit user details",
-          await userResponse.text(),
-        );
-        throw new Error("Failed to submit user details");
-      }
-
-      // const userData = await userResponse.json();
-      // console.log('User data submission successful:', userData);
-
-      // Send license details
-      /*const licenseResponse = await fetch(licenseDetailsUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(licenseDetailsPayload)
-            });
-
-            console.log(licenseResponse);
-
-            if (!licenseResponse.ok) {
-                console.error("Failed to submit license details", await licenseResponse.text());
-                throw new Error('Failed to submit license details');
-            }
-
-            const licenseData = await licenseResponse.json();
-            console.log('License data submission successful:', licenseData);*/
-
-      if (userResponse.ok /*&& licenseResponse.ok*/) {
-        if (progressData[0].actualstep == 3) {
-          const array = progressData.map((item) => {
-            if (item.id == 0) {
-              return {
-                id: 0,
-                title: "Information personnelles",
-                subtitle: "4 minutes",
-                completion: 1,
-                actualstep: 4,
-                nbstep: 4,
-              };
-            } else {
-              return item;
-            }
-          });
-
-          setProgressData(array);
-        }
-
-        router.push("/signup/signUpLanding");
-      }
+      router.push("/signup/signUpLanding");
     } catch (error) {
-      console.error("Error submitting data:", error);
+      console.error("Error saving personal information:", error);
+      Alert.alert(
+        "Erreur",
+        "Une erreur est survenue lors de l'enregistrement local des données. Veuillez réessayer.",
+      );
     }
   };
 
@@ -227,12 +152,8 @@ export default function Insurance() {
       formatDate(data.dateDe.getMonth() + 1) +
       "-" +
       formatDate(data.dateDe.getDate());
-    setUserDetails({ ...userDetails, licenseExpiration: datExp });
-    setUserDetails({ ...userDetails, licenseDelivery: datDe });
-
-    setTimeout(() => {
-      lauchrequest();
-    }, 500);
+    setUserDetails((prev) => ({ ...prev, licenseExpiration: datExp, licenseDelivery: datDe }));
+    lauchrequest({ licenseExpiration: datExp, licenseDelivery: datDe });
   });
 
   // try {
@@ -348,10 +269,7 @@ export default function Insurance() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stepper
-        currentStep={progressData[0].actualstep}
-        totalSteps={totalSteps}
-      />
+      <Stepper currentStep={4} totalSteps={totalSteps} displayStep={4} />
 
       <ScrollView
         //  contentContainerStyle={styles.scrollviewContainer}
@@ -391,7 +309,7 @@ export default function Insurance() {
               control={control}
               name="dateDe"
               rules={{
-                required: t("licenseDetails.expiryDateRequired"),
+                required: t("licenseDetails.issueDateRequired"),
                 minLength: {
                   value: 10,
                   message: t("licenseDetails.invalidFormat"),
@@ -405,15 +323,21 @@ export default function Insurance() {
                   mode="outlined"
                   activeOutlineColor="gray"
                   style={styles.inputDate}
+                  keyboardType="default"
+                  validRange={{ endDate: today }}
                   onChangeText={(text) => {
                     onChange(text);
-                    setDateDe(text);
                   }}
-                  //onChange={(d) => setInputDateDe(d)}
                   onChange={(d) => {
+                    if (!d) {
+                      return;
+                    }
+
                     onChange(d);
                     setInputDateDe(d);
+                    Keyboard.dismiss();
                   }}
+                  onFocus={() => Keyboard.dismiss()}
                   inputMode="start"
                   value={inputDateDe}
                 />
@@ -443,14 +367,21 @@ export default function Insurance() {
                   mode="outlined"
                   activeOutlineColor="gray"
                   style={styles.inputDate}
+                  keyboardType="default"
+                  validRange={{ startDate: inputDateDe || today }}
                   onChangeText={(text) => {
                     onChange(text);
-                    setDateEx(text);
                   }}
                   onChange={(d) => {
+                    if (!d) {
+                      return;
+                    }
+
                     onChange(d);
                     setInputDateEx(d);
+                    Keyboard.dismiss();
                   }}
+                  onFocus={() => Keyboard.dismiss()}
                   inputMode="start"
                   value={inputDateEx}
                 />
@@ -597,6 +528,7 @@ export default function Insurance() {
         <DualOptionButton
           onPressBack={handlePressBack}
           onPressContinue={handlePressContinue}
+          continueLabel="Compléter"
         />
       </View>
     </SafeAreaView>
@@ -610,6 +542,7 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     padding: 20,
     paddingTop: 0,
+    backgroundColor: "white",
   },
 
   content: {
@@ -644,7 +577,9 @@ const styles = StyleSheet.create({
   },
 
   inputDate: {
-    backgroundColor: "#ffff",
+    backgroundColor: "#fff",
+    height: 51,
+    fontSize: 16,
   },
 
   inputHalf: {

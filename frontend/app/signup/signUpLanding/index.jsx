@@ -41,19 +41,19 @@ export default function SignUpLandingPage() {
     setProgressData([
       {
         id: 0,
-        title: "Information personnelles",
+        title: "Informations personnelles",
         subtitle: "4 minutes",
         completion: 0,
         actualstep: 0,
-        nbstep: 4,
+        nbstep: 3,
       },
       {
         id: 1,
-        title: "Information du vehicules",
+        title: "Informations du véhicule",
         subtitle: "8 minutes",
         completion: 0,
         actualstep: 0,
-        nbstep: 4,
+        nbstep: 3,
       },
       {
         id: 2,
@@ -61,7 +61,7 @@ export default function SignUpLandingPage() {
         subtitle: "8 minutes",
         completion: 0,
         actualstep: 0,
-        nbstep: 4,
+        nbstep: 3,
       },
     ]);
 
@@ -123,21 +123,14 @@ export default function SignUpLandingPage() {
         break;
 
       case t("signUpLandingPage.vehicleInformation"):
-        if (lastVehicle == null) {
+        setProgressData((prev) => prev.map((step) => step.id === 1 ? { ...step, actualstep: 0 } : step));
+        setTimeout(() => {
           router.push("/signup/vehiculesSteps/vehiculesDetails");
-        } else {
-          Alert.alert(t("Info"), t("signUpLandingPage.addInsuranceInfo"), [
-            {
-              text: "Ok",
-              onPress: () => console.log("Cancel Pressed"),
-              style: "Cancel",
-            },
-          ]);
-        }
+        }, 0);
         break;
 
       case t("signUpLandingPage.insuranceInformation"):
-        if (lastVehicle == null) {
+        if (progressData[1]?.completion !== 1) {
           Alert.alert(t("Info"), t("signUpLandingPage.addVehicleFirst"), [
             {
               text: "Ok",
@@ -168,19 +161,19 @@ export default function SignUpLandingPage() {
       setProgressData([
         {
           id: 0,
-          title: "Information personnelles",
+          title: "Informations personnelles",
           subtitle: "4 minutes",
           completion: 0,
           actualstep: 0,
-          nbstep: 4,
+          nbstep: 3,
         },
         {
           id: 1,
-          title: "Information du vehicules",
+          title: "Informations du véhicule",
           subtitle: "8 minutes",
           completion: 0,
           actualstep: 0,
-          nbstep: 4,
+          nbstep: 3,
         },
         {
           id: 2,
@@ -188,7 +181,7 @@ export default function SignUpLandingPage() {
           subtitle: "8 minutes",
           completion: 0,
           actualstep: 0,
-          nbstep: 4,
+          nbstep: 3,
         },
       ]);
 
@@ -274,21 +267,7 @@ export default function SignUpLandingPage() {
   };
 
   const goToVeriff = () => {
-    if (progressData[2].completion == 1) {
-      router.push("signup/scandocuments/scanpermis");
-    } else {
-      Alert.alert(
-        "Info",
-        t("signUpPage.youmusthavecompletedalltheinformationcollectionsteps"),
-        [
-          {
-            text: "Ok",
-            onPress: () => console.log("Cancel Pressed"),
-            style: "cancel",
-          },
-        ],
-      );
-    }
+    router.push("signup/scandocuments/scanpermis");
   };
 
   const footer = () => {
@@ -322,7 +301,7 @@ export default function SignUpLandingPage() {
 
           <TouchableOpacity
             style={{ flex: 1, marginLeft: 10 }}
-            onPress={() => console.log("Pressed")}
+            onPress={() => router.push("/signup/scandocuments/scanassurance")}
           >
             <View style={styles.innerBox}>
               <Ionicons name="document-text" size={45} color="#CF8C58" />
@@ -369,10 +348,34 @@ export default function SignUpLandingPage() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.bottomButton, styles.registerButton]}
-            onPress={handlePressRegister}
+              style={[
+                styles.bottomButton,
+                styles.registerButton,
+                progressData.some(
+                  (step) => step.completion !== 1 || step.actualstep !== step.nbstep
+                )
+                  ? { backgroundColor: 'rgba(27, 104, 120, 0.15)' }
+                  : { backgroundColor: '#1B6878' }
+              ]}
+              onPress={handlePressRegister}
+              disabled={
+                progressData.some(
+                  (step) => step.completion !== 1 || step.actualstep !== step.nbstep
+                )
+              }
           >
-            <Text style={styles.buttonText}>{t("signUpLandingPage.end")}</Text>
+            <Text
+              style={[
+                styles.buttonText,
+                progressData.some(
+                  (step) => step.completion !== 1 || step.actualstep !== step.nbstep
+                )
+                  ? { color: '#1B6878', opacity: 0.5 }
+                  : { color: 'white', opacity: 1 }
+              ]}
+            >
+              {t("signUpLandingPage.end")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

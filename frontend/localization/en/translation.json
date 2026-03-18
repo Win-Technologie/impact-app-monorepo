@@ -31,7 +31,8 @@
   "dobScreen": {
     "title": "Date of Birth",
     "dateOfBirthRequired": "Date of birth is required",
-    "dateFormatError": "Date format should be YYYY-MM-DD"
+    "dateFormatError": "Date format should be YYYY-MM-DD",
+    "futureDateError": "Date of birth cannot be in the future"
   },
   "licenseDetails": {
     "issueDateLabel": "Issue Date",
@@ -120,6 +121,7 @@
     "firstNameRequired": "First name is required",
     "lastNamePlaceholder": "Last Name",
     "lastNameRequired": "Last name is required",
+    "nameCannotContainNumbers": "First and last name cannot contain numbers",
     "genderQuestion": "What is your gender?",
     "genderRequired": "Gender is required",
     "male": "Male",
@@ -158,15 +160,18 @@
     "cityPlaceholder": "City",
     "postalCodeTitle": "Postal Code",
     "postalCodeRequired": "Postal code is required",
+    "postalCodeMaxLength": "Postal code must be at most 6 characters",
     "postalCodePlaceholder": "Postal code",
     "countryTitle": "Country",
     "countryRequired": "Country is required",
     "countryPlaceholder": "Select a country",
+    "selectCountryBeforeProvince": "Select a country first",
     "provinceTitle": "Province",
     "provinceRequired": "Province is required",
     "provincePlaceholder": "Select a province",
     "phoneonlynumber": "only numeric value accepted",
-    "fourcarminimum": "4 charaters minimum"
+    "fourcarminimum": "4 charaters minimum",
+    "phoneTenDigits": "Phone number must contain exactly 10 digits"
   },
 
   "passwordResetVerification": {

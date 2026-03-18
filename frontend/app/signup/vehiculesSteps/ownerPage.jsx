@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import AnimatedButton from "../../../components/SignUp/animatedButton";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
@@ -31,15 +33,15 @@ export default function VehicleOwnership() {
   // console.log(vehicleDetails);
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
-  const [currentStep, setCurrentStep] = useState(3);
   const totalSteps = 3;
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
   const [vehicleDetails, setVehicleDetails] =
     useRecoilState(vehicleDetailsState);
-  const [isOwner, setIsOwner] = useState(true);
+  // null: nothing selected, true: owner, false: not owner
+  const [isOwner, setIsOwner] = useState(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [selectedOwner, setSelectedOwner] = useState("");
-  const [country, setCountry] = useState("CA");
+  const [country, setCountry] = useState("");
   const [province, setProvince] = useState("");
   const [lastVehicle, setLastVehicle] = useRecoilState(lastVehicleState);
   const { t } = useTranslation();
@@ -57,7 +59,18 @@ export default function VehicleOwnership() {
   };
 
   const handlePressBack = () => {
-    setCurrentStep(currentStep - 1);
+    // Always decrement actualstep (min 1)
+    const array = progressData.map((item) => {
+      if (item.id === 1) {
+        return {
+          ...item,
+          actualstep: Math.max(1, item.actualstep - 1),
+        };
+      } else {
+        return item;
+      }
+    });
+    setProgressData(array);
     router.back();
   };
 
@@ -81,10 +94,9 @@ export default function VehicleOwnership() {
     setCountry(selectedCountry);
     handleInputChange("vehicleOwnerCountry", selectedCountry);
 
-    // Set the initial province based on the newly selected country
-    const initialProvince = countryProvinces[selectedCountry]?.[0] || "";
-    setProvince(initialProvince);
-    handleInputChange("vehicleOwnerProvince", initialProvince);
+    // Province should be empty when country changes
+    setProvince("");
+    handleInputChange("vehicleOwnerProvince", "");
   };
 
   const indexOfDefautContry = () => {
@@ -112,9 +124,8 @@ export default function VehicleOwnership() {
   };
 
   useEffect(() => {
-    /*console.log("Selected country: ", country);
-        console.log("Provinces available: ", countryProvinces[country]);*/
-    setProvince(countryProvinces[country]?.[0] || "");
+    // Do not auto-select province when country changes
+    // setProvince(countryProvinces[country]?.[0] || "");
   }, [country]);
 
   const handleInputChange = (field, value) => {
@@ -146,6 +157,10 @@ export default function VehicleOwnership() {
   };
 
   const createVehicleDetails = async () => {
+    // Always save owner info to Recoil state for reuse
+    // (fields are already set via handleInputChange, so nothing extra needed)
+
+    // Try to send to backend as before
     const token = await AsyncStorage.getItem("userToken");
     if (!token) {
       console.error("No token provided");
@@ -153,8 +168,6 @@ export default function VehicleOwnership() {
     }
 
     try {
-      // Make sure the property names match those in the Recoil state
-
       const formattedDetails = {
         brand: vehicleDetails.vehicleBrand,
         model: vehicleDetails.vehicleModel,
@@ -173,21 +186,23 @@ export default function VehicleOwnership() {
           numeroDossier: vehicleDetails.vehicleDossierNumber,
           categorieUsage: vehicleDetails.vehiclecategorieUsage,
         },
+        // Add all owner info for guaranteed persistence
+        vehicleOwnerFirstname: vehicleDetails.vehicleOwnerFirstname,
+        vehicleOwnerName: vehicleDetails.vehicleOwnerName,
+        vehicleOwnerPhone: vehicleDetails.vehicleOwnerPhone,
+        vehicleOwnerAddress: vehicleDetails.vehicleOwnerAddress,
+        vehicleOwnerCity: vehicleDetails.vehicleOwnerCity,
+        vehicleOwnerPostalCode: vehicleDetails.vehicleOwnerPostalCode,
+        vehicleOwnerCountry: vehicleDetails.vehicleOwnerCountry,
+        vehicleOwnerProvince: vehicleDetails.vehicleOwnerProvince,
       };
 
       console.log(formattedDetails);
 
-      // console.log(formattedDetails);
-      /* vehicleOwnerFirstname: '',
-                        vehicleOwnerName: '',
-                            vehicleOwnerPhone: '',
-                                vehicleOwnerAddress: '',
-                                    vehicleOwnerCity: '',
-                                        vehicleOwnerPostalCode: '',
-                                            vehicleOwnerCountry: '',
-                                                vehicleOwnerProvince: '',*/
-      // console.log("Sending to backend:", formattedDetails);
+      // Save to Recoil state (redundant if handleInputChange is always used, but ensures persistence)
+      setVehicleDetails((prev) => ({ ...prev, ...formattedDetails }));
 
+      // Send to backend as before
       const response = await fetch(`${API_URL}vehicles/add`, {
         method: "POST",
         headers: {
@@ -206,8 +221,6 @@ export default function VehicleOwnership() {
           data.message ==
           "Une voiture avec cette plaque d'immatriculation existe déjà."
         ) {
-          //alert("Une voiture avec cette plaque d'immatriculation existe déjà.");
-
           Alert.alert(
             t("error"),
             t("vehicleOwnership.acarwiththislicenseplatealreadyexists"),
@@ -222,31 +235,33 @@ export default function VehicleOwnership() {
             ],
           );
         } else {
-          alert();
+          // Show backend error message if available, else a default error
+          Alert.alert(
+            t("error"),
+            data.message || data.error || t("vehicleOwnership.unknownError"),
+            [
+              {
+                text: "Ok",
+                style: "cancel",
+              },
+            ],
+          );
         }
-      } else {
-        setLastVehicle(data.car);
-        if (progressData[1].actualstep == 2) {
-          const array = progressData.map((item) => {
-            if (item.id == 1) {
-              return {
-                id: 1,
-                title: "Information du vehicules",
-                subtitle: "8 minutes",
-                completion: 1,
-                actualstep: 3,
-                nbstep: 3,
-              };
-            } else {
-              return item;
-            }
-          });
-
-          setProgressData(array);
-        }
-
-        router.push("/signup/signUpLanding");
       }
+      // Always set progress to 100% after last step, regardless of backend response
+      const array = progressData.map((item) => {
+        if (item.id === 1) {
+          return {
+            ...item,
+            actualstep: 3,
+            completion: 1,
+          };
+        } else {
+          return item;
+        }
+      });
+      setProgressData(array);
+      router.push("/signup/signUpLanding");
     } catch (error) {
       console.error("Error creating vehicle details:", error);
       return false; // Indicate failure
@@ -292,337 +307,273 @@ export default function VehicleOwnership() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Stepper
-        currentStep={progressData[1].actualstep}
-        totalSteps={totalSteps}
-      />
-
-      <ScrollView style={styles.content}>
-        <Text style={styles.title}>{t("vehicleOwnership.ownerTitle")}</Text>
-
-        <View style={styles.inputSection}>
-          <TouchableOpacity
-            onPress={() => {
-              chooseOption(1);
-            }}
-            style={isOwner ? styles.selectedButton : styles.unSelectedButton}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <SafeAreaView style={styles.container}>
+        <Stepper
+          currentStep={(progressData[1]?.actualstep ?? 0) + 1}
+          totalSteps={totalSteps}
+        />
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>{t("vehicleOwnership.ownerTitle")}</Text>
+          <View style={styles.inputSection}>
+            <TouchableOpacity
+            onPress={() => chooseOption(1)}
+            style={isOwner === true ? styles.selectedButton : styles.unSelectedButton}
           >
-            <Text
-              style={
-                isOwner
-                  ? styles.selectedButtonText
-                  : styles.unSelectedButtonText
-              }
-            >
+            <Text style={isOwner === true ? styles.selectedButtonText : styles.unSelectedButtonText}>
               {t("vehicleOwnership.ownerOption1")}
             </Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.inputSection}>
           <TouchableOpacity
-            onPress={() => {
-              chooseOption(2);
-            }}
-            style={!isOwner ? styles.selectedButton : styles.unSelectedButton}
+            onPress={() => chooseOption(2)}
+            style={isOwner === false ? styles.selectedButton : styles.unSelectedButton}
           >
-            <Text
-              style={
-                !isOwner
-                  ? styles.selectedButtonText
-                  : styles.unSelectedButtonText
-              }
-            >
+            <Text style={isOwner === false ? styles.selectedButtonText : styles.unSelectedButtonText}>
               {t("vehicleOwnership.ownerOption2")}
             </Text>
           </TouchableOpacity>
-        </View>
 
-        {!isOwner && (
-          <>
-            <Text style={styles.title}>
-              {t("vehicleOwnership.ownerInfoTitle")}
-            </Text>
-
-            <View style={styles.inputSection}>
-              <Controller
-                control={control}
-                rules={{ required: t("vehicleOwnership.firstNameRequired") }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={styles.textInput}
-                    onBlur={onBlur}
-                    onChangeText={(text) => {
-                      handleInputChange("vehicleOwnerFirstname", text);
-                      onChange(text);
-                    }}
-                    value={value}
-                    placeholder={t("vehicleOwnership.firstNamePlaceholder")}
-                  />
-                )}
-                name="firstName"
-              />
-              {errors.firstName && (
-                <Text style={styles.errorText}>{errors.firstName.message}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputSection}>
-              <Controller
-                control={control}
-                rules={{ required: t("vehicleOwnership.lastNameRequired") }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={styles.textInput}
-                    onBlur={onBlur}
-                    onChangeText={(text) => {
-                      handleInputChange("vehicleOwnerName", text);
-                      onChange(text);
-                    }}
-                    value={value}
-                    placeholder={t("vehicleOwnership.lastNamePlaceholder")}
-                  />
-                )}
-                name="lastName"
-              />
-              {errors.lastName && (
-                <Text style={styles.errorText}>{errors.lastName.message}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputSection}>
-              <Controller
-                control={control}
-                rules={{
-                  required: t("vehicleOwnership.phoneRequired"),
-                  /*pattern: {
-                                        value: /^\d{10}$/,
-                                        message: "Entrez un numero valide",
-                                    },*/
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={styles.textInput}
-                    onBlur={onBlur}
-                    onChangeText={(text) => {
-                      handleInputChange("vehicleOwnerPhone", text);
-                      onChange(text);
-                    }}
-                    value={value}
-                    placeholder={t("vehicleOwnership.phonePlaceholder")}
-                  />
-                )}
-                name="phone"
-              />
-              {errors.phone && (
-                <Text style={styles.errorText}>{errors.phone.message}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputSection}>
-              <Controller
-                control={control}
-                rules={{
-                  required: t("vehicleOwnership.addressRequired"),
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={styles.textInput}
-                    onBlur={onBlur}
-                    onChangeText={(text) => {
-                      handleInputChange("vehicleOwnerAddress", text);
-                      onChange(text);
-                    }}
-                    value={value}
-                    placeholder={t("vehicleOwnership.addressPlaceholder")}
-                  />
-                )}
-                name="address"
-              />
-              {errors.address && (
-                <Text style={styles.errorText}>{errors.address.message}</Text>
-              )}
-            </View>
-
-            <View style={styles.inputSection}>
-              <View style={{ flexDirection: "row" }}>
-                <View style={{ flex: 1, marginRight: 10 }}>
-                  <Controller
-                    control={control}
-                    name="city"
-                    rules={{ required: t("vehicleOwnership.cityRequired") }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <TextInput
-                        style={styles.textInput}
-                        onBlur={onBlur}
-                        onChangeText={(text) => {
-                          handleInputChange("vehicleOwnerCity", text);
-                          onChange(text);
-                        }}
-                        value={value}
-                        placeholder={t("vehicleOwnership.cityPlaceholder")}
-                      />
-                    )}
-                  />
-                  {errors.city && (
-                    <Text style={styles.errorText}>{errors.city.message}</Text>
+          {/* Only show fields if 'Je ne suis pas le propriétaire du véhicule' is selected */}
+          {isOwner === false && (
+            <>
+              <View style={styles.inputSection}>
+                <Controller
+                  control={control}
+                  rules={{ required: t("vehicleOwnership.lastNameRequired") }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={styles.textInput}
+                      onBlur={onBlur}
+                      onChangeText={(text) => {
+                        handleInputChange("vehicleOwnerName", text);
+                        onChange(text);
+                      }}
+                      value={value}
+                      placeholder={t("vehicleOwnership.lastNamePlaceholder")}
+                    />
                   )}
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Controller
-                    control={control}
-                    name="postalCode"
-                    rules={{
-                      required: t("vehicleOwnership.postalCodeRequired"),
-                      // pattern: /^[A-Za-z0-9]{3,6}$/
-                    }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <TextInput
-                        style={styles.textInput}
-                        onBlur={onBlur}
-                        onChangeText={(text) => {
-                          handleInputChange("vehicleOwnerPostalCode", text);
-                          onChange(text);
-                        }}
-                        value={value}
-                        placeholder={t(
-                          "vehicleOwnership.postalCodePlaceholder",
-                        )}
-                      />
-                    )}
-                  />
-                  {errors.postalCode && (
-                    <Text style={styles.errorText}>
-                      {errors.postalCode.message}
-                    </Text>
-                  )}
-                </View>
+                  name="lastName"
+                />
+                {errors.lastName && (
+                  <Text style={styles.errorText}>{errors.lastName.message}</Text>
+                )}
               </View>
-            </View>
 
-            <View style={styles.inputSection}>
-              <View style={{ flexDirection: "row" }}>
-                <View style={{ flex: 1, marginRight: 5 }}>
-                  <Controller
-                    control={control}
-                    name="country"
-                    rules={{ required: t("vehicleOwnership.countryRequired") }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <View>
-                        <SelectDropdown
-                          defaultButtonText={t(
-                            "vehicleOwnership.countryPlaceholder",
-                          )}
-                          defaultValueByIndex={
-                            vehicleDetails.vehicleOwnerCountry
-                              ? indexOfDefautContry()
-                              : null
-                          }
-                          data={countries.map((country) => country.label)}
-                          onSelect={onSelectCountry}
-                          buttonTextAfterSelection={(selectedItem, index) => {
-                            onChange(countries[index].label);
-                            return selectedItem;
-                          }}
-                          rowTextForSelection={(item, index) => {
-                            return item;
-                          }}
-                          buttonStyle={styles.dropdown1BtnStyle}
-                          buttonTextStyle={styles.dropdown1BtnTxtStyle}
-                          renderDropdownIcon={() => {
-                            return <Text>▼</Text>;
-                          }}
-                          dropdownIconPosition={"right"}
-                          dropdownStyle={styles.dropdown1DropdownStyle}
-                          // rowStyle={styles.dropdown1RowStyle}
-                          rowTextStyle={styles.dropdown1RowTxtStyle}
-                          onBlur={() => {
-                            onBlur();
-                          }}
-                          value="CA"
-                        />
-                        {errors.country && (
-                          <Text style={styles.errorText}>
-                            {errors.country.message}
-                          </Text>
-                        )}
-                      </View>
-                    )}
-                  />
-                </View>
+              <View style={styles.inputSection}>
+                <Controller
+                  control={control}
+                  rules={{
+                    required: t("vehicleOwnership.phoneRequired"),
+                    maxLength: {
+                      value: 10,
+                      message: t("vehicleOwnership.phoneTenDigits"),
+                    },
+                  }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={styles.textInput}
+                      onBlur={onBlur}
+                      onChangeText={(text) => {
+                        // Only allow numbers and max 10 digits
+                        const filtered = text.replace(/[^0-9]/g, '').slice(0, 10);
+                        handleInputChange("vehicleOwnerPhone", filtered);
+                        onChange(filtered);
+                      }}
+                      value={value}
+                      keyboardType="numeric"
+                      maxLength={10}
+                      placeholder={t("vehicleOwnership.phonePlaceholder")}
+                    />
+                  )}
+                  name="phone"
+                />
+                {errors.phone && (
+                  <Text style={styles.errorText}>{errors.phone.message}</Text>
+                )}
+              </View>
 
-                <View style={{ flex: 1 }}>
-                  <Controller
-                    control={control}
-                    name="province"
-                    rules={{ required: t("vehicleOwnership.provinceRequired") }}
-                    render={({ field: { onChange, onBlur, value } }) => (
-                      <View>
-                        <SelectDropdown
-                          defaultButtonText={t(
-                            "vehicleOwnership.provincePlaceholder",
-                          )}
-                          defaultValueByIndex={
-                            vehicleDetails.vehicleOwnerProvince
-                              ? indexOfDefautCountryProvinces()
-                              : null
-                          }
-                          data={countryProvinces[country] || []}
-                          onSelect={(selectedItem, index) => {
-                            handleInputChange(
-                              "vehicleOwnerProvince",
-                              selectedItem,
-                            );
-                          }}
-                          buttonTextAfterSelection={(selectedItem, index) => {
-                            onChange(countries[index].label);
-                            return selectedItem;
-                          }}
-                          rowTextForSelection={(item, index) => {
-                            return item;
-                          }}
-                          buttonStyle={styles.dropdown2BtnStyle}
-                          buttonTextStyle={styles.dropdown1BtnTxtStyle}
-                          renderDropdownIcon={() => {
-                            return <Text>▼</Text>;
-                          }}
-                          dropdownIconPosition={"right"}
-                          dropdownStyle={styles.dropdown1DropdownStyle}
-                          rowStyle={styles.dropdown1RowStyle}
-                          rowTextStyle={styles.dropdown1RowTxtStyle}
-                          onBlur={() => {
-                            onBlur();
+              <View style={styles.inputSection}>
+                <Controller
+                  control={control}
+                  rules={{ required: t("vehicleOwnership.addressRequired") }}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={styles.textInput}
+                      onBlur={onBlur}
+                      onChangeText={(text) => {
+                        handleInputChange("vehicleOwnerAddress", text);
+                        onChange(text);
+                      }}
+                      value={value}
+                      placeholder={t("vehicleOwnership.addressPlaceholder")}
+                    />
+                  )}
+                  name="address"
+                />
+                {errors.address && (
+                  <Text style={styles.errorText}>{errors.address.message}</Text>
+                )}
+              </View>
+
+              <View style={styles.inputSection}>
+                <View style={{ flexDirection: "row" }}>
+                  <View style={{ flex: 1, marginRight: 10 }}>
+                    <Controller
+                      control={control}
+                      name="city"
+                      rules={{ required: t("vehicleOwnership.cityRequired") }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                          style={styles.textInput}
+                          onBlur={onBlur}
+                          onChangeText={(text) => {
+                            handleInputChange("vehicleOwnerCity", text);
+                            onChange(text);
                           }}
                           value={value}
+                          placeholder={t("vehicleOwnership.cityPlaceholder")}
                         />
-                        {errors.province && (
-                          <Text style={styles.errorText}>
-                            {errors.province.message}
-                          </Text>
-                        )}
-                      </View>
+                      )}
+                    />
+                    {errors.city && (
+                      <Text style={styles.errorText}>{errors.city.message}</Text>
                     )}
-                  />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Controller
+                      control={control}
+                      name="postalCode"
+                      rules={{
+                        required: t("vehicleOwnership.postalCodeRequired"),
+                        maxLength: {
+                          value: 6,
+                          message: t("vehicleOwnership.postalCodeSixChars"),
+                        },
+                      }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <TextInput
+                          style={styles.textInput}
+                          onBlur={onBlur}
+                          onChangeText={(text) => {
+                            // Only allow max 6 chars
+                            const filtered = text.slice(0, 6);
+                            handleInputChange("vehicleOwnerPostalCode", filtered);
+                            onChange(filtered);
+                          }}
+                          value={value}
+                          maxLength={6}
+                          placeholder={t(
+                            "vehicleOwnership.postalCodePlaceholder",
+                          )}
+                        />
+                      )}
+                    />
+                    {errors.postalCode && (
+                      <Text style={styles.errorText}>
+                        {errors.postalCode.message}
+                      </Text>
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
 
-            {/*<TouchableOpacity style={styles.cameraIcon} onPress={openCamera}>
-                            <Ionicons name='camera' size={40} color='wh' />
-                        </TouchableOpacity>*/}
-          </>
-        )}
-      </ScrollView>
+              <View style={styles.inputSection}>
+                <View style={{ flexDirection: "row" }}>
+                  <View style={{ flex: 1, marginRight: 5 }}>
+                    <Controller
+                      control={control}
+                      name="country"
+                      rules={{ required: t("vehicleOwnership.countryRequired") }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <View>
+                          <SelectDropdown
+                            defaultButtonText="Pays"
+                            defaultValueByIndex={
+                              vehicleDetails.vehicleOwnerCountry
+                                ? indexOfDefautContry()
+                                : null
+                            }
+                            data={countries.map((country) => country.label)}
+                            onSelect={(selectedItem, index) => {
+                              onChange(countries[index].label);
+                              onSelectCountry(selectedItem, index);
+                            }}
+                            buttonTextAfterSelection={(selectedItem) => selectedItem}
+                            rowTextForSelection={(item) => item}
+                            buttonStyle={styles.dropdown1BtnStyle}
+                            buttonTextStyle={styles.dropdown1BtnTxtStyle}
+                            renderDropdownIcon={() => <Text>▼</Text>}
+                            dropdownIconPosition={"right"}
+                            dropdownStyle={styles.dropdown1DropdownStyle}
+                            rowStyle={styles.dropdown1RowStyle}
+                            rowTextStyle={styles.dropdown1RowTxtStyle}
+                          />
+                        </View>
+                      )}
+                    />
+                  </View>
+                  {errors.country && (
+                    <Text style={styles.errorText}>{errors.country.message}</Text>
+                  )}
 
-      <View style={styles.absoluteButtonContainer}>
-        <DualOptionButton
-          onPressBack={handlePressBack}
-          onPressContinue={handlePressContinue}
-        />
-      </View>
-    </SafeAreaView>
+                  <View style={{ flex: 1 }}>
+                    <Controller
+                      control={control}
+                      name="province"
+                      rules={{ required: t("vehicleOwnership.provinceRequired") }}
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <View>
+                          <SelectDropdown
+                            defaultButtonText="Province"
+                            defaultValueByIndex={
+                              vehicleDetails.vehicleOwnerProvince && country
+                                ? indexOfDefautCountryProvinces()
+                                : null
+                            }
+                            data={country ? countryProvinces[country] : []}
+                            onSelect={(selectedItem, index) => {
+                              handleInputChange("vehicleOwnerProvince", selectedItem);
+                              onChange(selectedItem);
+                            }}
+                            buttonTextAfterSelection={(selectedItem) => selectedItem}
+                            rowTextForSelection={(item) => item}
+                            buttonStyle={styles.dropdown2BtnStyle}
+                            buttonTextStyle={styles.dropdown1BtnTxtStyle}
+                            renderDropdownIcon={() => <Text>▼</Text>}
+                            dropdownIconPosition={"right"}
+                            dropdownStyle={styles.dropdown1DropdownStyle}
+                            rowStyle={styles.dropdown1RowStyle}
+                            rowTextStyle={styles.dropdown1RowTxtStyle}
+                            disabled={!country}
+                          />
+                          {errors.province && (
+                            <Text style={styles.errorText}>
+                              {errors.province.message}
+                            </Text>
+                          )}
+                        </View>
+                      )}
+                    />
+                  </View>
+                </View>
+              </View>
+            </>
+          )}
+        </View>
+        </ScrollView>
+        <View style={styles.absoluteButtonContainer}>
+          <DualOptionButton
+            onPressBack={handlePressBack}
+            onPressContinue={handlePressContinue}
+          />
+        </View>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -633,6 +584,7 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     padding: 20,
     paddingTop: 0,
+    backgroundColor: "white",
   },
 
   content: {
@@ -653,19 +605,23 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
-    marginTop: 20,
+    marginBottom: 28,
+    marginTop: 24,
+    textAlign: "center",
+    color: "#0B8BA8",
   },
 
   selectedButton: {
-    padding: 10,
-    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#0B8BA8",
     backgroundColor: "#0B8BA8",
     height: 51,
+    marginBottom: 12,
   },
 
   selectedButtonText: {
@@ -673,14 +629,16 @@ const styles = StyleSheet.create({
   },
 
   unSelectedButton: {
-    padding: 10,
-    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    backgroundColor: "transparent",
-    borderColor: "#ccc",
+    borderWidth: 1.5,
+    backgroundColor: "#fff",
+    borderColor: "#B0B0B0",
     height: 51,
+    marginBottom: 12,
   },
 
   unSelectedButtonText: {
@@ -688,15 +646,19 @@ const styles = StyleSheet.create({
   },
 
   inputSection: {
-    marginBottom: 20,
+    marginBottom: 28,
+    paddingHorizontal: 2,
   },
 
   textInput: {
     height: 51,
-    borderColor: "gray",
+    borderColor: "#B0B0B0",
     borderWidth: 1,
-    padding: 10,
-    borderRadius: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#FAFAFA",
+    fontSize: 16,
   },
 
   inputSection: {
@@ -704,9 +666,10 @@ const styles = StyleSheet.create({
   },
 
   errorText: {
-    color: "red",
-    marginTop: 5,
-    fontSize: 12,
+    color: "#D32F2F",
+    marginTop: 6,
+    fontSize: 13,
+    marginLeft: 2,
   },
 
   dropdown1BtnStyle: {

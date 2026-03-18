@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import React, { useState } from "react";
 import { View, Text, StyleSheet, TextInput, ScrollView } from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
 import { router } from "expo-router";
@@ -16,7 +16,7 @@ const phoneAndAddress = () => {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
-  const [country, setCountry] = useState("CA");
+  const [country, setCountry] = useState("");
   const [province, setProvince] = useState("");
   const [currentStep, setCurrentStep] = useState(3);
   const totalSteps = 4;
@@ -47,13 +47,19 @@ const phoneAndAddress = () => {
   };
 
   const indexOfDefautCountryProvinces = () => {
-    console.log("les provinces");
+    const selectedCountry = country || userDetails.country;
 
-    for (var i = 0; i < countryProvinces[userDetails.country].length; i++) {
-      if (countryProvinces[userDetails.country][i] == userDetails.province) {
+    if (!selectedCountry || !countryProvinces[selectedCountry]) {
+      return null;
+    }
+
+    for (var i = 0; i < countryProvinces[selectedCountry].length; i++) {
+      if (countryProvinces[selectedCountry][i] == userDetails.province) {
         return i;
       }
     }
+
+    return null;
   };
 
   const {
@@ -73,23 +79,16 @@ const phoneAndAddress = () => {
     mode: "onChange",
   });
 
+  const selectedCountryCode = country || userDetails.country || "";
+  const hasCountrySelected = !!selectedCountryCode;
+
   const onSelectCountry = (selectedItem, index) => {
     const selectedCountry = countries[index].value;
     setCountry(selectedCountry);
     handleInputChange("country", selectedCountry);
-    // Set the initial province based on the newly selected country
-    const initialProvince = countryProvinces[selectedCountry]?.[0] || "";
-    setProvince(initialProvince);
-    handleInputChange("province", initialProvince);
+    setProvince("");
+    handleInputChange("province", "");
   };
-
-  useEffect(() => {
-    /*console.log("Selected country: ", country);
-        console.log("Provinces available: ", countryProvinces[country]);*/
-    setProvince(countryProvinces[country]?.[0] || "");
-  }, [country]);
-
-  useEffect(() => {}, [userDetails]);
 
   const handlePressBack = () => {
     setCurrentStep(currentStep - 1);
@@ -129,10 +128,7 @@ const phoneAndAddress = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stepper
-        currentStep={progressData[0].actualstep}
-        totalSteps={totalSteps}
-      />
+      <Stepper currentStep={3} totalSteps={totalSteps} displayStep={3} />
 
       <ScrollView style={styles.content}>
         <Text style={styles.title}>{t("phoneAndAddress.phoneTitle")}</Text>
@@ -143,22 +139,29 @@ const phoneAndAddress = () => {
             rules={{
               required: t("phoneAndAddress.phoneRequired"),
               pattern: {
-                value: /^(0|[1-9]\d*)(\.\d+)?$/,
+                value: /^\d{10}$/,
                 message: t("phoneAndAddress.phoneonlynumber"),
               },
               minLength: {
-                value: 4,
-                message: t("phoneAndAddress.fourcarminimum"),
+                value: 10,
+                message: t("phoneAndAddress.phoneTenDigits"),
+              },
+              maxLength: {
+                value: 10,
+                message: t("phoneAndAddress.phoneTenDigits"),
               },
             }}
             render={({ field: { onChange, onBlur, value } }) => (
               <TextInput
                 style={styles.textInput}
                 placeholder={t("phoneAndAddress.phonePlaceholder")}
+                keyboardType="number-pad"
+                maxLength={10}
                 onBlur={onBlur}
                 onChangeText={(text) => {
-                  onChange(text);
-                  setUserDetails({ ...userDetails, phone: text });
+                  const normalizedPhone = text.replace(/\D/g, "").slice(0, 10);
+                  onChange(normalizedPhone);
+                  handleInputChange("phone", normalizedPhone);
                 }}
                 value={value}
               />
@@ -233,11 +236,18 @@ const phoneAndAddress = () => {
             <Controller
               control={control}
               name="postalCode"
-              rules={{ required: t("phoneAndAddress.postalCodeRequired") }}
+              rules={{
+                required: t("phoneAndAddress.postalCodeRequired"),
+                maxLength: {
+                  value: 6,
+                  message: t("phoneAndAddress.postalCodeMaxLength"),
+                },
+              }}
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
                   style={styles.textInput}
                   placeholder={t("phoneAndAddress.postalCodePlaceholder")}
+                  maxLength={6}
                   onBlur={onBlur}
                   onChangeText={(text) => {
                     onChange(text);
@@ -267,9 +277,11 @@ const phoneAndAddress = () => {
                       userDetails.country ? indexOfDefautContry() : null
                     }
                     data={countries.map((country) => country.label)}
-                    onSelect={onSelectCountry}
+                    onSelect={(selectedItem, index) => {
+                      onSelectCountry(selectedItem, index);
+                      onChange(countries[index].value);
+                    }}
                     buttonTextAfterSelection={(selectedItem, index) => {
-                      onChange(countries[index].label);
                       return selectedItem;
                     }}
                     rowTextForSelection={(item, index) => {
@@ -287,7 +299,6 @@ const phoneAndAddress = () => {
                     onBlur={() => {
                       onBlur();
                     }}
-                    value="CA"
                   />
                   {errors.country && (
                     <Text style={styles.errorText}>
@@ -313,12 +324,12 @@ const phoneAndAddress = () => {
                         ? indexOfDefautCountryProvinces()
                         : null
                     }
-                    data={countryProvinces[userDetails.country] || []}
+                    data={countryProvinces[selectedCountryCode] || []}
                     onSelect={(selectedItem, index) => {
+                      onChange(selectedItem);
                       handleInputChange("province", selectedItem);
                     }}
                     buttonTextAfterSelection={(selectedItem, index) => {
-                      onChange("cc");
                       return selectedItem;
                     }}
                     rowTextForSelection={(item, index) => {
@@ -333,11 +344,17 @@ const phoneAndAddress = () => {
                     dropdownStyle={styles.dropdown1DropdownStyle}
                     rowStyle={styles.dropdown1RowStyle}
                     rowTextStyle={styles.dropdown1RowTxtStyle}
+                    disabled={!hasCountrySelected}
                     onBlur={() => {
                       onBlur();
                     }}
                     value={value}
                   />
+                  {!hasCountrySelected && (
+                    <Text style={styles.helperText}>
+                      {t("phoneAndAddress.selectCountryBeforeProvince")}
+                    </Text>
+                  )}
                   {errors.province && (
                     <Text style={styles.errorText}>
                       {errors.province.message}
@@ -367,6 +384,7 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     padding: 20,
     paddingTop: 0,
+    backgroundColor: "white",
   },
 
   content: {
@@ -399,6 +417,13 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 12,
     paddingVertical: 3,
+    paddingLeft: 5,
+  },
+
+  helperText: {
+    color: "#6B7280",
+    fontSize: 12,
+    paddingTop: 6,
     paddingLeft: 5,
   },
 

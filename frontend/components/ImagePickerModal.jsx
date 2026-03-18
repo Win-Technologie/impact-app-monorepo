@@ -7,34 +7,37 @@ import * as ImagePicker from "expo-image-picker";
 
 export default function ImagePickerModal({ isVisible, onClose, setImage }) {
   const pickupImage = async (mode) => {
-    if (mode == 1) {
+    // Request permissions first
+    if (mode === 1) {
+      const { status: libStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (libStatus !== 'granted') {
+        alert('Permission to access gallery is required!');
+        return;
+      }
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         base64: true,
-        //aspect: [4, 3],
         quality: 1,
       });
-
-      //console.log(result.assets[0].base64);
-
-      if (!result.canceled) {
-        //  setImage(result.assets[0].base64);
-        setImage(result.assets[0]);
+      if (!result.canceled && result.assets && result.assets[0] && result.assets[0].uri) {
+        setImage(result.assets[0].uri);
         onClose();
       }
     } else {
+      const { status: camStatus } = await ImagePicker.requestCameraPermissionsAsync();
+      if (camStatus !== 'granted') {
+        alert('Permission to access camera is required!');
+        return;
+      }
       let result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        //base64:true,
-        // aspect: [4, 3],
+        base64: true,
         quality: 1,
       });
-
-      if (!result.canceled) {
-        //alert(result.assets[0].uri);
-        setImage(result.assets[0].assets[0].base64);
+      if (!result.canceled && result.assets && result.assets[0] && result.assets[0].uri) {
+        setImage(result.assets[0].uri);
         onClose();
       }
     }
