@@ -54,7 +54,17 @@ export default function TabsHomeScreen() {
   }, [setInsurance]);
 
   const callUrgence = () => {
-    Linking.openURL("tel:911");
+    Alert.alert(
+      "Appeler les urgences",
+      "Voulez-vous appeler le numéro d'urgence ?\n911",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Appeler",
+          onPress: () => Linking.openURL("tel:911"),
+        },
+      ]
+    );
   };
 
   const callAssurance = () => {
