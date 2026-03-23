@@ -6,6 +6,9 @@ import {
   TextInput,
   ScrollView,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
 } from "react-native";
 import AnimatedButton from "../../../components/SignUp/animatedButton";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
@@ -25,6 +28,36 @@ const typeOfAccident = () => {
   const [plateNumber, setPlateNumber] = useState("");
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
 
+  const formatPlateNumber = (text) => {
+    // Remove all spaces and special characters, keep only alphanumeric
+    const cleaned = text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    // Limit to 7 characters
+    const limited = cleaned.substring(0, 7);
+    // Add space after 3rd character if length > 3
+    if (limited.length > 3) {
+      return limited.substring(0, 3) + ' ' + limited.substring(3);
+    }
+    return limited;
+  };
+
+  const generateTestPlate = () => {
+    // Generate random French license plate format: ABC1234
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    
+    let plate = '';
+    // 3 letters
+    for (let i = 0; i < 3; i++) {
+      plate += letters.charAt(Math.floor(Math.random() * letters.length));
+    }
+    // 4 numbers
+    for (let i = 0; i < 4; i++) {
+      plate += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    }
+    
+    setPlateNumber(formatPlateNumber(plate));
+  };
+
   //console.log(declaration);
 
   const handlePress = (type) => {
@@ -35,69 +68,81 @@ const typeOfAccident = () => {
   };
 
   const back = () => {
-    router.back();
+    try {
+      router.back();
+    } catch (error) {
+      console.error("Navigation error:", error);
+      Alert.alert("Erreur", "Impossible de revenir en arrière");
+    }
   };
 
   const next = () => {
-    // type d'accident choisie
-    if (!!selectedType) {
-      if (selectedType === "Autre") {
-        // Accident choisi
-        if (!!accidentType) {
-          setDeclaration({ ...declaration, type: accidentType });
+    try {
+      // type d'accident choisie
+      if (!!selectedType) {
+        if (selectedType === "Autre") {
+          // Accident choisi
+          if (!!accidentType) {
+            setDeclaration({ ...declaration, type: accidentType });
 
-          router.navigate("declarations/onePersonne/placeOfAccident");
+            router.navigate("declarations/onePersonne/placeOfAccident");
+          } else {
+            Alert.alert(
+              "Erreur",
+              "Vous devez inscrire le type d'accident avant de continuer",
+              [
+                {
+                  text: "Ok",
+                  onPress: () => null,
+                  style: "cancel",
+                },
+              ],
+            );
+          }
+        } else if (selectedType === "Accrochage avec un véhicule vide") {
+          // numéro de la carte inscrit
+          if (!!plateNumber) {
+            // Remove spaces before saving
+            const cleanedPlate = plateNumber.replace(/\s/g, '');
+            setDeclaration({ ...declaration, plaque: cleanedPlate });
+            router.navigate("declarations/onePersonne/placeOfAccident");
+            //alert("okay accident choisi");
+            //console.log(declaration);
+          } else {
+            Alert.alert(
+              "Erreur",
+              "Vous devez inscrire le numéro de la carte d'immatriculation du vehicule touché",
+              [
+                {
+                  text: "Ok",
+                  onPress: () => null,
+                  style: "cancel",
+                },
+              ],
+            );
+          }
         } else {
-          Alert.alert(
-            "Erreur",
-            "Vous devez inscrire le type d'accident avant de continuer",
-            [
-              {
-                text: "Ok",
-                onPress: () => null,
-                style: "cancel",
-              },
-            ],
-          );
-        }
-      } else if (selectedType === "Accrochage avec un véhicule vide") {
-        // numéro de la carte inscrit
-        if (!!plateNumber) {
-          setDeclaration({ ...declaration, plaque: plateNumber });
           router.navigate("declarations/onePersonne/placeOfAccident");
-          //alert("okay accident choisi");
-          //console.log(declaration);
-        } else {
-          Alert.alert(
-            "Erreur",
-            "Vous devez inscrire le numéro de la carte d'immatriculation du vehicule touché",
-            [
-              {
-                text: "Ok",
-                onPress: () => null,
-                style: "cancel",
-              },
-            ],
-          );
         }
       } else {
-        router.navigate("declarations/onePersonne/placeOfAccident");
+        Alert.alert(
+          "Erreur",
+          "Vous devez choisir  le type d'accident avant de continuer",
+          [
+            {
+              text: "Ok",
+              onPress: () => null,
+              style: "cancel",
+            },
+          ],
+        );
       }
-    } else {
-      Alert.alert(
-        "Erreur",
-        "Vous devez choisir  le type d'accident avant de continuer",
-        [
-          {
-            text: "Ok",
-            onPress: () => null,
-            style: "cancel",
-          },
-        ],
-      );
-    }
 
-    console.log(declaration);
+      console.log(declaration);
+    } catch (error) {
+      console.error("Navigation error:", error);
+      Alert.alert("Erreur", "Impossible de continuer. Veuillez réessayer.");
+    }
   };
 
   return (
@@ -108,11 +153,19 @@ const typeOfAccident = () => {
         style={styles.stepper}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.container}>
-          <Text style={styles.title}>
-            De quel type d'accident est-il question?
-          </Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <Text style={styles.title}>
+              De quel type d'accident est-il question?
+            </Text>
 
           <View style={styles.buttonContainer}>
             <AnimatedButton
@@ -201,12 +254,20 @@ const typeOfAccident = () => {
               <View style={styles.inputWithCounter}>
                 <TextInput
                   style={styles.textInput}
-                  placeholder="Numéro de plaque"
+                  placeholder="Plaque d'immatriculation"
                   value={plateNumber}
-                  onChangeText={(text) => setPlateNumber(text.substring(0, 7))}
+                  onChangeText={(text) => setPlateNumber(formatPlateNumber(text))}
+                  autoCapitalize="characters"
+                  maxLength={8}
                 />
-                <Text style={styles.counter}>{`${plateNumber.length}/7`}</Text>
+                <Text style={styles.counter}>{`${plateNumber.replace(' ', '').length}/7`}</Text>
               </View>
+              <TouchableOpacity
+                style={styles.testButton}
+                onPress={generateTestPlate}
+              >
+                <Text style={styles.testButtonText}>Générer plaque test</Text>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -225,8 +286,9 @@ const typeOfAccident = () => {
               </View>
             </View>
           )}
-        </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <View style={styles.footContainer}>
         <DualOptionButton
@@ -247,8 +309,8 @@ const styles = StyleSheet.create({
   },
 
   scrollContainer: {
-    justifyContent: "center",
     padding: 20,
+    paddingBottom: 80,
   },
 
   container: {
@@ -347,6 +409,20 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+
+  testButton: {
+    backgroundColor: "#6c757d",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  testButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
 

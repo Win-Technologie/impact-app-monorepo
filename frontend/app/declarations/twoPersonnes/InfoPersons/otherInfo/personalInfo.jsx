@@ -9,6 +9,7 @@
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { router } from "expo-router";
@@ -18,13 +19,14 @@ import { useForm, Controller } from "react-hook-form";
 import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import { AntDesign } from "@expo/vector-icons";
 import InputsShowGroup from "../../../../../components/Utils/Inputs/InputsShowGroup";
-import { fetchUserInfoAndVehicle } from "../../../../api/users/userApi";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { fetchUserInfoAndVehicle, getMyVehicles } from "../../../../api/users/userApi";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { accidentVehicleState } from "../../../../../GlobalState/AccidentVehiculeState";
 import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
 import Loading from "../../../../../components/Utils/Notification/Loading";
 import { ScannedQrCodeData } from "../../../../../GlobalState/ScannedQrCodeData";
 import { SafeAreaView } from "react-native-safe-area-context";
+import SelectDropdown from "react-native-select-dropdown";
 
 export default function PersonanalInformation() {
   //obtenir la valeur de manière globale
@@ -34,12 +36,61 @@ export default function PersonanalInformation() {
   const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
   const [isEditable, setIsEditable] = useState(true);
   const userInfo = useRecoilValue(ScannedQrCodeData);
+  const setScannedData = useSetRecoilState(ScannedQrCodeData);
+  const [allVehicles, setAllVehicles] = useState([]);
+  const [showVehicleSelector, setShowVehicleSelector] = useState(false);
 
   //obtenir les données au moment du rendu du composant
   useEffect(() => {
     //  userInformation()
     createDataUser(userInfo);
+    loadMyVehicles();
   }, []);
+
+  const loadMyVehicles = async () => {
+    const userToken = await AsyncStorage.getItem("userToken");
+    const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
+    if (vehiclesResponse.status === 200) {
+      setAllVehicles(vehiclesResponse.data.carsWithInsurances);
+    }
+  };
+
+  const handleFillFromAccount = () => {
+    if (allVehicles.length === 0) {
+      Alert.alert("Erreur", "Aucun véhicule trouvé dans votre compte.");
+      return;
+    }
+    setShowVehicleSelector(true);
+  };
+
+  const handleVehicleSelect = async (selectedItem) => {
+    const vehicleId = selectedItem?.car?._id;
+    if (!vehicleId) {
+      Alert.alert("Erreur", "Véhicule invalide");
+      return;
+    }
+
+    const userToken = await AsyncStorage.getItem("userToken");
+    try {
+      const result = await fetchUserInfoAndVehicle(
+        vehicleId,
+        userToken,
+        ENDPOINT,
+      );
+
+      if (result.error) {
+        throw new Error(`Failed to fetch data: ${result.status}`);
+      }
+
+      // Set the scanned data with the user's own vehicle info
+      setScannedData(result.data);
+      createDataUser(result.data);
+      setShowVehicleSelector(false);
+      Alert.alert("Succès", "Informations remplies depuis votre compte");
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible de charger les informations");
+    }
+  };
 
   /**
    * Crée et organise les données de l'utilisateur pour l'affichage.
@@ -140,7 +191,50 @@ export default function PersonanalInformation() {
         </View>
       </View>
 
+      {showVehicleSelector && (
+        <View style={styles.fillFromAccountContainer}>
+          <Text style={styles.fillFromAccountTitle}>
+            Sélectionnez un véhicule de votre compte:
+          </Text>
+          <SelectDropdown
+            data={allVehicles}
+            defaultButtonText="Choisir un véhicule"
+            onSelect={handleVehicleSelect}
+            buttonTextAfterSelection={(selectedItem) =>
+              selectedItem?.car?.model
+            }
+            rowTextForSelection={(item) => item.car.model}
+            buttonStyle={styles.dropdownBtnStyle}
+            buttonTextStyle={styles.dropdownBtnTxtStyle}
+            dropdownStyle={styles.dropdownDropdownStyle}
+            rowStyle={styles.dropdownRowStyle}
+            rowTextStyle={styles.dropdownRowTxtStyle}
+            renderDropdownIcon={() => (
+              <AntDesign name="down" size={14} color="gray" />
+            )}
+          />
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => setShowVehicleSelector(false)}
+          >
+            <Text style={styles.cancelButtonText}>Annuler</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <ScrollView keyboardShouldPersistTaps="handled">
+        <View style={styles.fillButtonContainer}>
+          <TouchableOpacity
+            style={styles.fillFromAccountButton}
+            onPress={handleFillFromAccount}
+          >
+            <AntDesign name="user" size={20} color="#0B8BA8" />
+            <Text style={styles.fillFromAccountText}>
+              Remplir a partir du compte
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.contentContainer}>
           {!userData ? (
             <Loading text="Loading.." />
@@ -198,5 +292,83 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+
+  fillButtonContainer: {
+    marginVertical: 15,
+  },
+
+  fillFromAccountButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#0B8BA8",
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+  },
+
+  fillFromAccountText: {
+    color: "#0B8BA8",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  fillFromAccountContainer: {
+    backgroundColor: "#f8f9fa",
+    padding: 15,
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+
+  fillFromAccountTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#19363C",
+    marginBottom: 10,
+  },
+
+  dropdownBtnStyle: {
+    width: "100%",
+    height: 49,
+    backgroundColor: "#FFF",
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 10,
+  },
+
+  dropdownBtnTxtStyle: {
+    color: "#444",
+    textAlign: "left",
+  },
+
+  dropdownDropdownStyle: {
+    backgroundColor: "#EFEFEF",
+  },
+
+  dropdownRowStyle: {
+    backgroundColor: "#EFEFEF",
+    borderBottomColor: "#C5C5C5",
+  },
+
+  dropdownRowTxtStyle: {
+    color: "#444",
+    textAlign: "left",
+  },
+
+  cancelButton: {
+    backgroundColor: "#6c757d",
+    padding: 12,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+
+  cancelButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

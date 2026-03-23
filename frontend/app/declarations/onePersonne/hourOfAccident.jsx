@@ -46,26 +46,43 @@ const hourOfAccident = () => {
   };
 
   const back = () => {
-    router.back();
+    try {
+      router.back();
+    } catch (error) {
+      console.error("Navigation error:", error);
+      Alert.alert("Erreur", "Impossible de revenir en arrière");
+    }
   };
 
   const next = () => {
-    if (minute == null || hour == null) {
-      Alert.alert(
-        "Erreur",
-        "Vous devez choisir l'heure  de l'accident avant de continuer",
-        [
-          {
-            text: "Ok",
-            onPress: () => null,
-            style: "cancel",
-          },
-        ],
-      );
-    } else {
-      setDeclaration({ ...declaration, hour: hour, minute: minute });
-      router.navigate("declarations/onePersonne/otherSpecification");
+    try {
+      if (minute == null || hour == null) {
+        Alert.alert(
+          "Erreur",
+          "Vous devez choisir l'heure  de l'accident avant de continuer",
+          [
+            {
+              text: "Ok",
+              onPress: () => null,
+              style: "cancel",
+            },
+          ],
+        );
+      } else {
+        setDeclaration({ ...declaration, hour: hour, minute: minute });
+        router.navigate("declarations/onePersonne/otherSpecification");
+      }
+    } catch (error) {
+      console.error("Navigation error:", error);
+      Alert.alert("Erreur", "Impossible de continuer. Veuillez réessayer.");
     }
+  };
+
+  const generateTestTime = () => {
+    const randomHour = Math.floor(Math.random() * 24);
+    const randomMinute = Math.floor(Math.random() * 60);
+    setHour(randomHour);
+    setMinute(randomMinute);
   };
 
   return (
@@ -114,6 +131,13 @@ const hourOfAccident = () => {
               {minute == null ? "minute" : minute}
             </Text>
           </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.testButton}
+          onPress={generateTestTime}
+        >
+          <Text style={styles.testButtonText}>Générer heure test</Text>
         </TouchableOpacity>
 
         <View>
@@ -242,6 +266,20 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+
+  testButton: {
+    backgroundColor: "#6c757d",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 15,
+  },
+
+  testButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
 
