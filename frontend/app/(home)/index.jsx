@@ -12,16 +12,66 @@ import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import BottomButton from "../../components/Home/bottomButton";
 import { router } from "expo-router";
 import * as Linking from "expo-linking";
+
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import { insuranceState } from "../../GlobalState/InsuranceState";
+import { Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function index() {
+export default function HomeScreen() {
+  const insurance = useRecoilValue(insuranceState);
+  const setInsurance = useSetRecoilState(insuranceState);
+  const insurancePhone = insurance?.insuranceNumber || "";
+
+  // Fetch insurance info on mount and set in Recoil
+  React.useEffect(() => {
+    const fetchInsurance = async () => {
+      try {
+        const token = await AsyncStorage.getItem("userToken");
+        const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.2.21:8000/api/";
+        const response = await fetch(`${API_URL}vehicles`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Use the first insurance found (or improve logic as needed)
+          const insuranceData = data.carsWithInsurances?.[0]?.insurance;
+          if (insuranceData) {
+            setInsurance((prev) => ({ ...prev, ...insuranceData, insuranceNumber: insuranceData.policyNumber || insuranceData.insuranceNumber }));
+          }
+        }
+      } catch (e) {
+        // fail silently
+      }
+    };
+    fetchInsurance();
+  }, [setInsurance]);
+
   const callUrgence = () => {
     Linking.openURL("tel:+123456789");
   };
 
   const callAssurance = () => {
-    Linking.openURL("tel:+123456789");
+    if (!insurancePhone) {
+      Alert.alert(
+        "Numéro manquant",
+        "Aucun numéro d'assurance n'est enregistré."
+      );
+      return;
+    }
+    Alert.alert(
+      "Appeler l'assurance",
+      `Voulez-vous appeler ce numéro ?\n${insurancePhone}`,
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Appeler",
+          onPress: () => Linking.openURL(`tel:${insurancePhone}`),
+        },
+      ]
+    );
   };
 
   const callRemorcage = () => {
