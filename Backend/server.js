@@ -29,6 +29,7 @@ const CHECKEXPIRATIONTIMER = process.env.CRONTIMER_DAILY1AM;
 
 // Routes
 const userRoutes = require("./routes/user/user.routes");
+const userController = require("./controllers/user/user.controller");
 const vehicleRoutes = require("./routes/vehicle/vehicle.routes");
 const insuranceRoutes = require("./routes/insurance/insurance.routes");
 const onfidoRoutes = require("./routes/onfido/onfido.routes");
@@ -81,6 +82,10 @@ app.use("/api/dl", driverLicenseRoutes);
 app.use("/api/veriff", veriffRoutes);
 
 app.use("/api/accidents", accidentReportRoutes);
+
+// Backwards-compatible endpoints for image access used by frontend
+app.get('/Backend/user/profile-image/:id', userController.StreamUserProfileImage);
+app.get('/Backend/user/driving-licence-photo/:id', userController.StreamDrivingLicenceImage);
 
 // Programmation de tâches qui s'exécutent automatiquement après un certain laps de temps
 cron.schedule(

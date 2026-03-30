@@ -33,8 +33,7 @@ export default function EditProfile() {
   const [countryCode, setCountryCode] = useState("CA");
   const [country, setCountry] = useState("Canada");
   const [province, setProvince] = useState("Québec");
-  const [selfie, setSelfie] = useState(null);
-  const [filePath, setFilePath] = useState(null);
+  const [selfieUri, setSelfieUri] = useState(null);
   const [visible, setVisible] = useState(false);
   const [showPasswordConfirmModal, setShowPasswordConfirmModal] = useState(false);
   const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
@@ -197,7 +196,13 @@ export default function EditProfile() {
       }
       
       const s = await AsyncStorage.getItem("selfie");
-      setFilePath(s);
+      let parsed;
+      try {
+        parsed = s ? JSON.parse(s) : null;
+      } catch (e) {
+        parsed = { url: s, ts: 0 };
+      }
+      setSelfieUri(parsed ? parsed.url : null);
     } catch (error) {
       console.log("Error loading user data:", error);
     }
@@ -407,16 +412,19 @@ export default function EditProfile() {
     }
   };
 
-  const createFormData = (photo, body = {}) => {
-    let filename = photo.fileName.split("/").pop();
+  const createFormData = (uri, body = {}) => {
+    if (!uri) {
+      throw new Error("No image URI provided for upload");
+    }
+    let filename = uri.split("/").pop() || `photo_${Date.now()}.jpg`;
     let match = /\.(\w+)$/.exec(filename);
     let type = match ? `image/${match[1]}` : "image";
 
     const data = new FormData();
     data.append("image", {
-      name: photo.fileName,
+      name: filename,
       type: type,
-      uri: Platform.OS === "ios" ? photo.uri.replace("file://", "") : photo.uri,
+      uri: Platform.OS === "ios" ? uri.replace("file://", "") : uri,
     });
 
     Object.keys(body).forEach((key) => {
@@ -426,27 +434,45 @@ export default function EditProfile() {
     return data;
   };
 
-  const handleUploadPhoto = async (photo) => {
+  const handleUploadPhoto = async (uri) => {
     const token = await AsyncStorage.getItem("userToken");
-
     if (!token) {
       console.error("No token provided");
       return;
     }
-
+    const original = uri;
     fetch(`${API_URL}users/user/upload-profile-image`, {
       method: "PATCH",
       headers: {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
       },
-      body: createFormData(photo, { userId: "123" }),
+      body: createFormData(uri, { userId: "123" }),
     })
       .then((response) => response.json())
-      .then((response) => {
-        const newPath = `${HOST_URL}Backend/${response.imagePath}`;
-        saveSelfie(newPath);
-        setFilePath(newPath);
+      .then(async (response) => {
+        if (!response || !response.imagePath) {
+          console.error("[editProfile] upload response missing imagePath", response);
+          // persist local uri so UI shows it even if server failed
+          try {
+            const localUri = typeof original === 'string' ? original : original?.uri;
+            if (localUri) {
+              const payload = JSON.stringify({ url: localUri, ts: Date.now() });
+              await AsyncStorage.setItem("selfie", payload);
+              setSelfieUri(localUri);
+            }
+          } catch (e) {
+            console.error('[editProfile] failed to persist local image after upload error', e);
+          }
+          return;
+        }
+        let newPath = `${HOST_URL}Backend/${response.imagePath}`;
+        // normalize backslashes from server
+        newPath = newPath.replace(/\\/g, "/");
+        console.log("[editProfile] saveSelfie ->", newPath);
+        const payload = JSON.stringify({ url: newPath, ts: Date.now() });
+        await AsyncStorage.setItem("selfie", payload);
+        setSelfieUri(newPath);
       })
       .catch((error) => {
         console.log("error", error);
@@ -454,12 +480,14 @@ export default function EditProfile() {
   };
 
   const saveSelfie = async (selfie) => {
-    await AsyncStorage.setItem("selfie", selfie);
+    console.log("[editProfile] saveSelfie ->", selfie);
+    const payload = JSON.stringify({ url: selfie, ts: Date.now() });
+    await AsyncStorage.setItem("selfie", payload);
   };
 
   useEffect(() => {
-    if (selfie && !visible) {
-      handleUploadPhoto(selfie);
+    if (selfieUri && !visible) {
+      handleUploadPhoto(selfieUri);
     }
   }, [visible]);
 
@@ -489,8 +517,8 @@ export default function EditProfile() {
           <View style={styles.profileImageContainer}>
             <Image
               source={
-                filePath
-                  ? { uri: filePath }
+                selfieUri
+                  ? { uri: selfieUri }
                   : require("../../assets/avatar.jpg")
               }
               style={styles.profileImage}
@@ -713,7 +741,7 @@ export default function EditProfile() {
       <ImagePickerModal
         isVisible={visible}
         onClose={() => setVisible(false)}
-        setImage={setSelfie}
+        setImage={setSelfieUri}
       />
 
       {/* Confirm Password Modal */}

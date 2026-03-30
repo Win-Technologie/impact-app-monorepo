@@ -21,16 +21,24 @@ export default function HeaderBox({ name, email, selfie, setSelfie }) {
   const HOST_URL = API_URL.replace("api/", "");
   const navigation = useNavigation();
 
-  const createFormData = (photo, body = {}) => {
-    let filename = photo.fileName.split("/").pop();
-    let match = /\.(\w+)$/.exec(filename);
-    let type = match ? `image/${match[1]}` : "image";
+  const createFormData = (photoOrUri, body = {}) => {
+    // Accept either an object { uri, fileName } or a uri string
+    const isString = typeof photoOrUri === "string";
+    const uri = isString ? photoOrUri : photoOrUri?.uri;
+    if (!uri) throw new Error("No image URI provided for upload");
+
+    const filename = isString
+      ? uri.split("/").pop() || `photo_${Date.now()}.jpg`
+      : photoOrUri.fileName || uri.split("/").pop() || `photo_${Date.now()}.jpg`;
+
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : "image";
 
     const data = new FormData();
     data.append("image", {
-      name: photo.fileName,
+      name: filename,
       type: type,
-      uri: Platform.OS === "ios" ? photo.uri.replace("file://", "") : photo.uri,
+      uri: Platform.OS === "ios" ? uri.replace("file://", "") : uri,
     });
 
     Object.keys(body).forEach((key) => {
@@ -40,26 +48,53 @@ export default function HeaderBox({ name, email, selfie, setSelfie }) {
     return data;
   };
 
-  const handleUploadPhoto = async (photo) => {
+  const handleUploadPhoto = async (photoOrUri) => {
+    console.log("[headerBox] handleUploadPhoto called with:", photoOrUri);
     const token = await AsyncStorage.getItem("userToken");
 
     if (!token) {
       console.error("No token provided");
       return;
     }
-
+    console.log("[headerBox] sending upload to", `${API_URL}users/user/upload-profile-image`);
+    const original = photoOrUri;
     fetch(`${API_URL}users/user/upload-profile-image`, {
       method: "PATCH",
       headers: {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
       },
-      body: createFormData(photo, { userId: "123" }),
+      body: createFormData(photoOrUri, { userId: "123" }),
     })
       .then((response) => response.json())
-      .then((response) => {
-        saveSelfie(`${HOST_URL}Backend/${response.imagePath}`);
-        setFilePath(`${HOST_URL}Backend/${response.imagePath}`);
+      .then(async (response) => {
+        console.log("[headerBox] upload response:", response);
+        if (!response || !response.imagePath) {
+          console.error("[headerBox] upload response missing imagePath", response);
+          // Persist local image so UI doesn't revert while server fails
+          try {
+            const localUri = typeof original === 'string' ? original : original?.uri;
+            if (localUri) {
+              await saveSelfie(localUri);
+              setFilePath(localUri);
+              if (typeof setSelfie === "function") setSelfie(localUri);
+            }
+          } catch (e) {
+            console.error('[headerBox] failed to persist local image after upload error', e);
+          }
+          return;
+        }
+        let newUrl = `${HOST_URL}Backend/${response.imagePath}`;
+        // normalize backslashes from server
+        newUrl = newUrl.replace(/\\/g, "/");
+        console.log("[headerBox] newUrl ->", newUrl);
+        await saveSelfie(newUrl);
+        console.log("[headerBox] saved selfie to AsyncStorage");
+        setFilePath(newUrl);
+        // update parent state so the header shows the persisted image
+        if (typeof setSelfie === "function") {
+          setSelfie(newUrl);
+        }
       })
       .catch((error) => {
         console.log("error", error);
@@ -67,18 +102,51 @@ export default function HeaderBox({ name, email, selfie, setSelfie }) {
   };
 
   React.useEffect(() => {
-    if (selfie && !visible) {
-      handleUploadPhoto(selfie);
+    // Trigger upload when a new local selfie URI is provided and the
+    // image picker modal is not visible. Skip upload when the selfie
+    // is already an uploaded HTTP URL (prevents re-uploading and
+    // overwriting the stored image).
+    if (!selfie || visible) return;
+
+    // If selfie is a string and already points to a hosted URL, don't upload.
+    if (typeof selfie === "string") {
+      const isHttp = selfie.startsWith("http://") || selfie.startsWith("https://");
+      const isGridFsPath = selfie.includes("/user/profile-image/") || selfie.includes("/user/driving-licence-photo/");
+      if (isHttp || isGridFsPath) {
+        console.log("[headerBox] selfie is already hosted, skipping upload ->", selfie);
+        // Ensure local state reflects the hosted URL
+        if (selfie !== filePath) {
+          setFilePath(selfie);
+          saveSelfie(selfie);
+        }
+        return;
+      }
     }
-  }, [visible]);
+
+    // Otherwise treat as a local uri/object and upload it
+    console.log("[headerBox] uploading local selfie ->", selfie);
+    handleUploadPhoto(selfie);
+  }, [selfie, visible]);
 
   const saveSelfie = async (selfie) => {
-    await AsyncStorage.setItem("selfie", selfie);
+    const payload = JSON.stringify({ url: selfie, ts: Date.now() });
+    await AsyncStorage.setItem("selfie", payload);
   };
 
   const getSelfie = async () => {
     const s = await AsyncStorage.getItem("selfie");
-    setFilePath(s);
+    let parsed;
+    try {
+      parsed = s ? JSON.parse(s) : null;
+    } catch (e) {
+      parsed = { url: s, ts: 0 };
+    }
+    // Only update filePath if AsyncStorage has a non-empty value
+    // and it differs from the currently-displayed filePath. This
+    // prevents a late read returning null and clearing the image.
+    if (parsed && parsed.url && parsed.url !== filePath) {
+      setFilePath(parsed.url);
+    }
   };
 
   React.useEffect(() => {
@@ -93,9 +161,13 @@ export default function HeaderBox({ name, email, selfie, setSelfie }) {
   return (
     <View style={styles.headerBox}>
       <Image
-        // source={selfie ? { uri: `data:image;base64,${selfie}` } : require('../../assets/avatar.jpg')}
         source={
-          selfie ? { uri: `${filePath}` } : require("../../assets/avatar.jpg")
+          // Prefer the uploaded filePath URL, then the local selfie URI, then fallback avatar
+          filePath
+            ? { uri: filePath }
+            : selfie
+            ? { uri: selfie }
+            : require("../../assets/avatar.jpg")
         }
         style={styles.profileImage}
       />

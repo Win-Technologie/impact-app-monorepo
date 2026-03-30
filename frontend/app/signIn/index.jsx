@@ -81,7 +81,8 @@ export default function SignIn() {
 
         if (response.data.user.user.profileImagePath) {
           const selfieUrl = `${HOST_URL}Backend/${response.data.user.user.profileImagePath}`;
-          await AsyncStorage.setItem("selfie", selfieUrl);
+          const payload = JSON.stringify({ url: selfieUrl, ts: Date.now() });
+          await AsyncStorage.setItem("selfie", payload);
         }
 
         if (response.data.A7) {
