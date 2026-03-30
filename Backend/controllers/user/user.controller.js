@@ -1190,6 +1190,13 @@ async function EditUser(req, res) {
       userData.birthdate = myBirthdate;
     }
 
+    // Log incoming payload keys for debugging
+    try {
+      console.log("[EditUser] incoming userData keys:", Object.keys(userData || {}));
+    } catch (e) {
+      console.log("[EditUser] incoming userData keys: <unavailable>");
+    }
+
     // Mettre à jour les données de la propriété avec les nouvelles données
     Object.assign(foundUser, userData);
 
@@ -1198,10 +1205,31 @@ async function EditUser(req, res) {
       foundUser.active = foundUser.active.toLowerCase() === "true";
     }
 
-    const result = await userCollection.updateOne(
-      { _id: id }, // Filtre pour trouver la propriété par son ID
-      { $set: foundUser }, // Données actualisées souhaitées
-    );
+    // Ensure we don't try to $set the immutable _id field
+    const updateFields = { ...foundUser };
+    if (updateFields._id) delete updateFields._id;
+
+    // Ensure the filter uses an ObjectId when possible
+    let filterId = id;
+    try {
+      filterId = typeof id === "string" ? new ObjectId(id) : id;
+    } catch (e) {
+      // keep original id if it cannot be converted
+    }
+
+    try {
+      // log what we update to help debug Atlas errors
+      console.log("[EditUser] updating user _id:", filterId);
+      console.log("[EditUser] update fields:", Object.keys(updateFields));
+      const result = await userCollection.updateOne(
+        { _id: filterId }, // Filtre pour trouver la propriété par son ID
+        { $set: updateFields }, // Données actualisées souhaitées
+      );
+      console.log("[EditUser] update result:", result);
+    } catch (e) {
+      console.error("[EditUser] Mongo update error:", e);
+      throw e;
+    }
 
     return res.status(200).json({ msg: "user has been modified" });
   } catch (error) {
