@@ -47,3 +47,4 @@ test.rest
 #vars.js
 node_modules 
 *.pdf
+/Backend/uploads/
