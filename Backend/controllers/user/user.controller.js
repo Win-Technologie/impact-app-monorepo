@@ -1209,13 +1209,9 @@ async function EditUser(req, res) {
     const updateFields = { ...foundUser };
     if (updateFields._id) delete updateFields._id;
 
-    // Ensure the filter uses an ObjectId when possible
-    let filterId = id;
-    try {
-      filterId = typeof id === "string" ? new ObjectId(id) : id;
-    } catch (e) {
-      // keep original id if it cannot be converted
-    }
+    // The user _id in this project is stored as a string (see user model),
+    // so use the string id for the update filter to ensure matches.
+    const filterId = id;
 
     try {
       // log what we update to help debug Atlas errors
@@ -1226,6 +1222,36 @@ async function EditUser(req, res) {
         { $set: updateFields }, // Données actualisées souhaitées
       );
       console.log("[EditUser] update result:", result);
+        // If the client provided an expirationDate for the driver's license, try to update the DriverLicense record
+        try {
+          if (userData.expirationDate) {
+            const exp = userData.expirationDate || "";
+            const parts = exp.split("/");
+            if (parts.length === 2) {
+              const month = parseInt(parts[0], 10);
+              const year = parseInt(parts[1], 10);
+              if (!isNaN(month) && !isNaN(year)) {
+                const expiresDate = new Date(year, month - 1, 1);
+                // try updating by user reference first
+                let dlResult = await drivingLicensesCollection.updateOne(
+                  { user: filterId },
+                  { $set: { expires: expiresDate } },
+                );
+                // if no doc matched, try by license number if provided
+                if ((!dlResult || dlResult.matchedCount === 0) && userData.licenseNumber) {
+                  dlResult = await drivingLicensesCollection.updateOne(
+                    { number: userData.licenseNumber },
+                    { $set: { expires: expiresDate } },
+                  );
+                }
+                console.log("[EditUser] DriverLicense update result:", dlResult);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("[EditUser] DriverLicense update error:", e);
+          // do not fail the whole request for this secondary update
+        }
     } catch (e) {
       console.error("[EditUser] Mongo update error:", e);
       throw e;
