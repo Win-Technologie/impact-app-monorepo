@@ -1110,12 +1110,20 @@ async function RestorePassword(req, res) {
     // Hasher le nouveau mot de passe
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     // Mettre à jour l'utilisateur dans la base de données avec le nouveau mot de passe
-    await userCollection.updateOne(
+    const updateResult = await userCollection.updateOne(
       { _id: myToken.user_id },
       {
         $set: { password: hashedNewPassword },
       },
     );
+
+    console.log("[RestorePassword] updateResult:", updateResult);
+
+    if (!updateResult || updateResult.matchedCount === 0) {
+      return res
+        .status(500)
+        .json({ msg: "Impossible de mettre à jour le mot de passe (utilisateur non trouvé)" });
+    }
 
     return res
       .status(200)

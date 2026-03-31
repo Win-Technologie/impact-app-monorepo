@@ -456,6 +456,13 @@ export default function EditProfile() {
 
       if (response.ok) {
         setShowPasswordChangeModal(false);
+        // update masked password in UI (do not store real password)
+        try {
+          const masked = "*".repeat(newPassword.length || 8);
+          setPassword(masked);
+        } catch (e) {
+          setPassword("********");
+        }
         setOldPassword("");
         setNewPassword("");
         setConfirmNewPassword("");
@@ -885,12 +892,24 @@ export default function EditProfile() {
               secureTextEntry
             />
 
-            <TouchableOpacity
-              style={styles.modifyButton}
-              onPress={handlePasswordChange}
-            >
-              <Text style={styles.modifyButtonText}>Modifier</Text>
-            </TouchableOpacity>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setShowPasswordChangeModal(false);
+                  setNewPassword("");
+                  setConfirmNewPassword("");
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.continueModalButton]}
+                onPress={handlePasswordChange}
+              >
+                <Text style={styles.continueButtonText}>Modifier</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
