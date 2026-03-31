@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useRecoilValue } from "recoil";
+import { notificationsPrefState } from "../../GlobalState/NotificationsPrefState";
 
 export default function HomeHeader({
   children,
@@ -9,6 +12,8 @@ export default function HomeHeader({
   setSelfie,
 }) {
   const [filePath, setFilePath] = React.useState(null);
+  const router = useRouter();
+  const prefs = useRecoilValue(notificationsPrefState);
 
   return (
     <View style={styles.headerContainer}>
@@ -27,9 +32,13 @@ export default function HomeHeader({
         </View>
       </View>
 
-      <TouchableOpacity style={styles.bellIconContainer}>
+      <TouchableOpacity
+        style={styles.bellIconContainer}
+        onPress={() => {
+          router.push("settings/notifications");
+        }}
+      >
         <MaterialIcons name="notifications" size={32} color="black" />
-        <View style={styles.notificationDot} />
       </TouchableOpacity>
     </View>
   );
