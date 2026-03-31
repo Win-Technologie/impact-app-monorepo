@@ -19,6 +19,7 @@ const argv = require('minimist')(process.argv.slice(2));
 const days = parseInt(argv.days || argv.d || DAYS_DEFAULT, 10);
 const doDelete = !!argv.delete || !!argv.dodelete;
 const pattern = argv.pattern || argv.p || null;
+const excludePattern = argv.exclude || argv.e || null;
 const largest = parseInt(argv.largest || argv.L || 0, 10);
 
 (async () => {
@@ -32,7 +33,16 @@ const largest = parseInt(argv.largest || argv.L || 0, 10);
 
     if (largest && largest > 0) {
       console.log(`Connected. Listing top ${largest} largest GridFS files.`);
-      const top = await filesColl.find({}).sort({ length: -1 }).limit(largest).toArray();
+      let top = await filesColl.find({}).sort({ length: -1 }).limit(largest).toArray();
+      if (excludePattern) {
+        try {
+          const reEx = new RegExp(excludePattern);
+          top = top.filter(f => !reEx.test(f.filename));
+          console.log(`Excluding filenames that match: ${excludePattern}`);
+        } catch (e) {
+          console.log('Invalid exclude pattern; ignoring exclude filter');
+        }
+      }
       const toDelete = top.map(f => ({ _id: f._id, filename: f.filename, uploadDate: f.uploadDate, length: f.length }));
       console.log(`Found ${toDelete.length} files (largest).`);
       let totalBytes = 0;
@@ -77,6 +87,17 @@ const largest = parseInt(argv.largest || argv.L || 0, 10);
     while (await cursor.hasNext()) {
       const f = await cursor.next();
       toDelete.push({ _id: f._id, filename: f.filename, uploadDate: f.uploadDate, length: f.length });
+    }
+
+    if (excludePattern) {
+      try {
+        const reEx = new RegExp(excludePattern);
+        const before = toDelete.length;
+        toDelete = toDelete.filter(f => !reEx.test(f.filename));
+        console.log(`Excluded ${before - toDelete.length} files by exclude pattern: ${excludePattern}`);
+      } catch (e) {
+        console.log('Invalid exclude pattern; ignoring exclude filter');
+      }
     }
 
     console.log(`Found ${toDelete.length} files older than ${days} days.`);
