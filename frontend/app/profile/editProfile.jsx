@@ -22,19 +22,41 @@ import ImagePickerModal from "../../components/ImagePickerModal";
 export default function EditProfile() {
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
+  // Form-local state: editing these shouldn't update the header until saved
+  const [formName, setFormName] = useState("");
+  const [formLastName, setFormLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("********");
   const [licenseNumber, setLicenseNumber] = useState("");
   const [expirationDate, setExpirationDate] = useState("");
+  const [monthOpen, setMonthOpen] = useState(false);
+  const [yearOpen, setYearOpen] = useState(false);
+  const [monthValue, setMonthValue] = useState(null);
+  const [yearValue, setYearValue] = useState(null);
+
+  const months = [
+    { label: '01', value: '01' },{ label: '02', value: '02' },{ label: '03', value: '03' },{ label: '04', value: '04' },
+    { label: '05', value: '05' },{ label: '06', value: '06' },{ label: '07', value: '07' },{ label: '08', value: '08' },
+    { label: '09', value: '09' },{ label: '10', value: '10' },{ label: '11', value: '11' },{ label: '12', value: '12' },
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 20 }).map((_, i) => ({ label: String(currentYear + i), value: String(currentYear + i) }));
+
+  // when both month and year selected, compose expiration date
+  useEffect(() => {
+    if (monthValue && yearValue) {
+      setExpirationDate(`${monthValue}/${yearValue}`);
+    }
+  }, [monthValue, yearValue]);
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [countryCode, setCountryCode] = useState("CA");
   const [country, setCountry] = useState("Canada");
   const [province, setProvince] = useState("Québec");
-  const [selfie, setSelfie] = useState(null);
-  const [filePath, setFilePath] = useState(null);
+  const [selfieUri, setSelfieUri] = useState(null);
   const [visible, setVisible] = useState(false);
   const [showPasswordConfirmModal, setShowPasswordConfirmModal] = useState(false);
   const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
@@ -169,10 +191,21 @@ export default function EditProfile() {
           // Update state with fresh data from MongoDB
           setName(user.name || "");
           setLastName(user.lastName || "");
+          // initialize form fields separately so edits don't reflect immediately
+          setFormName(user.name || "");
+          setFormLastName(user.lastName || "");
           setEmail(user.email || "");
           setPhone(user.phone || "");
           setLicenseNumber(user.licenseNumber || "");
           setExpirationDate(user.expirationDate || "");
+          // parse existing expirationDate (MM/YYYY) into month/year selectors
+          if (user.expirationDate) {
+            const parts = (user.expirationDate || "").split('/');
+            if (parts.length === 2) {
+              setMonthValue(parts[0]);
+              setYearValue(parts[1]);
+            }
+          }
           setAddress(user.address || "");
           setCity(user.city || "");
           setPostalCode(user.postalCode || "");
@@ -183,10 +216,20 @@ export default function EditProfile() {
           // Fallback to AsyncStorage data if API fails
           setName(userData.user.name || "");
           setLastName(userData.user.lastName || "");
+          setFormName(userData.user.name || "");
+          setFormLastName(userData.user.lastName || "");
           setEmail(userData.user.email || "");
           setPhone(userData.user.phone || "");
           setLicenseNumber(userData.user.licenseNumber || "");
           setExpirationDate(userData.user.expirationDate || "");
+          // parse existing expirationDate from AsyncStorage if present
+          if (userData.user.expirationDate) {
+            const parts = (userData.user.expirationDate || "").split('/');
+            if (parts.length === 2) {
+              setMonthValue(parts[0]);
+              setYearValue(parts[1]);
+            }
+          }
           setAddress(userData.user.address || "");
           setCity(userData.user.city || "");
           setPostalCode(userData.user.postalCode || "");
@@ -197,30 +240,36 @@ export default function EditProfile() {
       }
       
       const s = await AsyncStorage.getItem("selfie");
-      setFilePath(s);
+      let parsed;
+      try {
+        parsed = s ? JSON.parse(s) : null;
+      } catch (e) {
+        parsed = { url: s, ts: 0 };
+      }
+      setSelfieUri(parsed ? parsed.url : null);
     } catch (error) {
       console.log("Error loading user data:", error);
     }
   };
 
   const handleSave = async () => {
-    // Validate name
-    if (!name || !name.trim()) {
+    // Validate name (use form fields)
+    if (!formName || !formName.trim()) {
       Alert.alert("Erreur", "Le prénom est requis");
       return;
     }
     const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
-    if (!nameRegex.test(name)) {
+    if (!nameRegex.test(formName)) {
       Alert.alert("Erreur", "Le prénom ne doit contenir que des lettres");
       return;
     }
 
     // Validate last name
-    if (!lastName || !lastName.trim()) {
+    if (!formLastName || !formLastName.trim()) {
       Alert.alert("Erreur", "Le nom de famille est requis");
       return;
     }
-    if (!nameRegex.test(lastName)) {
+    if (!nameRegex.test(formLastName)) {
       Alert.alert("Erreur", "Le nom de famille ne doit contenir que des lettres");
       return;
     }
@@ -308,44 +357,57 @@ export default function EditProfile() {
 
     try {
       const token = await AsyncStorage.getItem("userToken");
+      const bodyPayload = {
+        name: formName,
+        lastName: formLastName,
+        email,
+        phone,
+        licenseNumber,
+        expirationDate,
+        address,
+        city,
+        postalCode,
+        country,
+        countryCode,
+        province,
+      };
+
+      console.log('[editProfile] saving payload', bodyPayload);
+
       const response = await fetch(`${API_URL}users/user`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          name,
-          lastName,
-          email,
-          phone,
-          licenseNumber,
-          expirationDate,
-          address,
-          city,
-          postalCode,
-          country,
-          countryCode,
-          province,
-        }),
+        body: JSON.stringify(bodyPayload),
       });
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        data = { msg: text };
+      }
 
-      const data = await response.json();
-      
       if (response.ok) {
         const userData = JSON.parse(await AsyncStorage.getItem("user"));
-        userData.user = { ...userData.user, name, lastName, email, phone, licenseNumber, expirationDate, address, city, postalCode, country, countryCode, province };
+        userData.user = { ...userData.user, ...bodyPayload };
         await AsyncStorage.setItem("user", JSON.stringify(userData));
-        
+        // update visible header values
+        setName(formName);
+        setLastName(formLastName);
+
         Alert.alert("Succès", "Votre profil a été mis à jour", [
           { text: "OK", onPress: () => router.back() },
         ]);
       } else {
+        console.error('[editProfile] save failed', response.status, data);
         Alert.alert("Erreur", data.msg || data.message || "Une erreur est survenue");
       }
     } catch (error) {
-      console.log("Error saving profile:", error);
-      Alert.alert("Erreur", "Impossible de sauvegarder les modifications");
+      console.error("Error saving profile:", error);
+      Alert.alert("Erreur", "Impossible de sauvegarder les modifications: " + (error.message || error));
     }
   };
 
@@ -394,6 +456,13 @@ export default function EditProfile() {
 
       if (response.ok) {
         setShowPasswordChangeModal(false);
+        // update masked password in UI (do not store real password)
+        try {
+          const masked = "*".repeat(newPassword.length || 8);
+          setPassword(masked);
+        } catch (e) {
+          setPassword("********");
+        }
         setOldPassword("");
         setNewPassword("");
         setConfirmNewPassword("");
@@ -407,16 +476,19 @@ export default function EditProfile() {
     }
   };
 
-  const createFormData = (photo, body = {}) => {
-    let filename = photo.fileName.split("/").pop();
+  const createFormData = (uri, body = {}) => {
+    if (!uri) {
+      throw new Error("No image URI provided for upload");
+    }
+    let filename = uri.split("/").pop() || `photo_${Date.now()}.jpg`;
     let match = /\.(\w+)$/.exec(filename);
     let type = match ? `image/${match[1]}` : "image";
 
     const data = new FormData();
     data.append("image", {
-      name: photo.fileName,
+      name: filename,
       type: type,
-      uri: Platform.OS === "ios" ? photo.uri.replace("file://", "") : photo.uri,
+      uri: Platform.OS === "ios" ? uri.replace("file://", "") : uri,
     });
 
     Object.keys(body).forEach((key) => {
@@ -426,27 +498,45 @@ export default function EditProfile() {
     return data;
   };
 
-  const handleUploadPhoto = async (photo) => {
+  const handleUploadPhoto = async (uri) => {
     const token = await AsyncStorage.getItem("userToken");
-
     if (!token) {
       console.error("No token provided");
       return;
     }
-
+    const original = uri;
     fetch(`${API_URL}users/user/upload-profile-image`, {
       method: "PATCH",
       headers: {
         "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
       },
-      body: createFormData(photo, { userId: "123" }),
+      body: createFormData(uri, { userId: "123" }),
     })
       .then((response) => response.json())
-      .then((response) => {
-        const newPath = `${HOST_URL}Backend/${response.imagePath}`;
-        saveSelfie(newPath);
-        setFilePath(newPath);
+      .then(async (response) => {
+        if (!response || !response.imagePath) {
+          console.error("[editProfile] upload response missing imagePath", response);
+          // persist local uri so UI shows it even if server failed
+          try {
+            const localUri = typeof original === 'string' ? original : original?.uri;
+            if (localUri) {
+              const payload = JSON.stringify({ url: localUri, ts: Date.now() });
+              await AsyncStorage.setItem("selfie", payload);
+              setSelfieUri(localUri);
+            }
+          } catch (e) {
+            console.error('[editProfile] failed to persist local image after upload error', e);
+          }
+          return;
+        }
+        let newPath = `${HOST_URL}Backend/${response.imagePath}`;
+        // normalize backslashes from server
+        newPath = newPath.replace(/\\/g, "/");
+        console.log("[editProfile] saveSelfie ->", newPath);
+        const payload = JSON.stringify({ url: newPath, ts: Date.now() });
+        await AsyncStorage.setItem("selfie", payload);
+        setSelfieUri(newPath);
       })
       .catch((error) => {
         console.log("error", error);
@@ -454,12 +544,14 @@ export default function EditProfile() {
   };
 
   const saveSelfie = async (selfie) => {
-    await AsyncStorage.setItem("selfie", selfie);
+    console.log("[editProfile] saveSelfie ->", selfie);
+    const payload = JSON.stringify({ url: selfie, ts: Date.now() });
+    await AsyncStorage.setItem("selfie", payload);
   };
 
   useEffect(() => {
-    if (selfie && !visible) {
-      handleUploadPhoto(selfie);
+    if (selfieUri && !visible) {
+      handleUploadPhoto(selfieUri);
     }
   }, [visible]);
 
@@ -489,8 +581,8 @@ export default function EditProfile() {
           <View style={styles.profileImageContainer}>
             <Image
               source={
-                filePath
-                  ? { uri: filePath }
+                selfieUri
+                  ? { uri: selfieUri }
                   : require("../../assets/avatar.jpg")
               }
               style={styles.profileImage}
@@ -513,10 +605,8 @@ export default function EditProfile() {
             <Text style={styles.label}>Prénom</Text>
             <TextInput
               style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="Steve"
-              placeholderTextColor="#B0B0B0"
+              value={formName}
+              onChangeText={setFormName}
             />
           </View>
 
@@ -525,10 +615,8 @@ export default function EditProfile() {
             <Text style={styles.label}>Nom</Text>
             <TextInput
               style={styles.input}
-              value={lastName}
-              onChangeText={setLastName}
-              placeholder="Blanchard"
-              placeholderTextColor="#B0B0B0"
+              value={formLastName}
+              onChangeText={setFormLastName}
             />
           </View>
 
@@ -540,8 +628,6 @@ export default function EditProfile() {
                 style={styles.inputFlex}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="example@hotmail.com"
-                placeholderTextColor="#B0B0B0"
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -559,8 +645,6 @@ export default function EditProfile() {
                 style={styles.inputFlex}
                 value={phone}
                 onChangeText={setPhone}
-                placeholder="(514) 388-3900"
-                placeholderTextColor="#B0B0B0"
                 keyboardType="phone-pad"
               />
               <TouchableOpacity style={styles.iconButton}>
@@ -577,8 +661,6 @@ export default function EditProfile() {
                 style={styles.inputFlex}
                 value={password}
                 editable={false}
-                placeholder="••••••••"
-                placeholderTextColor="#B0B0B0"
                 secureTextEntry
               />
               <TouchableOpacity style={styles.iconButton} onPress={handlePasswordEditClick}>
@@ -594,26 +676,46 @@ export default function EditProfile() {
               style={styles.input}
               value={licenseNumber}
               onChangeText={setLicenseNumber}
-              placeholder="2023-000123-12"
-              placeholderTextColor="#B0B0B0"
             />
           </View>
 
           {/* Date d'expiration */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>Date d'expiration</Text>
-            <View style={styles.inputWithIcon}>
-              <TextInput
-                style={styles.inputFlex}
-                value={expirationDate}
-                onChangeText={setExpirationDate}
-                placeholder="08/2023"
-                placeholderTextColor="#B0B0B0"
-              />
-              <TouchableOpacity style={styles.iconButton}>
-                <MaterialIcons name="edit" size={20} color="#666" />
-              </TouchableOpacity>
-            </View>
+              <View style={[styles.inputWithIcon, styles.expirationRow]}>
+                <View style={[styles.expirationDropdown, { zIndex: monthOpen ? 3000 : 1000 }]}>
+                  <DropDownPicker
+                    open={monthOpen}
+                    value={monthValue}
+                    items={months}
+                    setOpen={setMonthOpen}
+                    setValue={setMonthValue}
+                    setItems={() => {}}
+                    placeholder="Mois"
+                    listMode="MODAL"
+                    style={[styles.dropdown, styles.expirationDropdownInner]}
+                    dropDownContainerStyle={styles.dropdownContainer}
+                  />
+                </View>
+                <View style={{ width: 10 }} />
+                <View style={[styles.expirationDropdown, { zIndex: yearOpen ? 3000 : 1000 }]}>
+                  <DropDownPicker
+                    open={yearOpen}
+                    value={yearValue}
+                    items={years}
+                    setOpen={setYearOpen}
+                    setValue={setYearValue}
+                    setItems={() => {}}
+                    placeholder="Année"
+                    listMode="MODAL"
+                    style={[styles.dropdown, styles.expirationDropdownInner]}
+                    dropDownContainerStyle={styles.dropdownContainer}
+                  />
+                </View>
+                <TouchableOpacity style={styles.iconButton}>
+                  <MaterialIcons name="edit" size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
           </View>
 
           {/* Adresse complète */}
@@ -624,8 +726,6 @@ export default function EditProfile() {
                 style={styles.inputFlex}
                 value={address}
                 onChangeText={setAddress}
-                placeholder="1280 Sainte-Marie"
-                placeholderTextColor="#B0B0B0"
               />
               <TouchableOpacity style={styles.iconButton}>
                 <MaterialIcons name="edit" size={20} color="#666" />
@@ -636,21 +736,19 @@ export default function EditProfile() {
           {/* Ville et Code postal */}
           <View style={styles.rowFields}>
             <View style={styles.halfFieldContainer}>
+              <Text style={styles.label}>Ville</Text>
               <TextInput
                 style={styles.simpleInput}
                 value={city}
                 onChangeText={setCity}
-                placeholder="Montréal"
-                placeholderTextColor="#B0B0B0"
               />
             </View>
             <View style={styles.halfFieldContainer}>
+              <Text style={styles.label}>Code Postal</Text>
               <TextInput
                 style={styles.simpleInput}
                 value={postalCode}
                 onChangeText={setPostalCode}
-                placeholder="J4K 1H8"
-                placeholderTextColor="#B0B0B0"
                 autoCapitalize="characters"
               />
             </View>
@@ -659,6 +757,7 @@ export default function EditProfile() {
           {/* Pays et Province */}
           <View style={styles.rowFields}>
             <View style={[styles.halfFieldContainer, { zIndex: countryOpen ? 3000 : 1000 }]}>
+              <Text style={styles.label}>Pays</Text>
               <DropDownPicker
                 open={countryOpen}
                 value={country}
@@ -666,7 +765,7 @@ export default function EditProfile() {
                 setOpen={setCountryOpen}
                 setValue={setCountry}
                 setItems={setCountries}
-                listMode="SCROLLVIEW"
+                listMode="MODAL"
                 onChangeValue={(value) => {
                   if (value === "Canada") {
                     setCountryCode("CA");
@@ -684,6 +783,7 @@ export default function EditProfile() {
               />
             </View>
             <View style={[styles.halfFieldContainer, { zIndex: provinceOpen ? 3000 : 1000 }]}>
+              <Text style={styles.label}>Province</Text>
               <DropDownPicker
                 open={provinceOpen}
                 value={province}
@@ -691,7 +791,7 @@ export default function EditProfile() {
                 setOpen={setProvinceOpen}
                 setValue={setProvince}
                 setItems={setProvinces}
-                listMode="SCROLLVIEW"
+                listMode="MODAL"
                 placeholder="Sélectionnez une province"
                 style={styles.dropdown}
                 dropDownContainerStyle={styles.dropdownContainer}
@@ -713,7 +813,7 @@ export default function EditProfile() {
       <ImagePickerModal
         isVisible={visible}
         onClose={() => setVisible(false)}
-        setImage={setSelfie}
+        setImage={setSelfieUri}
       />
 
       {/* Confirm Password Modal */}
@@ -792,12 +892,24 @@ export default function EditProfile() {
               secureTextEntry
             />
 
-            <TouchableOpacity
-              style={styles.modifyButton}
-              onPress={handlePasswordChange}
-            >
-              <Text style={styles.modifyButtonText}>Modifier</Text>
-            </TouchableOpacity>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setShowPasswordChangeModal(false);
+                  setNewPassword("");
+                  setConfirmNewPassword("");
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.continueModalButton]}
+                onPress={handlePasswordChange}
+              >
+                <Text style={styles.continueButtonText}>Modifier</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -930,6 +1042,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E0E0E0",
     backgroundColor: "#FFFFFF",
+  },
+  expirationRow: {
+    alignItems: 'center',
+    padding: 10,
+  },
+  expirationDropdown: {
+    flex: 1,
+  },
+  expirationDropdownInner: {
+    height: 44,
   },
   dropdownText: {
     fontSize: 16,

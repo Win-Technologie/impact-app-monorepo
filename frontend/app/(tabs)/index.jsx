@@ -133,7 +133,13 @@ export default function TabsHomeScreen() {
 
   const getSelfie = async () => {
     const s = await AsyncStorage.getItem("selfie");
-    setSelfie(s);
+    let parsed;
+    try {
+      parsed = s ? JSON.parse(s) : null;
+    } catch (e) {
+      parsed = { url: s, ts: 0 };
+    }
+    setSelfie(parsed ? parsed.url : null);
   };
 
   return (

@@ -62,6 +62,18 @@ router.patch(
   userController.UploadUserDrivingLicencePhoto,
 );
 
+// Route to stream profile images stored in GridFS
+router.get(
+  "/user/profile-image/:id",
+  userController.StreamUserProfileImage,
+);
+
+// Route to stream driving licence images stored in GridFS
+router.get(
+  "/user/driving-licence-photo/:id",
+  userController.StreamDrivingLicenceImage,
+);
+
 // Route pour authentifier un utilisateur en utilisant un token JWT
 // Utilise le middleware d'authentification
 router.post(

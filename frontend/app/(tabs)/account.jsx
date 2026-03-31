@@ -73,7 +73,42 @@ export default function Index() {
 
   const getSelfie = async () => {
     const s = await AsyncStorage.getItem("selfie");
-    setSelfie(s);
+    console.log("[account] getSelfie read ->", s);
+    const now = Date.now();
+    let parsed;
+    try {
+      parsed = s ? JSON.parse(s) : null;
+    } catch (e) {
+      parsed = { url: s, ts: 0 };
+    }
+
+    if (parsed && parsed.url) {
+      // Only update if value differs
+      if (parsed.url !== selfie) {
+        console.log("[account] updating selfie from AsyncStorage", parsed.url);
+        setSelfie(parsed.url);
+      }
+    }
+
+    // Re-read shortly after to catch any pending writes from other screens
+    setTimeout(async () => {
+      try {
+        const s2 = await AsyncStorage.getItem("selfie");
+        console.log("[account] delayed getSelfie read ->", s2);
+        let parsed2;
+        try {
+          parsed2 = s2 ? JSON.parse(s2) : null;
+        } catch (e) {
+          parsed2 = { url: s2, ts: 0 };
+        }
+        if (parsed2 && parsed2.url && parsed2.url !== selfie) {
+          console.log("[account] updating selfie from delayed AsyncStorage read", parsed2.url);
+          setSelfie(parsed2.url);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 600);
   };
 
   return (
