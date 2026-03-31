@@ -2335,57 +2335,39 @@ async function UploadUserProfileImage(req, res) {
       metadata: { userId: loggedInUserId, originalName: uploadedImage.name },
     });
 
-    let responded = false;
-    readStream.pipe(uploadStream)
-      .on("error", async (err) => {
-        console.error("GridFS upload error:", err);
-        // Fallback: move file to disk if GridFS fails (e.g., quota)
-        try {
-          const fileExtensionFallback = path.extname(uploadedImage.name) || '.jpg';
-          const uniqueFilenameFallback = `${loggedInUserId}_${Date.now()}${fileExtensionFallback}`;
-          const destinationPath = path.join(USER_ROUTER_IMG_PROFILE_PATH, uniqueFilenameFallback);
-          fs.renameSync(uploadedImage.path, destinationPath);
-          await userCollection.updateOne(
-            { _id: loggedInUserId },
-            { $set: { profileImagePath: destinationPath } },
-          );
-          if (!responded) {
-            responded = true;
-            return res.status(200).json({ msg: "Image de profil téléchargée (fallback)", imagePath: destinationPath });
-          }
-        } catch (fsErr) {
-          console.error('Fallback filesystem save failed:', fsErr);
-          if (!responded) {
-            responded = true;
-            return res.status(500).json({ msg: "Erreur lors de l'upload dans GridFS", error: err.message });
-          }
-        }
-      })
-      .on("finish", async () => {
-        try {
-          // remove temp file
-          fs.unlink(uploadedImage.path, () => {});
+    // Pipe temp file into GridFS and handle success/error. No filesystem fallback: GridFS is single source of truth.
+    const uploadPromise = new Promise((resolve, reject) => {
+      readStream.pipe(uploadStream)
+        .on("error", (err) => reject(err))
+        .on("finish", () => resolve(uploadStream.id));
+    });
 
-          const fileId = uploadStream.id;
-          // Store reference in the user document (both id and a public path)
-          const publicPath = `user/profile-image/${fileId}`;
-          await userCollection.updateOne(
-            { _id: loggedInUserId },
-            { $set: { profileImagePath: publicPath, profileImageId: fileId } },
-          );
+    let uploadedFileId;
+    try {
+      uploadedFileId = await uploadPromise;
+    } catch (err) {
+      // ensure temp file removed
+      try { fs.unlinkSync(uploadedImage.path); } catch (e) {}
+      console.error("GridFS upload error:", err);
+      return res.status(500).json({ msg: "Erreur lors de l'upload dans GridFS", error: err.message });
+    }
 
-          if (!responded) {
-            responded = true;
-            return res.status(200).json({ msg: "Image de profil téléchargée avec succès", imagePath: publicPath });
-          }
-        } catch (err) {
-          console.error("Error updating user with GridFS id:", err);
-          if (!responded) {
-            responded = true;
-            return res.status(500).json({ msg: "Erreur interne", error: err.message });
-          }
-        }
-      });
+    // remove temp file
+    try { fs.unlinkSync(uploadedImage.path); } catch (e) {}
+
+    try {
+      const fileId = uploadedFileId;
+      const publicPath = `user/profile-image/${fileId}`;
+      await userCollection.updateOne(
+        { _id: loggedInUserId },
+        { $set: { profileImagePath: publicPath, profileImageId: fileId } },
+      );
+
+      return res.status(200).json({ msg: "Image de profil téléchargée avec succès", imagePath: publicPath });
+    } catch (err) {
+      console.error("Error updating user with GridFS id:", err);
+      return res.status(500).json({ msg: "Erreur interne", error: err.message });
+    }
   } catch (error) {
     console.error("Erreur lors du téléchargement de l'image de profil:", error);
     return res
@@ -2530,29 +2512,31 @@ async function UploadUserDrivingLicencePhoto(req, res) {
       });
     };
 
-        // Save images to GridFS (selfie, front, back) with filesystem fallback on error
+        // Save images to GridFS (selfie, front, back). Abort on any GridFS error.
         let selfieSaved, frontSaved, backSaved;
         try {
           selfieSaved = await saveImageToGridFS(selfie, 'selfie');
           frontSaved = await saveImageToGridFS(front, 'front');
           backSaved = await saveImageToGridFS(back, 'back');
         } catch (gridErr) {
-          console.error('GridFS batch upload error, attempting filesystem fallback:', gridErr);
-          // Fallback: move each temp file to disk and build public paths
-          const saveDisk = (image, type) => {
-            if (!image || !image.path) throw new Error(`Invalid image for fallback: ${type}`);
-            const fileExtensionFallback = path.extname(image.name) || '.jpg';
-            const uniqueFilenameFallback = `${loggedInUserId}_${type}_${Date.now()}${fileExtensionFallback}`;
-            const destinationPath = path.join(USER_ROUTER_IMG_IDS_PATH, uniqueFilenameFallback);
-            fs.renameSync(image.path, destinationPath);
-            const publicPath = destinationPath;
-            const fileId = null;
-            return { fileId, publicPath };
+          console.error('GridFS batch upload error:', gridErr);
+          // Attempt to delete any partially uploaded GridFS files to avoid orphaned data
+          const tryDeleteId = async (fid) => {
+            if (!fid) return;
+            try {
+              await gridFSBucket.delete(ObjectId(fid));
+            } catch (e) {
+              // ignore
+            }
           };
-
-          selfieSaved = saveDisk(selfie, 'selfie');
-          frontSaved = saveDisk(front, 'front');
-          backSaved = saveDisk(back, 'back');
+          await tryDeleteId(selfieSaved?.fileId);
+          await tryDeleteId(frontSaved?.fileId);
+          await tryDeleteId(backSaved?.fileId);
+          // ensure temp files removed
+          try { fs.unlinkSync(selfie.path); } catch (e) {}
+          try { fs.unlinkSync(front.path); } catch (e) {}
+          try { fs.unlinkSync(back.path); } catch (e) {}
+          return res.status(500).json({ msg: 'Erreur lors de l\'upload dans GridFS', error: gridErr.message });
         }
 
     // Mettre à jour les chemins des images dans la collection drivingLicensesCollection
