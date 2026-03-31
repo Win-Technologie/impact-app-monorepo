@@ -391,9 +391,7 @@ const AddVehicle = () => {
                   </View>
                 </View>
 
-                <TouchableOpacity style={styles.cameraButton}>
-                  <MaterialIcons name="camera-alt" size={28} color="white" />
-                </TouchableOpacity>
+                {/* Camera button removed per request */}
               </View>
             )}
           </View>
