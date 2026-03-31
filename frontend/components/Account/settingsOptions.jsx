@@ -30,7 +30,7 @@ export default function SettingsOptions({ currentLanguage, appVersion }) {
   };
 
   const handlePressNotifications = () => {
-    //router.push('/notifications');
+    router.push("settings/notifications");
   };
 
   const handlePressAide = () => {
