@@ -1,5 +1,6 @@
 const { getDb } = require("../../mongoConnection");
 const jwt = require("../../utils/jwt");
+const mongoose = require("mongoose");
 
 // VALIDATE INFOS
 const { body, validationResult } = require("express-validator");
@@ -165,8 +166,9 @@ async function addCar(req, res) {
         .json({ message: "Une voiture avec ce numéro de série existe déjà." });
     }
 
-    // Crée une nouvelle voiture
-    const newCar = new Vehicle({
+    // Crée un objet voiture simple (éviter d'insérer le document Mongoose directement)
+    const newCar = {
+      _id: new mongoose.Types.ObjectId().toString(),
       brand,
       model,
       year,
@@ -176,7 +178,9 @@ async function addCar(req, res) {
       owner: ownerId,
       isOwner: isOwner !== undefined ? isOwner : true,
       ...(ownerInfo && { ownerInfo }),
-    });
+      isActive: true,
+      dateAdded: new Date(),
+    };
 
     // Insère la nouvelle voiture dans la collection et met à jour les informations du propriétaire
     await Promise.all([
@@ -198,6 +202,10 @@ async function addCar(req, res) {
       .json({ message: "Voiture ajoutée avec succès", car: newCar });
   } catch (error) {
     console.error("Erreur lors de l'ajout de la voiture :", error);
+    // In development, return error message and stack to help debugging
+    if (process.env.NODE_ENV !== "production") {
+      return res.status(500).json({ error: error.message, stack: error.stack });
+    }
     // En cas d'erreur, renvoyer une réponse d'erreur interne du serveur
     return res.status(500).json({ error: "Erreur interne du serveur" });
   }
