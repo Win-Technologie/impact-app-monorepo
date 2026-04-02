@@ -813,7 +813,10 @@ export default function EditProfile() {
       <ImagePickerModal
         isVisible={visible}
         onClose={() => setVisible(false)}
-        setImage={setSelfieUri}
+        setImage={(img) => {
+          const uri = typeof img === 'string' ? img : img?.uri;
+          setSelfieUri(uri);
+        }}
       />
 
       {/* Confirm Password Modal */}
