@@ -97,10 +97,10 @@ export default function TabsHomeScreen() {
   const getUser = async () => {
     try {
       const userData = JSON.parse(await AsyncStorage.getItem("user"));
-      console.log(userData.vehicles[0].vehicle);
       const token = await AsyncStorage.getItem("userToken");
-      console.log(token);
-      setName(userData.user.name + " " + userData.user.lastName);
+      if (userData?.user) {
+        setName(userData.user.name + " " + userData.user.lastName);
+      }
     } catch (error) {
       console.log(error);
     }

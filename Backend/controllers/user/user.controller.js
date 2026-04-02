@@ -1782,19 +1782,11 @@ async function getUserInfo(userId, vehicleId) {
     } else if (!vehicle) {
       statusCode = 404;
       msg = "Véhicule non trouvé";
-    } else if (!driverLicense) {
-      statusCode = 404;
-      msg = "Permis de conduire introuvable";
     } else {
       let vehicleOwner =
         vehicle.owner !== user._id
           ? await userCollection.findOne({ _id: vehicle.owner })
           : user;
-
-      if (!insurance) {
-        statusCode = 404;
-        msg = "Assurance non trouvée";
-      }
 
       response = {
         owner: {
@@ -1809,8 +1801,8 @@ async function getUserInfo(userId, vehicleId) {
           country: vehicleOwner.country,
         },
         vehicle,
-        insurance,
-        driverLicense,
+        insurance: insurance || null,
+        driverLicense: driverLicense || null,
       };
     }
 

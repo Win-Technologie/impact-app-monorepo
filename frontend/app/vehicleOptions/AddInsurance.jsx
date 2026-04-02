@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   View,
   Text,
@@ -89,7 +89,7 @@ const AddInsurance = () => {
           }}
         >
           <AntDesign
-            name="arrowleft"
+            name="arrow-left"
             size={20}
             color="#19363C"
             style={{ fontWeight: "200" }}

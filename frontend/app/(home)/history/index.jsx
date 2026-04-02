@@ -58,7 +58,7 @@ export default function HistoryPage() {
           <Text style={styles.text2}>{0} accidents</Text>
         </View>
         <AntDesign
-          name="pluscircle"
+          name="plus-circle"
           size={34}
           color="white"
           style={styles.icon}

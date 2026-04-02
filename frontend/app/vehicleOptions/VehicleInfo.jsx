@@ -12,18 +12,20 @@ import { useTranslation } from "react-i18next";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import InputsShowGroup from "../../components/Utils/Inputs/InputsShowGroup";
 import { useRecoilValue } from "recoil";
+import { useLocalSearchParams } from "expo-router";
 import { SelectedVehicleState } from "../../GlobalState/SelectedVehiclesState";
 import { UserInfoState } from "../../GlobalState/UserInfoState";
-import { VehicleUserInfoState } from "../../GlobalState/VehicleUserInfoState";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AntDesign } from "@expo/vector-icons";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.2.21:8000/api/";
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const VehicleInfo = () => {
   const { t } = useTranslation();
   const router = useRouter();
-  const selectedVehicleId = useRecoilValue(SelectedVehicleState);
+  const params = useLocalSearchParams();
+  const recoilVehicleId = useRecoilValue(SelectedVehicleState);
+  const selectedVehicleId = params.vehicleId || recoilVehicleId;
   const ownerDetails = useRecoilValue(UserInfoState);
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -12,6 +12,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import InputsShowGroup from "../../components/Utils/Inputs/InputsShowGroup";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRecoilValue } from "recoil";
+import { useLocalSearchParams } from "expo-router";
 import { UserInfoState } from "../../GlobalState/UserInfoState";
 import { SelectedVehicleState } from "../../GlobalState/SelectedVehiclesState";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -35,10 +36,12 @@ const formatDate = (dateString, format = "year/mm/dd") => {
 const InsuranceInfo = () => {
   const { t } = useTranslation();
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const recoilVehicleId = useRecoilValue(SelectedVehicleState);
+  const selectedVehicleId = params.vehicleId || recoilVehicleId;
+  const ownerDetails = useRecoilValue(UserInfoState);
   const [insuranceDetails, setInsuranceDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-  const selectedVehicleId = useRecoilValue(SelectedVehicleState);
-  const ownerDetails = useRecoilValue(UserInfoState);
   const [userProfile, setUserProfile] = useState(null);
   const [vehicleData, setVehicleData] = useState(null);
 

@@ -1,4 +1,4 @@
-import {
+﻿import {
   StyleSheet,
   Text,
   View,
@@ -121,7 +121,7 @@ export default function GetUserInformation() {
                     <View style={styles.headersContainer}>
                         <TouchableOpacity onPress={() => router.back()}>
                             <View style={styles.headerIcon}>
-                                <AntDesign name="arrowleft" size={24} color="black" />
+                                <AntDesign name="arrow-left" size={24} color="black" />
                                 <Text>Retour</Text>
                             </View>
                         </TouchableOpacity>

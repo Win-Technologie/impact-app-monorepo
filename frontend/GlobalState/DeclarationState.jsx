@@ -1,2 +1,2 @@
 import { atom } from "recoil";
-export const DeclarationState = atom({ key: "declarationState", default: "" });
+export const DeclarationState = atom({ key: "declarationState", default: {} });

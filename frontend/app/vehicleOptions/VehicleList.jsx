@@ -125,17 +125,13 @@ const VehicleList = () => {
   };
 
   const handleNavigateToVehicleInfo = (vehicleId) => {
-    console.log("Navigating to VehicleInfo with ID:", vehicleId);
-    setSelectedVehicleId(vehicleId);
     setGlobalSelectedVehicleId(vehicleId);
-    router.push("vehicleOptions/VehicleInfo");
+    router.push(`vehicleOptions/VehicleInfo?vehicleId=${vehicleId}`);
   };
 
   const handleNavigateToInsurance = (vehicleId) => {
-    console.log("Navigating to Insurance with ID:", vehicleId);
-    setSelectedVehicleId(vehicleId);
     setGlobalSelectedVehicleId(vehicleId);
-    router.push("vehicleOptions/VehicleInsurance");
+    router.push(`vehicleOptions/VehicleInsurance?vehicleId=${vehicleId}`);
   };
 
   const handleAddVehicle = () => {

@@ -2,107 +2,100 @@
   StyleSheet,
   Text,
   View,
-  Button,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
+  Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { router } from "expo-router";
-import InputsShowGroup from "../../../../../components/Utils/Inputs/InputsShowGroup";
 import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import { AntDesign } from "@expo/vector-icons";
-import { useRecoilValue } from "recoil";
-import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
-import Loading from "../../../../../components/Utils/Notification/Loading";
-import { ScannedQrCodeData } from "../../../../../GlobalState/ScannedQrCodeData";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { fetchUserInfoAndVehicle, getMyVehicles } from "../../../../api/users/userApi";
 import { SafeAreaView } from "react-native-safe-area-context";
+import SelectDropdown from "react-native-select-dropdown";
 
 export default function VehicleInfo() {
-  //obtenir la valeur de manière globale
-  const personalInformation = useRecoilValue(ScannedQrCodeData);
+  const ENDPOINT = "users/user/vehicle/info/";
+  const [allVehicles, setAllVehicles] = useState([]);
+  const [showVehicleSelector, setShowVehicleSelector] = useState(false);
 
-  /**
-   * * Contient des informations détaillées sur le véhicule à afficher.
-   */
-  const infoVehicle = [
-    {
-      style: "column",
-      label: "Numéro du certificat d’immatriculation",
-      value: personalInformation?.vehicle?.serialNumber || "non disponible",
-    },
-    {
-      style: "column",
-      label: "Numéro de plaque",
-      value: personalInformation?.vehicle?.plate || "non disponible",
-    },
-    {
-      style: "row",
-      firstLabel: "Modèle du véhicule",
-      valueFirstLabel: personalInformation?.vehicle?.model || "non disponible",
-      secondLabel: "Année",
-      valueSecondLabel:
-        personalInformation?.vehicle?.year?.toString() || "non disponible",
-    },
-    {
-      style: "column",
-      label: "Couleur du véhicule",
-      value: personalInformation?.vehicle?.color || "non disponible",
-    },
-  ];
+  // Vehicle fields - blank by default
+  const [serialNumber, setSerialNumber] = useState("");
+  const [plate, setPlate] = useState("");
+  const [model, setModel] = useState("");
+  const [year, setYear] = useState("");
+  const [color, setColor] = useState("");
 
-  /**
-   * * Contient des informations détaillées sur le proprietaire du véhicule à afficher.
-   */
-  const vehicleOwner = [
-    {
-      style: "column",
-      label: "Prénom",
-      value: personalInformation.owner.name || "non disponible",
-    },
-    {
-      style: "column",
-      label: "Nom",
-      value: personalInformation.owner.lastName || "non disponible",
-    },
-    {
-      style: "column",
-      label: "adresse courriel",
-      value: personalInformation.owner.email || "non disponible",
-    },
-    {
-      style: "column",
-      label: "Numéro de téléphone",
-      value: personalInformation.owner.phone || "non disponible",
-    },
-    {
-      style: "column",
-      label: "Numéro et rue de l'adresse",
-      value: personalInformation.owner.address || "non disponible",
-    },
-    {
-      style: "row",
-      firstLabel: "Ville",
-      valueFirstLabel: personalInformation.owner.city || "non disponible",
-      secondLabel: "Code postale",
-      valueSecondLabel:
-        personalInformation.owner.postalCode || "non disponible",
-    },
-    {
-      style: "row",
-      firstLabel: "Pays",
-      valueFirstLabel: personalInformation.owner.country || "non disponible",
-      secondLabel: "Province",
-      valueSecondLabel: personalInformation.owner.province || "non disponible",
-    },
-  ];
+  // Owner fields - blank by default
+  const [ownerName, setOwnerName] = useState("");
+  const [ownerLastName, setOwnerLastName] = useState("");
+  const [ownerEmail, setOwnerEmail] = useState("");
+  const [ownerPhone, setOwnerPhone] = useState("");
+  const [ownerAddress, setOwnerAddress] = useState("");
+  const [ownerCity, setOwnerCity] = useState("");
+  const [ownerPostalCode, setOwnerPostalCode] = useState("");
+  const [ownerCountry, setOwnerCountry] = useState("");
+  const [ownerProvince, setOwnerProvince] = useState("");
+
+  useEffect(() => {
+    loadMyVehicles();
+  }, []);
+
+  const loadMyVehicles = async () => {
+    const userToken = await AsyncStorage.getItem("userToken");
+    const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
+    if (vehiclesResponse.status === 200) {
+      setAllVehicles(vehiclesResponse.data.carsWithInsurances);
+    }
+  };
+
+  const handleFillFromAccount = () => {
+    if (allVehicles.length === 0) {
+      Alert.alert("Erreur", "Aucun véhicule trouvé dans votre compte.");
+      return;
+    }
+    setShowVehicleSelector(true);
+  };
+
+  const handleVehicleSelect = async (selectedItem) => {
+    const vehicleId = selectedItem?.car?._id;
+    if (!vehicleId) {
+      Alert.alert("Erreur", "Véhicule invalide");
+      return;
+    }
+
+    const userToken = await AsyncStorage.getItem("userToken");
+    try {
+      const result = await fetchUserInfoAndVehicle(vehicleId, userToken, ENDPOINT);
+      if (result.error) throw new Error(`Failed to fetch data: ${result.status}`);
+      const data = result.data;
+      setSerialNumber(data.vehicle?.serialNumber || "");
+      setPlate(data.vehicle?.plate || "");
+      setModel(data.vehicle?.model || "");
+      setYear(data.vehicle?.year?.toString() || "");
+      setColor(data.vehicle?.color || "");
+      setOwnerName(data.owner?.name || "");
+      setOwnerLastName(data.owner?.lastName || "");
+      setOwnerEmail(data.owner?.email || "");
+      setOwnerPhone(data.owner?.phone || "");
+      setOwnerAddress(data.owner?.address || "");
+      setOwnerCity(data.owner?.city || "");
+      setOwnerPostalCode(data.owner?.postalCode || "");
+      setOwnerCountry(data.owner?.country || "");
+      setOwnerProvince(data.owner?.province || "");
+      setShowVehicleSelector(false);
+      Alert.alert("Succès", "Informations remplies depuis votre compte");
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible de charger les informations");
+    }
+  };
 
   const handlePressContinue = () => {
     router.navigate(
-      "/declarations/twoPersonnes/InfoPersons/myInfo/assuranceInfo",
+      "/declarations/twoPersonnes/InfoPersons/otherInfo/assuranceInfo",
     );
   };
 
@@ -122,7 +115,7 @@ export default function VehicleInfo() {
           }}
         >
           <AntDesign
-            name="arrowleft"
+            name="arrow-left"
             size={20}
             color="#19363C"
             style={{ fontWeight: "200" }}
@@ -132,34 +125,89 @@ export default function VehicleInfo() {
 
         <View>
           <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            Information d'assurance
+            Informations du véhicule
           </Text>
         </View>
       </View>
 
-      <ScrollView keyboardShouldPersistTaps="handled">
-        <View style={styles.contentContainer}>
-          {infoVehicle.length === 0 ? (
-            <Loading text="Chargement..." />
-          ) : (
-            <InputsShowGroup dataToShow={infoVehicle} />
-          )}
-          <View>
-            <Text
-              style={[
-                styles.headerTitle,
-                styles.marginSpace,
-                styles.centerText,
-              ]}
-            >
-              Informations du propriétaire
-            </Text>
-            {vehicleOwner.length === 0 ? (
-              <Loading text="Chargement" />
-            ) : (
-              <InputsShowGroup dataToShow={vehicleOwner} />
+      {showVehicleSelector && (
+        <View style={styles.fillFromAccountContainer}>
+          <Text style={styles.fillFromAccountTitle}>
+            Sélectionnez un véhicule de votre compte:
+          </Text>
+          <SelectDropdown
+            data={allVehicles}
+            defaultButtonText="Choisir un véhicule"
+            onSelect={handleVehicleSelect}
+            buttonTextAfterSelection={(selectedItem) =>
+              selectedItem?.car?.model
+            }
+            rowTextForSelection={(item) => item.car.model}
+            buttonStyle={styles.dropdownBtnStyle}
+            buttonTextStyle={styles.dropdownBtnTxtStyle}
+            dropdownStyle={styles.dropdownDropdownStyle}
+            rowStyle={styles.dropdownRowStyle}
+            rowTextStyle={styles.dropdownRowTxtStyle}
+            renderDropdownIcon={() => (
+              <AntDesign name="down" size={14} color="gray" />
             )}
-          </View>
+          />
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => setShowVehicleSelector(false)}
+          >
+            <Text style={styles.cancelButtonText}>Annuler</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <ScrollView keyboardShouldPersistTaps="handled">
+        <View style={styles.fillButtonContainer}>
+          <TouchableOpacity
+            style={styles.fillFromAccountButton}
+            onPress={handleFillFromAccount}
+          >
+            <AntDesign name="car" size={20} color="#0B8BA8" />
+            <Text style={styles.fillFromAccountText}>
+              Remplir a partir du compte
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.contentContainer}>
+          <Text style={styles.fieldLabel}>Numéro du certificat d'immatriculation</Text>
+          <TextInput style={styles.input} value={serialNumber} onChangeText={setSerialNumber} />
+          <Text style={styles.fieldLabel}>Numéro de plaque</Text>
+          <TextInput style={styles.input} value={plate} onChangeText={setPlate} />
+          <Text style={styles.fieldLabel}>Modèle du véhicule</Text>
+          <TextInput style={styles.input} value={model} onChangeText={setModel} />
+          <Text style={styles.fieldLabel}>Année</Text>
+          <TextInput style={styles.input} value={year} onChangeText={setYear} keyboardType="numeric" />
+          <Text style={styles.fieldLabel}>Couleur du véhicule</Text>
+          <TextInput style={styles.input} value={color} onChangeText={setColor} />
+
+          <Text style={[styles.headerTitle, styles.marginSpace, styles.centerText]}>
+            Informations du propriétaire
+          </Text>
+
+          <Text style={styles.fieldLabel}>Prénom</Text>
+          <TextInput style={styles.input} value={ownerName} onChangeText={setOwnerName} />
+          <Text style={styles.fieldLabel}>Nom</Text>
+          <TextInput style={styles.input} value={ownerLastName} onChangeText={setOwnerLastName} />
+          <Text style={styles.fieldLabel}>Adresse courriel</Text>
+          <TextInput style={styles.input} value={ownerEmail} onChangeText={setOwnerEmail} keyboardType="email-address" />
+          <Text style={styles.fieldLabel}>Numéro de téléphone</Text>
+          <TextInput style={styles.input} value={ownerPhone} onChangeText={setOwnerPhone} keyboardType="phone-pad" />
+          <Text style={styles.fieldLabel}>Numéro et rue de l'adresse</Text>
+          <TextInput style={styles.input} value={ownerAddress} onChangeText={setOwnerAddress} />
+          <Text style={styles.fieldLabel}>Ville</Text>
+          <TextInput style={styles.input} value={ownerCity} onChangeText={setOwnerCity} />
+          <Text style={styles.fieldLabel}>Code postal</Text>
+          <TextInput style={styles.input} value={ownerPostalCode} onChangeText={setOwnerPostalCode} />
+          <Text style={styles.fieldLabel}>Pays</Text>
+          <TextInput style={styles.input} value={ownerCountry} onChangeText={setOwnerCountry} />
+          <Text style={styles.fieldLabel}>Province</Text>
+          <TextInput style={styles.input} value={ownerProvince} onChangeText={setOwnerProvince} />
         </View>
       </ScrollView>
 
@@ -211,6 +259,22 @@ const styles = StyleSheet.create({
     marginBottom: 50,
   },
 
+  fieldLabel: {
+    color: "#b4b4b5",
+    marginBottom: 5,
+    fontSize: 12,
+  },
+
+  input: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 15,
+    marginBottom: 7,
+    backgroundColor: "#fafafa",
+  },
+
   titleText: {
     fontSize: 23,
     marginBottom: 30,
@@ -233,16 +297,88 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: 20,
-  },
-
   footContainer: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
+  },
+
+  fillButtonContainer: {
+    marginVertical: 15,
+  },
+
+  fillFromAccountButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#0B8BA8",
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+  },
+
+  fillFromAccountText: {
+    color: "#0B8BA8",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  fillFromAccountContainer: {
+    backgroundColor: "#f8f9fa",
+    padding: 15,
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+
+  fillFromAccountTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#19363C",
+    marginBottom: 10,
+  },
+
+  dropdownBtnStyle: {
+    width: "100%",
+    height: 49,
+    backgroundColor: "#FFF",
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 10,
+  },
+
+  dropdownBtnTxtStyle: {
+    color: "#444",
+    textAlign: "left",
+  },
+
+  dropdownDropdownStyle: {
+    backgroundColor: "#EFEFEF",
+  },
+
+  dropdownRowStyle: {
+    backgroundColor: "#EFEFEF",
+    borderBottomColor: "#C5C5C5",
+  },
+
+  dropdownRowTxtStyle: {
+    color: "#444",
+    textAlign: "left",
+  },
+
+  cancelButton: {
+    backgroundColor: "#6c757d",
+    padding: 12,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+
+  cancelButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

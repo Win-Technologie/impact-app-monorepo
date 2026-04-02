@@ -12,7 +12,7 @@ export default function SearchInput() {
   return (
     <View style={styles.container}>
       <AntDesign
-        name="search1"
+        name="search"
         size={20}
         color="grey"
         style={styles.iconLeft}

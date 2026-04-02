@@ -1,4 +1,4 @@
-﻿import {
+import {
   StyleSheet,
   Text,
   View,
@@ -23,6 +23,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function VehicleInfo() {
   //obtenir la valeur de manière globale
   const personalInformation = useRecoilValue(globalPersonalInfo);
+  const vehicle = personalInformation?.vehicle || {};
+  const owner = personalInformation?.owner || {};
 
   /**
    * * Contient des informations détaillées sur le véhicule à afficher.
@@ -31,25 +33,25 @@ export default function VehicleInfo() {
     {
       style: "column",
       label: "Numéro du certificat d’immatriculation",
-      value: personalInformation.vehicle.serialNumber || "non disponible",
+      value: vehicle.serialNumber || "non disponible",
     },
     {
       style: "column",
       label: "Numéro de plaque",
-      value: personalInformation.vehicle.plate || "non disponible",
+      value: vehicle.plate || "non disponible",
     },
     {
       style: "row",
       firstLabel: "Modèle du véhicule",
-      valueFirstLabel: personalInformation.vehicle.model || "non disponible",
+      valueFirstLabel: vehicle.model || "non disponible",
       secondLabel: "Année",
       valueSecondLabel:
-        personalInformation.vehicle.year.toString() || "non disponible",
+        vehicle.year?.toString() || "non disponible",
     },
     {
       style: "column",
       label: "Couleur du véhicule",
-      value: personalInformation.vehicle.color || "non disponible",
+      value: vehicle.color || "non disponible",
     },
   ];
 
@@ -60,42 +62,42 @@ export default function VehicleInfo() {
     {
       style: "column",
       label: "Prénom",
-      value: personalInformation.owner.name || "non disponible",
+      value: owner.name || "non disponible",
     },
     {
       style: "column",
       label: "Nom",
-      value: personalInformation.owner.lastName || "non disponible",
+      value: owner.lastName || "non disponible",
     },
     {
       style: "column",
       label: "adresse courriel",
-      value: personalInformation.owner.email || "non disponible",
+      value: owner.email || "non disponible",
     },
     {
       style: "column",
       label: "Numéro de téléphone",
-      value: personalInformation.owner.phone || "non disponible",
+      value: owner.phone || "non disponible",
     },
     {
       style: "column",
       label: "Numéro et rue de l'adresse",
-      value: personalInformation.owner.address || "non disponible",
+      value: owner.address || "non disponible",
     },
     {
       style: "row",
       firstLabel: "Ville",
-      valueFirstLabel: personalInformation.owner.city || "non disponible",
+      valueFirstLabel: owner.city || "non disponible",
       secondLabel: "Code postale",
       valueSecondLabel:
-        personalInformation.owner.postalCode || "non disponible",
+        owner.postalCode || "non disponible",
     },
     {
       style: "row",
       firstLabel: "Pays",
-      valueFirstLabel: personalInformation.owner.country || "non disponible",
+      valueFirstLabel: owner.country || "non disponible",
       secondLabel: "Province",
-      valueSecondLabel: personalInformation.owner.province || "non disponible",
+      valueSecondLabel: owner.province || "non disponible",
     },
   ];
 
@@ -121,7 +123,7 @@ export default function VehicleInfo() {
           }}
         >
           <AntDesign
-            name="arrowleft"
+            name="arrow-left"
             size={20}
             color="#19363C"
             style={{ fontWeight: "200" }}
@@ -131,7 +133,7 @@ export default function VehicleInfo() {
 
         <View>
           <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            Information d'assurance
+            Informations du véhicule
           </Text>
         </View>
       </View>

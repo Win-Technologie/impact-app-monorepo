@@ -6,6 +6,7 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import AnimatedButton from "../../../components/SignUp/animatedButton";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
@@ -29,45 +30,77 @@ const otherspecification = () => {
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
   const [otherSpec, setOtherSpec] = useState(null);
 
-  const handlePress = (type) => {
-    setSelectedType(type);
-    setShowAdditionalInput(type === "Accrochage avec un véhicule vide");
-    setShowAccidentTypeInput(type === "Autre");
-  };
-
   const back = () => {
-    router.back();
+    try {
+      router.back();
+    } catch (error) {
+      console.error("Navigation error:", error);
+      Alert.alert("Erreur", "Impossible de revenir en arrière");
+    }
   };
 
   const next = () => {
-    setDeclaration({
-      ...declaration,
-      otherSpecification: otherSpec,
-      images: images,
-    });
+    try {
+      setDeclaration({
+        ...declaration,
+        otherSpecification: otherSpec || "",
+        images: images || [],
+      });
 
-    console.log(declaration);
+      console.log(declaration);
 
-    router.navigate("declarations/onePersonne/submitDeclaration");
+      router.navigate("declarations/onePersonne/submitDeclaration");
+    } catch (error) {
+      console.error("Navigation error:", error);
+      Alert.alert("Erreur", "Impossible de continuer. Veuillez réessayer.");
+    }
+  };
+
+  const generateTestSpecifications = () => {
+    const testSpecs = [
+      "Le véhicule a percuté un poteau d'éclairage public sur le côté droit. Dommages importants à l'avant du véhicule.",
+      "Accident causé par une perte de contrôle sur chaussée glissante. Aucun autre véhicule impliqué. Dommages légers.",
+      "Le rétroviseur latéral a été endommagé lors d'une manoeuvre de stationnement. Rayures sur la porte conducteur.",
+      "Impact avec un véhicule stationné sans surveillance. Pare-choc avant endommagé. Pas de blessés.",
+      "Accrochage mineur dans un stationnement. Éraflures sur le pare-choc arrière. L'autre véhicule était vide.",
+    ];
+    const randomSpec = testSpecs[Math.floor(Math.random() * testSpecs.length)];
+    setOtherSpec(randomSpec);
   };
 
   const openPickupImage = () => {
-    setVisible(true);
+    try {
+      setVisible(true);
+    } catch (error) {
+      console.error("Image picker error:", error);
+      Alert.alert("Erreur", "Impossible d'ouvrir le sélecteur d'images");
+    }
   };
 
   const removeImage = (obj) => {
-    var arr = images;
-    arr = arr.filter((item) => item !== obj);
-    setImages(arr);
+    try {
+      if (!obj || !images) {
+        console.warn("Invalid image object or images array");
+        return;
+      }
+      const updatedImages = images.filter((item) => item !== obj);
+      setImages([...updatedImages]);
+    } catch (error) {
+      console.error("Error removing image:", error);
+      Alert.alert("Erreur", "Impossible de supprimer l'image");
+    }
   };
 
   useEffect(() => {
-    if (!visible && image != null) {
-      const tab = images;
-      tab.push({ id: tab.length, image: image.uri });
-
-      setImages(tab);
-      setImage(null);
+    try {
+      if (!visible && image != null && image.uri) {
+        const newImage = { id: images.length, image: image.uri };
+        setImages([...images, newImage]);
+        setImage(null);
+      }
+    } catch (error) {
+      console.error("Error adding image:", error);
+      Alert.alert("Erreur", "Impossible d'ajouter l'image");
     }
   }, [visible]);
 
@@ -83,6 +116,13 @@ const otherspecification = () => {
         <Text style={styles.title}>
           Avez-vous d'autre spécifications à ajouter ?
         </Text>
+
+        <TouchableOpacity
+          style={styles.testButton}
+          onPress={generateTestSpecifications}
+        >
+          <Text style={styles.testButtonText}>Générer texte test</Text>
+        </TouchableOpacity>
 
         <View style={styles.inputSection}>
           <TextInput
@@ -280,6 +320,20 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+
+  testButton: {
+    backgroundColor: "#6c757d",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  testButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
   },
 
   UploadButton: {

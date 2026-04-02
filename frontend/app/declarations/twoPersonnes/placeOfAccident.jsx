@@ -1,22 +1,23 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TextInput,
   ScrollView,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import AnimatedButton from "../../../components/SignUp/animatedButton";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import Stepper from "../../../components/SignUp/stepper";
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { router } from "expo-router";
 import * as Location from "expo-location";
 import { DeclarationState } from "../../../GlobalState/DeclarationState";
 import { useRecoilState } from "recoil";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const placeOfAccident = () => {
   const [selectedType, setSelectedType] = useState("");
@@ -27,59 +28,115 @@ const placeOfAccident = () => {
   const [accidentType, setAccidentType] = useState("");
   const [plateNumber, setPlateNumber] = useState("");
   const [location, setLocation] = useState(null);
-  const [place, setPlace] = useState(null);
+  const [place, setPlace] = useState("");
   const [errorMsg, setErrorMsg] = useState(null);
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+  const [selectedCoords, setSelectedCoords] = useState(null);
+  const googlePlacesRef = useRef(null);
 
   console.log(declaration);
 
   const back = () => {
-    router.back();
+    try {
+      router.back();
+    } catch (error) {
+      console.error("Navigation error:", error);
+      Alert.alert("Erreur", "Impossible de revenir en arrière");
+    }
   };
 
   const next = () => {
-    if (place) {
-      setDeclaration({ ...declaration, place: place });
-      router.navigate("declarations/onePersonne/hourOfAccident");
-    } else {
-      Alert.alert(
-        "Erreur",
-        "Vous devez choisir le lieux de l'accident avant de continuer",
-        [
-          {
-            text: "Ok",
-            onPress: () => null,
-            style: "cancel",
-          },
-        ],
-      );
+    try {
+      if (place) {
+        setDeclaration({ ...declaration, place: place });
+        router.navigate("declarations/twoPersonnes/hourOfAccident");
+      } else {
+        Alert.alert(
+          "Erreur",
+          "Vous devez choisir le lieux de l'accident avant de continuer",
+          [
+            {
+              text: "Ok",
+              onPress: () => null,
+              style: "cancel",
+            },
+          ],
+        );
+      }
+    } catch (error) {
+      console.error("Navigation error:", error);
+      Alert.alert("Erreur", "Impossible de continuer. Veuillez réessayer.");
     }
   };
 
   const selectPlace = (data, details) => {
-    console.log(data.description);
-    setPlace(data.description);
+    try {
+      if (data && data.description) {
+        console.log(data.description);
+        setPlace(data.description);
+      } else {
+        console.warn("Invalid place data:", data);
+      }
+    } catch (error) {
+      console.error("Error selecting place:", error);
+      Alert.alert("Erreur", "Impossible de sélectionner cet endroit");
+    }
+  };
+
+  const handleMapLongPress = async (event) => {
+    try {
+      const coords = event.nativeEvent.coordinate;
+      setSelectedCoords(coords);
+
+      // Reverse geocode the coordinates
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.latitude},${coords.longitude}&key=AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY&language=fr`
+      );
+
+      const data = await response.json();
+
+      if (data.results && data.results.length > 0) {
+        const address = data.results[0].formatted_address;
+        setPlace(address);
+        // Set the text in the Google Places input field
+        if (googlePlacesRef.current) {
+          googlePlacesRef.current.setAddressText(address);
+        }
+        Alert.alert("Emplacement sélectionné", address);
+      } else {
+        Alert.alert("Erreur", "Impossible de trouver l'adresse pour cet emplacement");
+      }
+    } catch (error) {
+      console.error("Error handling map long press:", error);
+      Alert.alert("Erreur", "Impossible de sélectionner l'emplacement");
+    }
   };
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
 
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        return;
+        if (status !== "granted") {
+          setErrorMsg("Permission to access location was denied");
+          console.warn("Location permission denied");
+          return;
+        }
+
+        let l = await Location.getCurrentPositionAsync({});
+
+        console.log(l);
+
+        setLocation({
+          latitude: l.coords.latitude,
+          longitude: l.coords.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        });
+      } catch (error) {
+        console.error("Error getting location:", error);
+        setErrorMsg("Unable to get location");
       }
-
-      let l = await Location.getCurrentPositionAsync({});
-
-      console.log(l);
-
-      setLocation({
-        latitude: l.coords.latitude,
-        longitude: l.coords.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      });
     })();
   }, []);
 
@@ -91,17 +148,41 @@ const placeOfAccident = () => {
         style={styles.stepper}
       />
 
-      <View style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}> Ou l'accident a t-il eu lieu ? </Text>
 
-        <View style={{ zIndex: 9999, marginTop: 30, height: 400 }}>
+        <View style={{ zIndex: 9999, marginTop: 20 }}>
           <GooglePlacesAutocomplete
-            placeholder="chercher une adresse"
-            query={{ key: "AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY" }}
+            ref={googlePlacesRef}
+            placeholder="chercher une adresse"            textInputValue={place}            query={{
+              key: "AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY",
+              language: 'fr',
+              components: 'country:fr',
+            }}
             fetchDetails={true}
             onPress={(data, details = null) => selectPlace(data, details)}
-            onFail={(error) => console.log(error)}
-            onNotFound={() => console.log("no results")}
+            onFail={(error) => {
+              console.error("Google Places API error:", error);
+              Alert.alert("Erreur", "Impossible de rechercher l'adresse. Vérifiez votre connexion internet.");
+            }}
+            onNotFound={() => {
+              console.log("no results");
+              Alert.alert("Information", "Aucune adresse trouvée. Essayez une autre recherche.");
+            }}
+            enablePoweredByContainer={false}
+            listViewDisplayed='auto'
+            keepResultsAfterBlur={true}
+            predefinedPlaces={[]}
+            debounce={400}
+            minLength={2}
+            nearbyPlacesAPI='GooglePlacesSearch'
+            textInputProps={{
+              onFocus: () => {},
+              onBlur: () => {},
+              autoCorrect: false,
+              autoCapitalize: 'none',
+              onChangeText: (text) => setPlace(text),
+            }}
             styles={{
               textInput: {
                 borderRadius: 5,
@@ -113,8 +194,29 @@ const placeOfAccident = () => {
           />
         </View>
 
-        {location && <MapView style={styles.map} initialRegion={location} />}
-      </View>
+        <View style={styles.mapContainer}>
+          <MapView 
+            style={styles.map} 
+            initialRegion={location || {
+              latitude: 45.5017,
+              longitude: -73.5673,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+            showsUserLocation={true}
+            showsMyLocationButton={true}
+            onLongPress={handleMapLongPress}
+          >
+            {selectedCoords && (
+              <Marker
+                coordinate={selectedCoords}
+                pinColor="red"
+                title="Émplacement sélectionné"
+              />
+            )}
+          </MapView>
+        </View>
+      </ScrollView>
 
       {/*<View style={{
                 position: "absolute",
@@ -170,6 +272,11 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
+    padding: 20,
+  },
+
+  scrollContent: {
+    paddingBottom: 100,
   },
 
   title: {
@@ -180,12 +287,19 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
 
+  mapContainer: {
+    width: '100%',
+    height: 400,
+    marginTop: 20,
+    marginBottom: 20,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#e0e0e0',
+  },
+
   map: {
-    position: "absolute",
-    width: "120%",
-    marginLeft: -20,
-    height: 900,
-    top: 80,
+    width: '100%',
+    height: '100%',
   },
 
   buttonContainer: {

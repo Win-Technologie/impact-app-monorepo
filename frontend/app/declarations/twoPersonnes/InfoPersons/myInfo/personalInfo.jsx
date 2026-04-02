@@ -1,4 +1,5 @@
-﻿import {
+﻿import React, { useState, useEffect } from "react";
+import {
   StyleSheet,
   Text,
   View,
@@ -10,7 +11,6 @@
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect } from "react";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useForm, Controller } from "react-hook-form";
@@ -25,19 +25,50 @@ import Loading from "../../../../../components/Utils/Notification/Loading";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PersonanalInformation() {
-  //obtenir la valeur de manière globale
   const VEHICLE_ID = useRecoilValue(accidentVehicleState);
   const ENDPOINT = "users/user/vehicle/info/";
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
   const [userData, setUserData] = useState(null);
   const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
-  const [isEditable, setIsEditable] = useState(true);
   const userInfo = useRecoilValue(globalPersonalInfo);
 
-  //obtenir les données au moment du rendu du composant
   useEffect(() => {
-    //  userInformation()
-    createDataUser(userInfo);
-  }, []);
+    if (userInfo?.owner?.name || userInfo?.owner?.email) {
+      createDataUser(userInfo);
+    } else {
+      // No vehicle selected or owner data not loaded — fetch profile directly from API
+      fetchProfileFromApi();
+    }
+  }, [userInfo]);
+
+  const fetchProfileFromApi = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      const userId = JSON.parse(await AsyncStorage.getItem("user"))?.user?._id;
+      if (!token || !userId) { setUserData([]); return; }
+      const response = await fetch(`${API_URL}users/user/profile/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok && data.user) {
+        const u = data.user;
+        setUserData([
+          { style: "column", label: "Prénom", value: u.name || "non disponible" },
+          { style: "column", label: "Nom", value: u.lastName || "non disponible" },
+          { style: "row", firstLabel: "Numéro du permis de conduire", valueFirstLabel: u.driverLicense?.number || "non disponible", secondLabel: "Expiration", valueSecondLabel: u.driverLicense?.expires || "non disponible" },
+          { style: "column", label: "adresse courriel", value: u.email || "non disponible" },
+          { style: "column", label: "Numéro de téléphone", value: u.phone || "non disponible" },
+          { style: "column", label: "Numéro et rue de l'adresse", value: u.address || "non disponible" },
+          { style: "row", firstLabel: "Ville", valueFirstLabel: u.city || "non disponible", secondLabel: "Code postale", valueSecondLabel: u.postalCode || "non disponible" },
+          { style: "row", firstLabel: "Pays", valueFirstLabel: u.country || "non disponible", secondLabel: "Province", valueSecondLabel: u.province || "non disponible" },
+        ]);
+      } else {
+        setUserData([]);
+      }
+    } catch {
+      setUserData([]);
+    }
+  };
 
   /**
    * Crée et organise les données de l'utilisateur pour l'affichage.
@@ -63,9 +94,9 @@ export default function PersonanalInformation() {
       {
         style: "row",
         firstLabel: "Numéro du permis de conduire",
-        valueFirstLabel: data.driverLicense.number || "non disponible",
+        valueFirstLabel: data.driverLicense?.number || "non disponible",
         secondLabel: "Expiration",
-        valueSecondLabel: data.driverLicense.expires || "non disponible",
+        valueSecondLabel: data.driverLicense?.expires || "non disponible",
       },
       {
         style: "column",
@@ -122,7 +153,7 @@ export default function PersonanalInformation() {
           }}
         >
           <AntDesign
-            name="arrowleft"
+            name="arrow-left"
             size={20}
             color="#19363C"
             style={{ fontWeight: "200" }}
@@ -140,8 +171,14 @@ export default function PersonanalInformation() {
 
       <ScrollView keyboardShouldPersistTaps="handled">
         <View style={styles.contentContainer}>
-          {!userData ? (
+          {userData === null ? (
             <Loading text="Loading.." />
+          ) : userData.length === 0 ? (
+            <>
+              <Text style={{ textAlign: "center", color: "gray", marginTop: 20 }}>
+                Informations non disponibles. Veuillez sélectionner un véhicule.
+              </Text>
+            </>
           ) : (
             <InputsShowGroup dataToShow={userData} editable={true} />
           )}

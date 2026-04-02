@@ -21,7 +21,7 @@ export default function ImagePickerModal({ isVisible, onClose, setImage }) {
         quality: 1,
       });
       if (!result.canceled && result.assets && result.assets[0] && result.assets[0].uri) {
-        setImage(result.assets[0].uri);
+        setImage(result.assets[0]);
         onClose();
       }
     } else {
@@ -37,7 +37,7 @@ export default function ImagePickerModal({ isVisible, onClose, setImage }) {
         quality: 1,
       });
       if (!result.canceled && result.assets && result.assets[0] && result.assets[0].uri) {
-        setImage(result.assets[0].uri);
+        setImage(result.assets[0]);
         onClose();
       }
     }

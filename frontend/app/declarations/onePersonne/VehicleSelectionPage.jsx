@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -27,25 +27,44 @@ const VehicleSelectionPage = () => {
   }, []);
 
   const loadVehicles = async () => {
-    const userToken = await AsyncStorage.getItem("userToken");
-    const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
-    if (vehiclesResponse.status === 200) {
-      //console.log(vehiclesResponse.data.carsWithInsurances)
-      setAllVehicles(vehiclesResponse.data.carsWithInsurances);
-    } else {
-      Alert.alert("Erreur", "Échec du chargement des véhicules.");
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+      if (!userToken) {
+        Alert.alert("Erreur", "Session expirée. Veuillez vous reconnecter.");
+        return;
+      }
+      
+      const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
+      if (vehiclesResponse && vehiclesResponse.status === 200) {
+        const vehicles = vehiclesResponse.data?.carsWithInsurances;
+        if (vehicles && Array.isArray(vehicles)) {
+          setAllVehicles(vehicles);
+        } else {
+          console.warn("No vehicles data received");
+          setAllVehicles([]);
+        }
+      } else {
+        Alert.alert("Erreur", "Échec du chargement des véhicules.");
+      }
+    } catch (error) {
+      console.error("Error loading vehicles:", error);
+      Alert.alert("Erreur", "Impossible de charger vos véhicules. Veuillez réessayer.");
     }
   };
 
   const handleVehicleSelect = (selectedItem) => {
-    const vehicleId = selectedItem?.car?._id;
-    if (vehicleId) {
-      setSelectedVehicleId(vehicleId);
-      setVehiculeState(vehicleId);
-      //Alert.alert("Succès", `Véhicule ${selectedItem?.car?.model} sélectionné.`);
-      router.push("./typeOfAccident");
-    } else {
-      //Alert.alert("Erreur", "Sélection de véhicule invalide. Veuillez réessayer.");
+    try {
+      const vehicleId = selectedItem?.car?._id;
+      if (vehicleId) {
+        setSelectedVehicleId(vehicleId);
+        setVehiculeState(vehicleId);
+        router.push("./typeOfAccident");
+      } else {
+        Alert.alert("Erreur", "Sélection de véhicule invalide. Veuillez réessayer.");
+      }
+    } catch (error) {
+      console.error("Error selecting vehicle:", error);
+      Alert.alert("Erreur", "Impossible de sélectionner ce véhicule.");
     }
   };
 
@@ -56,7 +75,7 @@ const VehicleSelectionPage = () => {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <AntDesign name="arrowleft" size={20} color="#19363C" />
+          <AntDesign name="arrow-left" size={20} color="#19363C" />
           <Text style={styles.backText}>{"   "}Retour</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Sélectionner un véhicule</Text>
@@ -67,23 +86,52 @@ const VehicleSelectionPage = () => {
           <Text style={styles.titleSelect}>
             Veuillez sélectionner un véhicule:
           </Text>
-          <SelectDropdown
-            data={allVehicles}
-            defaultButtonText="Choisir une voiture"
-            onSelect={handleVehicleSelect}
-            buttonTextAfterSelection={(selectedItem) =>
-              selectedItem?.car?.model
-            }
-            rowTextForSelection={(item) => item.car.model}
-            buttonStyle={styles.dropdownBtnStyle}
-            buttonTextStyle={styles.dropdownBtnTxtStyle}
-            dropdownStyle={styles.dropdownDropdownStyle}
-            rowStyle={styles.dropdownRowStyle}
-            rowTextStyle={styles.dropdownRowTxtStyle}
-            renderDropdownIcon={() => (
-              <AntDesign name="down" size={14} color="gray" />
-            )}
-          />
+          
+          {allVehicles.length <= 8 ? (
+            // Show vehicle cards when 8 or fewer vehicles
+            <View style={styles.cardsContainer}>
+              {allVehicles.map((vehicle, index) => (
+                <TouchableOpacity
+                  key={vehicle?.car?._id || index}
+                  style={[
+                    styles.vehicleCard,
+                    selectedVehicleId === vehicle?.car?._id && styles.vehicleCardSelected
+                  ]}
+                  onPress={() => handleVehicleSelect(vehicle)}
+                >
+                  <View style={styles.vehicleCardContent}>
+                    <Text style={styles.vehicleModel}>{vehicle?.car?.model || 'Véhicule'}</Text>
+                    <Text style={styles.vehiclePlate}>{vehicle?.car?.license_plate || ''}</Text>
+                    {vehicle?.car?.brand && (
+                      <Text style={styles.vehicleBrand}>{vehicle.car.brand}</Text>
+                    )}
+                  </View>
+                  {selectedVehicleId === vehicle?.car?._id && (
+                    <AntDesign name="checkcircle" size={24} color="#4CAF50" style={styles.checkIcon} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            // Show dropdown when more than 6 vehicles
+            <SelectDropdown
+              data={allVehicles}
+              defaultButtonText="Choisir une voiture"
+              onSelect={handleVehicleSelect}
+              buttonTextAfterSelection={(selectedItem) =>
+                selectedItem?.car?.model
+              }
+              rowTextForSelection={(item) => item.car.model}
+              buttonStyle={styles.dropdownBtnStyle}
+              buttonTextStyle={styles.dropdownBtnTxtStyle}
+              dropdownStyle={styles.dropdownDropdownStyle}
+              rowStyle={styles.dropdownRowStyle}
+              rowTextStyle={styles.dropdownRowTxtStyle}
+              renderDropdownIcon={() => (
+                <AntDesign name="down" size={14} color="gray" />
+              )}
+            />
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -150,6 +198,49 @@ const styles = StyleSheet.create({
   dropdownRowTxtStyle: {
     color: "#444",
     textAlign: "left",
+  },
+  cardsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  vehicleCard: {
+    width: "48%",
+    backgroundColor: "#FFF",
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#E0E0E0",
+    padding: 15,
+    marginBottom: 15,
+    minHeight: 100,
+    justifyContent: "space-between",
+  },
+  vehicleCardSelected: {
+    borderColor: "#4CAF50",
+    backgroundColor: "#F1F8F4",
+  },
+  vehicleCardContent: {
+    flex: 1,
+  },
+  vehicleModel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#19363C",
+    marginBottom: 5,
+  },
+  vehiclePlate: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 3,
+  },
+  vehicleBrand: {
+    fontSize: 12,
+    color: "#999",
+  },
+  checkIcon: {
+    alignSelf: "flex-end",
+    marginTop: 5,
   },
 });
 

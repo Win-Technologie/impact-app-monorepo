@@ -140,7 +140,7 @@ export default function InfoDeBase() {
           }}
         >
           <AntDesign
-            name="arrowleft"
+            name="arrow-left"
             size={20}
             color="#19363C"
             style={{ fontWeight: "200" }}
@@ -165,7 +165,7 @@ export default function InfoDeBase() {
 
       <View style={styles.footContainer}>
         <TouchableOpacity
-          onaPress={next}
+          onPress={next}
           style={{
             backgroundColor: "#0B8BA8",
             height: 50,

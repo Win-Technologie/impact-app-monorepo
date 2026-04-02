@@ -72,7 +72,7 @@ export default function HistoryPage() {
           </Text>
         </View>
         <AntDesign
-          name="pluscircle"
+          name="plus-circle"
           size={34}
           color="white"
           style={styles.icon}

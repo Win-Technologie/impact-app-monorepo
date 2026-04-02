@@ -2,98 +2,35 @@
   StyleSheet,
   Text,
   View,
-  Button,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
   TextInput,
   TouchableOpacity,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { router } from "expo-router";
-import InputsShowGroup from "../../../../../components/Utils/Inputs/InputsShowGroup";
 import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import { AntDesign } from "@expo/vector-icons";
-import { useRecoilValue } from "recoil";
-import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
-import Loading from "../../../../../components/Utils/Notification/Loading";
-import { ScannedQrCodeData } from "../../../../../GlobalState/ScannedQrCodeData";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function assuranceInfo() {
-  // obtenir la valeur de manière globale
-  const personalInformation = useRecoilValue(ScannedQrCodeData);
+  // Insurance fields - blank by default
+  const [insuranceCompany, setInsuranceCompany] = useState("");
+  const [policyNumber, setPolicyNumber] = useState("");
+  const [expirationDate, setExpirationDate] = useState("");
 
-  /**
-   * * Contient des informations détaillées sur l'assurance à afficher.
-   */
-  const infoInsurance = [
-    {
-      style: "column",
-      label: "Nom de la société d’assurance",
-      value: personalInformation.insurance.insuranceCompany || "non disponible",
-    },
-    {
-      style: "row",
-      firstLabel: "Numéro d’assurance ",
-      valueFirstLabel:
-        personalInformation.insurance.policyNumber || "non disponible",
-      secondLabel: "Expiration",
-      valueSecondLabel:
-        personalInformation.insurance.expirationDate.slice(0, 10) ||
-        "non disponible",
-    },
-  ];
+  // Insured person fields - blank by default
+  const [name, setName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("");
+  const [province, setProvince] = useState("");
 
-  /**
-   * Contient des informations détaillées sur l'assurance d'utilisateur à afficher.
-   */
-  const userDataInsurance = [
-    {
-      style: "column",
-      label: "Prénom",
-      value: personalInformation.owner.name || "non disponible",
-    },
-    {
-      style: "column",
-      label: "Nom",
-      value: personalInformation.owner.lastName || "non disponible",
-    },
-    {
-      style: "column",
-      label: "adresse courriel",
-      value: personalInformation.owner.email || "non disponible",
-    },
-    {
-      style: "column",
-      label: "Numéro de téléphone",
-      value: personalInformation.owner.phone || "non disponible",
-    },
-    {
-      style: "column",
-      label: "Numéro et rue de l'adresse",
-      value: personalInformation.owner.address || "non disponible",
-    },
-    {
-      style: "row",
-      firstLabel: "Ville",
-      valueFirstLabel: personalInformation.owner.city || "non disponible",
-      secondLabel: "Code postale",
-      valueSecondLabel:
-        personalInformation.owner.postalCode || "non disponible",
-    },
-    {
-      style: "row",
-      firstLabel: "Pays",
-      valueFirstLabel: personalInformation.owner.country || "non disponible",
-      secondLabel: "Province",
-      valueSecondLabel: personalInformation.owner.province || "non disponible",
-    },
-  ];
-
-  // Continuer à la prochaine étape après la soumission du formulaire.
   const handlePressContinue = () => {
-    // Redirige l'utilisateur à l'étape suivante
     router.push("declarations/twoPersonnes/infoDebase");
   };
 
@@ -113,7 +50,7 @@ export default function assuranceInfo() {
           }}
         >
           <AntDesign
-            name="arrowleft"
+            name="arrow-left"
             size={20}
             color="#19363C"
             style={{ fontWeight: "200" }}
@@ -123,34 +60,42 @@ export default function assuranceInfo() {
 
         <View>
           <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            Informations d’assurance
+            Informations d'assurance
           </Text>
         </View>
       </View>
 
-      <ScrollView>
+      <ScrollView keyboardShouldPersistTaps="handled">
         <View style={styles.contentContainer}>
-          {infoInsurance.length === 0 ? (
-            <Loading text="Chargement.." />
-          ) : (
-            <InputsShowGroup dataToShow={infoInsurance} />
-          )}
-          <View>
-            <Text
-              style={[
-                styles.headerTitle,
-                styles.marginSpace,
-                styles.centerText,
-              ]}
-            >
-              Informations de l’assuré
-            </Text>
-            {userDataInsurance.length === 0 ? (
-              <Loading text="Chargement" />
-            ) : (
-              <InputsShowGroup dataToShow={userDataInsurance} />
-            )}
-          </View>
+          <Text style={styles.fieldLabel}>Nom de la société d'assurance</Text>
+          <TextInput style={styles.input} value={insuranceCompany} onChangeText={setInsuranceCompany} />
+          <Text style={styles.fieldLabel}>Numéro d'assurance</Text>
+          <TextInput style={styles.input} value={policyNumber} onChangeText={setPolicyNumber} keyboardType="numeric" />
+          <Text style={styles.fieldLabel}>Date d'expiration</Text>
+          <TextInput style={styles.input} value={expirationDate} onChangeText={setExpirationDate} placeholder="YYYY-MM-DD" />
+
+          <Text style={[styles.headerTitle, styles.marginSpace, styles.centerText]}>
+            Informations de l'assuré
+          </Text>
+
+          <Text style={styles.fieldLabel}>Prénom</Text>
+          <TextInput style={styles.input} value={name} onChangeText={setName} />
+          <Text style={styles.fieldLabel}>Nom</Text>
+          <TextInput style={styles.input} value={lastName} onChangeText={setLastName} />
+          <Text style={styles.fieldLabel}>Adresse courriel</Text>
+          <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" />
+          <Text style={styles.fieldLabel}>Numéro de téléphone</Text>
+          <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+          <Text style={styles.fieldLabel}>Numéro et rue de l'adresse</Text>
+          <TextInput style={styles.input} value={address} onChangeText={setAddress} />
+          <Text style={styles.fieldLabel}>Ville</Text>
+          <TextInput style={styles.input} value={city} onChangeText={setCity} />
+          <Text style={styles.fieldLabel}>Code postal</Text>
+          <TextInput style={styles.input} value={postalCode} onChangeText={setPostalCode} />
+          <Text style={styles.fieldLabel}>Pays</Text>
+          <TextInput style={styles.input} value={country} onChangeText={setCountry} />
+          <Text style={styles.fieldLabel}>Province</Text>
+          <TextInput style={styles.input} value={province} onChangeText={setProvince} />
         </View>
       </ScrollView>
 
@@ -172,32 +117,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
 
-  scrollviewContainer: {
-    flexGrow: 1,
-  },
-
   safeAreaContainer: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? 40 : 0,
   },
 
-  headersContainer: {
-    marginTop: 20,
-    flexDirection: "row",
-    gap: 15,
-    marginHorizontal: 20,
-  },
   headerTitle: {
     fontSize: 19,
-    // marginBottom: 30,
     fontWeight: "bold",
     color: "#19363C",
-    // marginHorizontal: 20
-  },
-  headerIcon: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
   },
 
   contentContainer: {
@@ -206,12 +134,20 @@ const styles = StyleSheet.create({
     marginBottom: 50,
   },
 
-  titleText: {
-    fontSize: 23,
-    marginBottom: 30,
-    fontWeight: "bold",
-    color: "#19363C",
-    marginHorizontal: 20,
+  fieldLabel: {
+    color: "#b4b4b5",
+    marginBottom: 5,
+    fontSize: 12,
+  },
+
+  input: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 15,
+    marginBottom: 7,
+    backgroundColor: "#fafafa",
   },
 
   marginSpace: {

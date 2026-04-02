@@ -1,4 +1,4 @@
-/* eslint-disable react/no-unescaped-entities */
+﻿/* eslint-disable react/no-unescaped-entities */
 import React, { useState } from "react";
 import {
   View,
@@ -151,7 +151,7 @@ export default function VerifyEmail() {
         }}
       >
         <AntDesign
-          name="arrowleft"
+          name="arrow-left"
           size={20}
           color="#19363C"
           style={{ fontWeight: "200" }}
