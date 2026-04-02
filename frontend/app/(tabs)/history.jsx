@@ -1,5 +1,5 @@
 ﻿import { View, Text, StyleSheet, FlatList, StatusBar } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { AntDesign } from "@expo/vector-icons";
 import BoxComponent from "../../components/Home/boxComponent";
 import SearchInput from "../../components/History/searchInput";
@@ -7,51 +7,8 @@ import HistoryBoxComponent from "../../components/History/historyBox";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Données d'exemple pour la démonstration
-const historyData = [
-  {
-    key: "1",
-    date: "15 Mar 2023",
-    description: "Accident mineur sans blessures",
-    people: [
-      {
-        name: "John Doe",
-        imageUri: "../../../assets/splashscreen.png",
-      },
-      {
-        name: "Jane Doe",
-        imageUri: "../../../assets/splashscreen.png",
-      },
-    ],
-    accidentImageUri: "../../../assets/splashscreen.png",
-  },
-
-  {
-    key: "2",
-    date: "22 Mar 2023",
-    description: "Collision arrière avec dommages matériels",
-    people: [
-      {
-        name: "Alice Brown",
-        imageUri: "../../../assets/google.png",
-      },
-    ],
-    accidentImageUri: "../../../assets/facebook.png",
-  },
-
-  {
-    key: "3",
-    date: "22 Mar 2023",
-    description: "Collision arrière avec dommages matériels",
-    people: [
-      {
-        name: "Alice Brown",
-        imageUri: "../../../assets/google.png",
-      },
-    ],
-    accidentImageUri: "../../../assets/facebook.png",
-  },
-];
+// Placeholder data removed — use real data or fetch from API instead
+const [historyData, setHistoryData] = useState([]);
 
 export default function HistoryPage() {
   const { t } = useTranslation();
