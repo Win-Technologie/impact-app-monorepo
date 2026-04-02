@@ -1,5 +1,10 @@
 import { atom } from "recoil";
 export const globalPersonalInfo = atom({
   key: "globalPersonalInfo",
-  default: [],
+  default: {
+    owner: {},
+    vehicle: {},
+    insurance: {},
+    driverLicense: {},
+  },
 });

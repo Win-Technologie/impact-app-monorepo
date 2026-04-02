@@ -1,5 +1,10 @@
 import { atom } from "recoil";
 export const ScannedQrCodeData = atom({
   key: "ScannedQrCodeData",
-  default: [],
+  default: {
+    owner: {},
+    vehicle: {},
+    insurance: {},
+    driverLicense: {},
+  },
 });

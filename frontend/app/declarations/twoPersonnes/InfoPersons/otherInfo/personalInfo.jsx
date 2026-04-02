@@ -2,48 +2,40 @@
   StyleSheet,
   Text,
   View,
-  Button,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-//import { insuranceCompanyState } from '../../GlobalState/InsuranceState';
-import { useForm, Controller } from "react-hook-form";
 import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import { AntDesign } from "@expo/vector-icons";
-import InputsShowGroup from "../../../../../components/Utils/Inputs/InputsShowGroup";
 import { fetchUserInfoAndVehicle, getMyVehicles } from "../../../../api/users/userApi";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { accidentVehicleState } from "../../../../../GlobalState/AccidentVehiculeState";
-import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
-import Loading from "../../../../../components/Utils/Notification/Loading";
-import { ScannedQrCodeData } from "../../../../../GlobalState/ScannedQrCodeData";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SelectDropdown from "react-native-select-dropdown";
 
 export default function PersonanalInformation() {
-  //obtenir la valeur de manière globale
-  const VEHICLE_ID = useRecoilValue(accidentVehicleState);
   const ENDPOINT = "users/user/vehicle/info/";
-  const [userData, setUserData] = useState(null);
-  const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
-  const [isEditable, setIsEditable] = useState(true);
-  const userInfo = useRecoilValue(ScannedQrCodeData);
-  const setScannedData = useSetRecoilState(ScannedQrCodeData);
   const [allVehicles, setAllVehicles] = useState([]);
   const [showVehicleSelector, setShowVehicleSelector] = useState(false);
 
-  //obtenir les données au moment du rendu du composant
+  // Form fields - blank by default
+  const [name, setName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dlNumber, setDlNumber] = useState("");
+  const [dlExpires, setDlExpires] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("");
+  const [province, setProvince] = useState("");
+
   useEffect(() => {
-    //  userInformation()
-    createDataUser(userInfo);
     loadMyVehicles();
   }, []);
 
@@ -72,19 +64,20 @@ export default function PersonanalInformation() {
 
     const userToken = await AsyncStorage.getItem("userToken");
     try {
-      const result = await fetchUserInfoAndVehicle(
-        vehicleId,
-        userToken,
-        ENDPOINT,
-      );
-
-      if (result.error) {
-        throw new Error(`Failed to fetch data: ${result.status}`);
-      }
-
-      // Set the scanned data with the user's own vehicle info
-      setScannedData(result.data);
-      createDataUser(result.data);
+      const result = await fetchUserInfoAndVehicle(vehicleId, userToken, ENDPOINT);
+      if (result.error) throw new Error(`Failed to fetch data: ${result.status}`);
+      const data = result.data;
+      setName(data.owner?.name || "");
+      setLastName(data.owner?.lastName || "");
+      setDlNumber(data.driverLicense?.number || "");
+      setDlExpires(data.driverLicense?.expires || "");
+      setEmail(data.owner?.email || "");
+      setPhone(data.owner?.phone || "");
+      setAddress(data.owner?.address || "");
+      setCity(data.owner?.city || "");
+      setPostalCode(data.owner?.postalCode || "");
+      setCountry(data.owner?.country || "");
+      setProvince(data.owner?.province || "");
       setShowVehicleSelector(false);
       Alert.alert("Succès", "Informations remplies depuis votre compte");
     } catch (error) {
@@ -92,70 +85,9 @@ export default function PersonanalInformation() {
     }
   };
 
-  /**
-   * Crée et organise les données de l'utilisateur pour l'affichage.
-   * @param {Object} data - Contient les données de l'utilisateur et de son permis de conduire.
-   */
-  const createDataUser = (data) => {
-    //console.log("Received Data:", data); // Add this line to log the received data
-    if (!data.owner) {
-      // console.error("Data does not contain owner information.");
-      return; // Prevent further execution if owner is undefined
-    }
-    const dataToShow = [
-      {
-        style: "column",
-        label: "Prénom",
-        value: data.owner?.name || "non disponible",
-      },
-      {
-        style: "column",
-        label: "Nom",
-        value: data.owner.lastName || "non disponible",
-      },
-      {
-        style: "row",
-        firstLabel: "Numéro du permis de conduire",
-        valueFirstLabel: data.driverLicense.number || "non disponible",
-        secondLabel: "Expiration",
-        valueSecondLabel: data.driverLicense.expires || "non disponible",
-      },
-      {
-        style: "column",
-        label: "adresse courriel",
-        value: data.owner.email || "non disponible",
-      },
-      {
-        style: "column",
-        label: "Numéro de téléphone",
-        value: data.owner.phone || "non disponible",
-      },
-      {
-        style: "column",
-        label: "Numéro et rue de l'adresse",
-        value: data.owner.address || "non disponible",
-      },
-      {
-        style: "row",
-        firstLabel: "Ville",
-        valueFirstLabel: data.owner.city || "non disponible",
-        secondLabel: "Code postale",
-        valueSecondLabel: data.owner.postalCode || "non disponible",
-      },
-      {
-        style: "row",
-        firstLabel: "Pays",
-        valueFirstLabel: data.owner.country || "non disponible",
-        secondLabel: "Province",
-        valueSecondLabel: data.owner.province || "non disponible",
-      },
-    ];
-    setUserData(dataToShow);
-  };
-
   const handlePressContinue = () => {
     router.navigate(
-      "/declarations/twoPersonnes/InfoPersons/myInfo/vehicleInfo",
+      "/declarations/twoPersonnes/InfoPersons/otherInfo/vehicleInfo",
     );
   };
 
@@ -175,7 +107,7 @@ export default function PersonanalInformation() {
           }}
         >
           <AntDesign
-            name="arrowleft"
+            name="arrow-left"
             size={20}
             color="#19363C"
             style={{ fontWeight: "200" }}
@@ -236,11 +168,28 @@ export default function PersonanalInformation() {
         </View>
 
         <View style={styles.contentContainer}>
-          {!userData ? (
-            <Loading text="Loading.." />
-          ) : (
-            <InputsShowGroup dataToShow={userData} editable={true} />
-          )}
+          <Text style={styles.fieldLabel}>Prénom</Text>
+          <TextInput style={styles.input} value={name} onChangeText={setName} />
+          <Text style={styles.fieldLabel}>Nom</Text>
+          <TextInput style={styles.input} value={lastName} onChangeText={setLastName} />
+          <Text style={styles.fieldLabel}>Numéro du permis de conduire</Text>
+          <TextInput style={styles.input} value={dlNumber} onChangeText={setDlNumber} />
+          <Text style={styles.fieldLabel}>Expiration (permis)</Text>
+          <TextInput style={styles.input} value={dlExpires} onChangeText={setDlExpires} />
+          <Text style={styles.fieldLabel}>Adresse courriel</Text>
+          <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" />
+          <Text style={styles.fieldLabel}>Numéro de téléphone</Text>
+          <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+          <Text style={styles.fieldLabel}>Numéro et rue de l'adresse</Text>
+          <TextInput style={styles.input} value={address} onChangeText={setAddress} />
+          <Text style={styles.fieldLabel}>Ville</Text>
+          <TextInput style={styles.input} value={city} onChangeText={setCity} />
+          <Text style={styles.fieldLabel}>Code postal</Text>
+          <TextInput style={styles.input} value={postalCode} onChangeText={setPostalCode} />
+          <Text style={styles.fieldLabel}>Pays</Text>
+          <TextInput style={styles.input} value={country} onChangeText={setCountry} />
+          <Text style={styles.fieldLabel}>Province</Text>
+          <TextInput style={styles.input} value={province} onChangeText={setProvince} />
         </View>
       </ScrollView>
 
@@ -271,6 +220,22 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 40,
     justifyContent: "center",
+  },
+
+  fieldLabel: {
+    color: "#b4b4b5",
+    marginBottom: 5,
+    fontSize: 12,
+  },
+
+  input: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 15,
+    marginBottom: 7,
+    backgroundColor: "#fafafa",
   },
 
   titleText: {

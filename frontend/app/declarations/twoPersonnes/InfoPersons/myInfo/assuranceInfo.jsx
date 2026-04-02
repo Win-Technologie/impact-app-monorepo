@@ -22,27 +22,31 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function assuranceInfo() {
   // obtenir la valeur de manière globale
   const personalInformation = useRecoilValue(globalPersonalInfo);
+  // insurance is null or empty object when no insurance is linked to the selected vehicle
+  const rawInsurance = personalInformation?.insurance;
+  const insurance = (rawInsurance && rawInsurance.policyNumber) ? rawInsurance : null;
+  const owner = personalInformation?.owner || {};
 
   /**
    * * Contient des informations détaillées sur l'assurance à afficher.
    */
-  const infoInsurance = [
+  const infoInsurance = insurance ? [
     {
       style: "column",
-      label: "Nom de la société d’assurance",
-      value: personalInformation.insurance.insuranceCompany || "non disponible",
+      label: "Nom de la société d'assurance",
+      value: insurance.insuranceCompany || "non disponible",
     },
     {
       style: "row",
-      firstLabel: "Numéro d’assurance ",
+      firstLabel: "Numéro d'assurance ",
       valueFirstLabel:
-        personalInformation.insurance.policyNumber || "non disponible",
+        insurance.policyNumber || "non disponible",
       secondLabel: "Expiration",
-      valueSecondLabel:
-        personalInformation.insurance.expirationDate.slice(0, 10) ||
-        "non disponible",
+      valueSecondLabel: insurance.expirationDate
+        ? insurance.expirationDate.slice(0, 10)
+        : "non disponible",
     },
-  ];
+  ] : [];
 
   /**
    * Contient des informations détaillées sur l'assurance d'utilisateur à afficher.
@@ -51,42 +55,42 @@ export default function assuranceInfo() {
     {
       style: "column",
       label: "Prénom",
-      value: personalInformation.owner.name || "non disponible",
+      value: owner.name || "non disponible",
     },
     {
       style: "column",
       label: "Nom",
-      value: personalInformation.owner.lastName || "non disponible",
+      value: owner.lastName || "non disponible",
     },
     {
       style: "column",
       label: "adresse courriel",
-      value: personalInformation.owner.email || "non disponible",
+      value: owner.email || "non disponible",
     },
     {
       style: "column",
       label: "Numéro de téléphone",
-      value: personalInformation.owner.phone || "non disponible",
+      value: owner.phone || "non disponible",
     },
     {
       style: "column",
       label: "Numéro et rue de l'adresse",
-      value: personalInformation.owner.address || "non disponible",
+      value: owner.address || "non disponible",
     },
     {
       style: "row",
       firstLabel: "Ville",
-      valueFirstLabel: personalInformation.owner.city || "non disponible",
+      valueFirstLabel: owner.city || "non disponible",
       secondLabel: "Code postale",
       valueSecondLabel:
-        personalInformation.owner.postalCode || "non disponible",
+        owner.postalCode || "non disponible",
     },
     {
       style: "row",
       firstLabel: "Pays",
-      valueFirstLabel: personalInformation.owner.country || "non disponible",
+      valueFirstLabel: owner.country || "non disponible",
       secondLabel: "Province",
-      valueSecondLabel: personalInformation.owner.province || "non disponible",
+      valueSecondLabel: owner.province || "non disponible",
     },
   ];
 
@@ -112,7 +116,7 @@ export default function assuranceInfo() {
           }}
         >
           <AntDesign
-            name="arrowleft"
+            name="arrow-left"
             size={20}
             color="#19363C"
             style={{ fontWeight: "200" }}
@@ -129,8 +133,11 @@ export default function assuranceInfo() {
 
       <ScrollView>
         <View style={styles.contentContainer}>
-          {infoInsurance.length === 0 ? (
-            <Loading text="Chargement.." />
+          {insurance === null ? (
+            <View style={styles.noInsuranceBox}>
+              <Text style={styles.noInsuranceText}>Aucune assurance associée au véhicule sélectionné.</Text>
+              <Text style={styles.noInsuranceSubText}>Veuillez ajouter une assurance dans votre profil.</Text>
+            </View>
           ) : (
             <InputsShowGroup dataToShow={infoInsurance} />
           )}
@@ -144,11 +151,7 @@ export default function assuranceInfo() {
             >
               Informations de l’assuré
             </Text>
-            {userDataInsurance.length === 0 ? (
-              <Loading text="Chargement" />
-            ) : (
-              <InputsShowGroup dataToShow={userDataInsurance} />
-            )}
+            <InputsShowGroup dataToShow={userDataInsurance} />
           </View>
         </View>
       </ScrollView>
@@ -226,5 +229,24 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+
+  noInsuranceBox: {
+    backgroundColor: '#fff3cd',
+    padding: 20,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ffc107',
+  },
+  noInsuranceText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#856404',
+    marginBottom: 8,
+  },
+  noInsuranceSubText: {
+    fontSize: 14,
+    color: '#856404',
   },
 });

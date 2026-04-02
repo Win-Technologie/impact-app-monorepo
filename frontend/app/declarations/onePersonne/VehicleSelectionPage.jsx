@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -75,7 +75,7 @@ const VehicleSelectionPage = () => {
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <AntDesign name="arrowleft" size={20} color="#19363C" />
+          <AntDesign name="arrow-left" size={20} color="#19363C" />
           <Text style={styles.backText}>{"   "}Retour</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Sélectionner un véhicule</Text>

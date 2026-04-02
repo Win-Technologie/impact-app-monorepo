@@ -63,12 +63,6 @@ const submitDeclaration = () => {
     [setVisible],
   );
 
-  const handlePress = (type) => {
-    setSelectedType(type);
-    setShowAdditionalInput(type === "Accrochage avec un véhicule vide");
-    setShowAccidentTypeInput(type === "Autre");
-  };
-
   const back = () => {
     router.back();
   };

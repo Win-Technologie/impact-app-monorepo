@@ -6,6 +6,7 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import AnimatedButton from "../../../components/SignUp/animatedButton";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
@@ -28,12 +29,6 @@ const otherspecification = () => {
   const [images, setImages] = React.useState([]);
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
   const [otherSpec, setOtherSpec] = useState(null);
-
-  const handlePress = (type) => {
-    setSelectedType(type);
-    setShowAdditionalInput(type === "Accrochage avec un véhicule vide");
-    setShowAccidentTypeInput(type === "Autre");
-  };
 
   const back = () => {
     try {

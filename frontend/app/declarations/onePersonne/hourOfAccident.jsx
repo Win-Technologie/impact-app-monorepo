@@ -39,12 +39,6 @@ const hourOfAccident = () => {
     [setVisible],
   );
 
-  const handlePress = (type) => {
-    setSelectedType(type);
-    setShowAdditionalInput(type === "Accrochage avec un véhicule vide");
-    setShowAccidentTypeInput(type === "Autre");
-  };
-
   const back = () => {
     try {
       router.back();

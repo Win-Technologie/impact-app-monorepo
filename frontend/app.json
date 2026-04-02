@@ -36,6 +36,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan QR codes."
+        }
+      ],
+      [
         "expo-font",
         {
           "fonts": ["./assets/Font/InterDynamic.ttf"]

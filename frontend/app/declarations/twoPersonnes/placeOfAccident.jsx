@@ -83,49 +83,31 @@ const placeOfAccident = () => {
     }
   };
 
-  const handleMapPress = async (event) => {
+  const handleMapLongPress = async (event) => {
     try {
-      const now = Date.now();
-      const timeSinceLastTap = now - lastTapTime;
+      const coords = event.nativeEvent.coordinate;
+      setSelectedCoords(coords);
 
-      // Reset tap count if more than 500ms has passed
-      if (timeSinceLastTap > 500) {
-        setTapCount(1);
-        setLastTapTime(now);
-        return;
-      }
+      // Reverse geocode the coordinates
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.latitude},${coords.longitude}&key=AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY&language=fr`
+      );
 
-      const newTapCount = tapCount + 1;
-      setTapCount(newTapCount);
-      setLastTapTime(now);
+      const data = await response.json();
 
-      // Triple tap detected
-      if (newTapCount >= 3) {
-        const coords = event.nativeEvent.coordinate;
-        setSelectedCoords(coords);
-        
-        // Reverse geocode the coordinates
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.latitude},${coords.longitude}&key=AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY&language=fr`
-        );
-        
-        const data = await response.json();
-        
-        if (data.results && data.results.length > 0) {
-          const address = data.results[0].formatted_address;
-          setPlace(address);        // Set the text in the Google Places input field
+      if (data.results && data.results.length > 0) {
+        const address = data.results[0].formatted_address;
+        setPlace(address);
+        // Set the text in the Google Places input field
         if (googlePlacesRef.current) {
           googlePlacesRef.current.setAddressText(address);
-        }          Alert.alert("Émplacement sélectionné", address);
-        } else {
-          Alert.alert("Erreur", "Impossible de trouver l'adresse pour cet emplacement");
         }
-        
-        // Reset tap count
-        setTapCount(0);
+        Alert.alert("Emplacement sélectionné", address);
+      } else {
+        Alert.alert("Erreur", "Impossible de trouver l'adresse pour cet emplacement");
       }
     } catch (error) {
-      console.error("Error handling map press:", error);
+      console.error("Error handling map long press:", error);
       Alert.alert("Erreur", "Impossible de sélectionner l'emplacement");
     }
   };
