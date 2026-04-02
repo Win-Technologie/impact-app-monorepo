@@ -32,14 +32,64 @@ export default function ScanPermis() {
     router.back();
   };
   const handlePressContinue = async () => {
-    // Save images to local storage (AsyncStorage) for later use in user settings
+    // Upload images to backend (if present) then save URIs locally
     try {
-      await AsyncStorage.setItem('user_selfie', selfie || '');
-      await AsyncStorage.setItem('user_recto', rectoImage || '');
-      await AsyncStorage.setItem('user_verso', versoImage || '');
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        // still save locally and continue
+        await AsyncStorage.setItem('user_selfie', selfie || '');
+        await AsyncStorage.setItem('user_recto', rectoImage || '');
+        await AsyncStorage.setItem('user_verso', versoImage || '');
+        Alert.alert('Succès', 'Informations enregistrées localement');
+        router.replace('/signup/signUpLanding');
+        return;
+      }
+
+      // Build FormData
+      const data = new FormData();
+      const appendIf = (fieldName, uri) => {
+        if (!uri) return;
+        const filename = uri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        data.append(fieldName, { uri, name: filename, type });
+      };
+
+      appendIf('selfie', selfie);
+      appendIf('front', rectoImage);
+      appendIf('back', versoImage);
+
+      // If any files appended, call backend endpoint
+      const hasFiles = selfie || rectoImage || versoImage;
+      if (hasFiles) {
+        const res = await fetch(`${API_URL}users/user/upload-driving-licence-photos`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: data,
+        });
+        const result = await res.json();
+        if (!res.ok) {
+          console.log('Upload driving licence response error', result);
+          Alert.alert('Erreur', 'Impossible d\'uploader les images');
+        } else {
+          // Optionally save returned paths in AsyncStorage
+          if (result.photoSelfie) await AsyncStorage.setItem('user_selfie', result.photoSelfie);
+          if (result.photoRecto) await AsyncStorage.setItem('user_recto', result.photoRecto);
+          if (result.photoVerso) await AsyncStorage.setItem('user_verso', result.photoVerso);
+        }
+      } else {
+        // No files selected — still save local URIs
+        await AsyncStorage.setItem('user_selfie', selfie || '');
+        await AsyncStorage.setItem('user_recto', rectoImage || '');
+        await AsyncStorage.setItem('user_verso', versoImage || '');
+      }
+
       Alert.alert('Succès', 'Informations enregistrées');
       router.replace('/signup/signUpLanding');
     } catch (e) {
+      console.log('Error uploading driving licence images', e);
       Alert.alert('Erreur', "Impossible d'enregistrer les informations");
     }
   };

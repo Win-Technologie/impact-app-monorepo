@@ -51,6 +51,9 @@ const VehicleInfo = () => {
     const fetchVehicleDetails = async () => {
       try {
         const token = await AsyncStorage.getItem("userToken");
+        if (!token) {
+          console.error('No userToken found when fetching vehicle details');
+        }
         const response = await fetch(`${API_URL}vehicles`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -73,7 +76,8 @@ const VehicleInfo = () => {
             console.log("Vehicle not found for ID:", selectedVehicleId);
           }
         } else {
-          console.error("Failed to fetch vehicles:", response.status);
+          const text = await response.text();
+          console.error("Failed to fetch vehicles:", response.status, text);
         }
       } catch (error) {
         console.error("Error fetching vehicle details:", error);

@@ -11,10 +11,51 @@ export default function ScanAssurance() {
 
 	const handlePressContinue = async () => {
 		try {
-			await AsyncStorage.setItem('user_insurance', insuranceImage || '');
+			const token = await AsyncStorage.getItem('userToken');
+			if (!token) {
+				await AsyncStorage.setItem('user_insurance', insuranceImage || '');
+				Alert.alert('Succès', 'Informations enregistrées localement');
+				router.replace('/signup/signUpLanding');
+				return;
+			}
+
+			if (insuranceImage) {
+				const data = new FormData();
+				const filename = insuranceImage.split('/').pop();
+				const match = /\.(\w+)$/.exec(filename);
+				const type = match ? `image/${match[1]}` : 'image/jpeg';
+				data.append('insurance', { uri: insuranceImage, name: filename, type });
+
+				// try upload to dedicated endpoint (if exists), otherwise fall back to local save
+				try {
+					const res = await fetch(`${API_URL}users/user/upload-insurance-document`, {
+						method: 'PATCH',
+						headers: { Authorization: `Bearer ${token}` },
+						body: data,
+					});
+					if (res.ok) {
+						const result = await res.json();
+						if (result && result.documentPath) {
+							await AsyncStorage.setItem('user_insurance', result.documentPath);
+						} else {
+							await AsyncStorage.setItem('user_insurance', insuranceImage || '');
+						}
+					} else {
+						// fallback local
+						await AsyncStorage.setItem('user_insurance', insuranceImage || '');
+					}
+				} catch (err) {
+					console.log('insurance upload failed, saving locally', err);
+					await AsyncStorage.setItem('user_insurance', insuranceImage || '');
+				}
+			} else {
+				await AsyncStorage.setItem('user_insurance', insuranceImage || '');
+			}
+
 			Alert.alert('Succès', 'Informations enregistrées');
 			router.replace('/signup/signUpLanding');
 		} catch (e) {
+			console.log('Error saving insurance image', e);
 			Alert.alert('Erreur', "Impossible d'enregistrer les informations");
 		}
 	};

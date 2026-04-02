@@ -58,9 +58,12 @@ const SKIP_EMAIL_VERIFICATION =
 
 const path = require("path");
 const fs = require("fs");
+const { ObjectId, GridFSBucket } = require("mongodb");
 
 // GLOBAL CONNECTIONS
 const mainDb = getDb(MAINDB);
+// GridFS bucket for storing uploaded files in MongoDB
+const gridFSBucket = new GridFSBucket(mainDb, { bucketName: "uploads" });
 const userCollection = mainDb.collection(USERSCOLLECTION);
 const drivingLicensesCollection = mainDb.collection(DRIVERLICENSECOLLECTION);
 const insuranceCollection = mainDb.collection(INSURANCES_COLLECTION);
@@ -1107,12 +1110,20 @@ async function RestorePassword(req, res) {
     // Hasher le nouveau mot de passe
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     // Mettre à jour l'utilisateur dans la base de données avec le nouveau mot de passe
-    await userCollection.updateOne(
+    const updateResult = await userCollection.updateOne(
       { _id: myToken.user_id },
       {
         $set: { password: hashedNewPassword },
       },
     );
+
+    console.log("[RestorePassword] updateResult:", updateResult);
+
+    if (!updateResult || updateResult.matchedCount === 0) {
+      return res
+        .status(500)
+        .json({ msg: "Impossible de mettre à jour le mot de passe (utilisateur non trouvé)" });
+    }
 
     return res
       .status(200)
@@ -1187,6 +1198,13 @@ async function EditUser(req, res) {
       userData.birthdate = myBirthdate;
     }
 
+    // Log incoming payload keys for debugging
+    try {
+      console.log("[EditUser] incoming userData keys:", Object.keys(userData || {}));
+    } catch (e) {
+      console.log("[EditUser] incoming userData keys: <unavailable>");
+    }
+
     // Mettre à jour les données de la propriété avec les nouvelles données
     Object.assign(foundUser, userData);
 
@@ -1195,10 +1213,57 @@ async function EditUser(req, res) {
       foundUser.active = foundUser.active.toLowerCase() === "true";
     }
 
-    const result = await userCollection.updateOne(
-      { _id: id }, // Filtre pour trouver la propriété par son ID
-      { $set: foundUser }, // Données actualisées souhaitées
-    );
+    // Ensure we don't try to $set the immutable _id field
+    const updateFields = { ...foundUser };
+    if (updateFields._id) delete updateFields._id;
+
+    // The user _id in this project is stored as a string (see user model),
+    // so use the string id for the update filter to ensure matches.
+    const filterId = id;
+
+    try {
+      // log what we update to help debug Atlas errors
+      console.log("[EditUser] updating user _id:", filterId);
+      console.log("[EditUser] update fields:", Object.keys(updateFields));
+      const result = await userCollection.updateOne(
+        { _id: filterId }, // Filtre pour trouver la propriété par son ID
+        { $set: updateFields }, // Données actualisées souhaitées
+      );
+      console.log("[EditUser] update result:", result);
+        // If the client provided an expirationDate for the driver's license, try to update the DriverLicense record
+        try {
+          if (userData.expirationDate) {
+            const exp = userData.expirationDate || "";
+            const parts = exp.split("/");
+            if (parts.length === 2) {
+              const month = parseInt(parts[0], 10);
+              const year = parseInt(parts[1], 10);
+              if (!isNaN(month) && !isNaN(year)) {
+                const expiresDate = new Date(year, month - 1, 1);
+                // try updating by user reference first
+                let dlResult = await drivingLicensesCollection.updateOne(
+                  { user: filterId },
+                  { $set: { expires: expiresDate } },
+                );
+                // if no doc matched, try by license number if provided
+                if ((!dlResult || dlResult.matchedCount === 0) && userData.licenseNumber) {
+                  dlResult = await drivingLicensesCollection.updateOne(
+                    { number: userData.licenseNumber },
+                    { $set: { expires: expiresDate } },
+                  );
+                }
+                console.log("[EditUser] DriverLicense update result:", dlResult);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("[EditUser] DriverLicense update error:", e);
+          // do not fail the whole request for this secondary update
+        }
+    } catch (e) {
+      console.error("[EditUser] Mongo update error:", e);
+      throw e;
+    }
 
     return res.status(200).json({ msg: "user has been modified" });
   } catch (error) {
@@ -2252,31 +2317,49 @@ async function UploadUserProfileImage(req, res) {
         .json({ msg: "Le fichier téléchargé n'est pas une image valide." });
     }
 
-    // Générez un nom de fichier unique pour éviter les collisions
+    // Générez un nom de fichier unique pour GridFS
     const uniqueFilename = `${loggedInUserId}_${Date.now()}${fileExtension}`;
 
-    // Déplacez le fichier téléchargé vers le répertoire de destination
-    const destinationPath = path.join(
-      USER_ROUTER_IMG_PROFILE_PATH,
-      uniqueFilename,
-    );
+    // Stream the temporary uploaded file into GridFS
+    const readStream = fs.createReadStream(uploadedImage.path);
+    const uploadStream = gridFSBucket.openUploadStream(uniqueFilename, {
+      contentType: `image/${fileExtension.replace('.', '')}`,
+      metadata: { userId: loggedInUserId, originalName: uploadedImage.name },
+    });
 
-    // Déplacez le fichier temporaire vers le répertoire de destination
-    fs.renameSync(uploadedImage.path, destinationPath);
+    // Pipe temp file into GridFS and handle success/error. No filesystem fallback: GridFS is single source of truth.
+    const uploadPromise = new Promise((resolve, reject) => {
+      readStream.pipe(uploadStream)
+        .on("error", (err) => reject(err))
+        .on("finish", () => resolve(uploadStream.id));
+    });
 
-    // Mettre à jour le chemin de l'image de profil dans la base de données
-    await userCollection.updateOne(
-      { _id: loggedInUserId },
-      { $set: { profileImagePath: destinationPath } },
-    );
+    let uploadedFileId;
+    try {
+      uploadedFileId = await uploadPromise;
+    } catch (err) {
+      // ensure temp file removed
+      try { fs.unlinkSync(uploadedImage.path); } catch (e) {}
+      console.error("GridFS upload error:", err);
+      return res.status(500).json({ msg: "Erreur lors de l'upload dans GridFS", error: err.message });
+    }
 
-    // Retournez une réponse JSON réussie avec le chemin relatif de l'image enregistrée
-    return res
-      .status(200)
-      .json({
-        msg: "Image de profil téléchargée avec succès",
-        imagePath: destinationPath,
-      });
+    // remove temp file
+    try { fs.unlinkSync(uploadedImage.path); } catch (e) {}
+
+    try {
+      const fileId = uploadedFileId;
+      const publicPath = `user/profile-image/${fileId}`;
+      await userCollection.updateOne(
+        { _id: loggedInUserId },
+        { $set: { profileImagePath: publicPath, profileImageId: fileId } },
+      );
+
+      return res.status(200).json({ msg: "Image de profil téléchargée avec succès", imagePath: publicPath });
+    } catch (err) {
+      console.error("Error updating user with GridFS id:", err);
+      return res.status(500).json({ msg: "Erreur interne", error: err.message });
+    }
   } catch (error) {
     console.error("Erreur lors du téléchargement de l'image de profil:", error);
     return res
@@ -2322,40 +2405,26 @@ async function DeleteUserProfileImage(req, res) {
       return res.status(403).json({ msg: "Utilisateur non trouvé" });
     }
 
-    // Chemin de l'image de profil actuelle
-    const profileImagePath = loggedInUser.profileImagePath;
-    if (!profileImagePath || profileImagePath === "") {
-      return res
-        .status(400)
-        .json({ msg: "Aucune image de profil à supprimer" });
+    // Delete stored GridFS file if exists
+    const profileImageId = loggedInUser.profileImageId;
+    if (!profileImageId) {
+      return res.status(400).json({ msg: "Aucune image de profil à supprimer" });
     }
 
-    // Supprimer le fichier d'image de profil du système de fichiers
-    fs.unlink(profileImagePath, (err) => {
-      if (err) {
-        console.error(
-          "Erreur lors de la suppression de l'image de profil:",
-          err,
-        );
-        return res
-          .status(500)
-          .json({
-            msg: "Erreur lors de la suppression de l'image de profil",
-            error: err.message,
-          });
-      }
-    });
+    try {
+      await gridFSBucket.delete(ObjectId(profileImageId));
+    } catch (err) {
+      console.error("Error deleting GridFS file:", err);
+      // continue to unset DB fields even if file deletion fails
+    }
 
-    // Mettre à jour le champ profileImagePath de l'utilisateur dans la base de données
+    // Mettre à jour le champ profileImagePath et profileImageId de l'utilisateur dans la base de données
     await userCollection.updateOne(
       { _id: loggedInUserId },
-      { $set: { profileImagePath: "" } },
+      { $set: { profileImagePath: "", profileImageId: "" } },
     );
 
-    // Retourner une réponse JSON réussie
-    return res
-      .status(200)
-      .json({ msg: "Image de profil supprimée avec succès" });
+    return res.status(200).json({ msg: "Image de profil supprimée avec succès" });
   } catch (error) {
     console.error("Erreur lors de la suppression de l'image de profil:", error);
     return res
@@ -2402,8 +2471,8 @@ async function UploadUserDrivingLicencePhoto(req, res) {
 
     const loggedInUserId = myToken.user_id;
 
-    // Fonction pour vérifier et sauvegarder chaque image
-    const saveImage = (image, type) => {
+    // Function to validate and store each image into GridFS
+    const saveImageToGridFS = (image, type) => {
       if (!image || !image.path) {
         throw new Error(`Le fichier téléchargé pour ${type} est invalide.`);
       }
@@ -2411,37 +2480,71 @@ async function UploadUserDrivingLicencePhoto(req, res) {
       const allowedExtensions = [".jpg", ".jpeg", ".png", ".gif"];
       const fileExtension = path.extname(image.name).toLowerCase();
       if (!allowedExtensions.includes(fileExtension)) {
-        throw new Error(
-          `Le fichier téléchargé pour ${type} n'est pas une image valide.`,
-        );
+        throw new Error(`Le fichier téléchargé pour ${type} n'est pas une image valide.`);
       }
 
       const uniqueFilename = `${loggedInUserId}_${type}_${Date.now()}${fileExtension}`;
-      const destinationPath = path.join(
-        USER_ROUTER_IMG_IDS_PATH,
-        uniqueFilename,
-      );
 
-      fs.renameSync(image.path, destinationPath);
-      return destinationPath;
+      return new Promise((resolve, reject) => {
+        const readStream = fs.createReadStream(image.path);
+        const uploadStream = gridFSBucket.openUploadStream(uniqueFilename, {
+          contentType: `image/${fileExtension.replace('.', '')}`,
+          metadata: { userId: loggedInUserId, type },
+        });
+
+        readStream.pipe(uploadStream)
+              .on('error', (err) => reject(err))
+              .on('finish', () => {
+                // remove temp file
+                fs.unlink(image.path, () => {});
+                const fileId = uploadStream.id;
+                const publicPath = `user/driving-licence-photo/${fileId}`;
+                resolve({ fileId, publicPath });
+              });
+      });
     };
 
-    // Sauvegarde des images
-    const selfiePath = saveImage(selfie, "selfie");
-    const frontPath = saveImage(front, "front");
-    const backPath = saveImage(back, "back");
+        // Save images to GridFS (selfie, front, back). Abort on any GridFS error.
+        let selfieSaved, frontSaved, backSaved;
+        try {
+          selfieSaved = await saveImageToGridFS(selfie, 'selfie');
+          frontSaved = await saveImageToGridFS(front, 'front');
+          backSaved = await saveImageToGridFS(back, 'back');
+        } catch (gridErr) {
+          console.error('GridFS batch upload error:', gridErr);
+          // Attempt to delete any partially uploaded GridFS files to avoid orphaned data
+          const tryDeleteId = async (fid) => {
+            if (!fid) return;
+            try {
+              await gridFSBucket.delete(ObjectId(fid));
+            } catch (e) {
+              // ignore
+            }
+          };
+          await tryDeleteId(selfieSaved?.fileId);
+          await tryDeleteId(frontSaved?.fileId);
+          await tryDeleteId(backSaved?.fileId);
+          // ensure temp files removed
+          try { fs.unlinkSync(selfie.path); } catch (e) {}
+          try { fs.unlinkSync(front.path); } catch (e) {}
+          try { fs.unlinkSync(back.path); } catch (e) {}
+          return res.status(500).json({ msg: 'Erreur lors de l\'upload dans GridFS', error: gridErr.message });
+        }
 
     // Mettre à jour les chemins des images dans la collection drivingLicensesCollection
     const drivingLicence = await drivingLicensesCollection.findOneAndUpdate(
       { user: loggedInUserId }, // Filtrer par l'utilisateur connecté
       {
         $set: {
-          photoSelfie: selfiePath,
-          photoRecto: frontPath,
-          photoVerso: backPath,
+          photoSelfie: selfieSaved.publicPath,
+          photoRecto: frontSaved.publicPath,
+          photoVerso: backSaved.publicPath,
+          photoSelfieId: selfieSaved.fileId,
+          photoRectoId: frontSaved.fileId,
+          photoVersoId: backSaved.fileId,
         },
       },
-      { new: true, upsert: true }, // Options pour créer un nouveau document si nécessaire
+      { returnDocument: 'after', upsert: true }, // Options pour créer un nouveau document si nécessaire
     );
 
     // Mettre à jour le champ allFieldsComplete dans la collection des utilisateurs
@@ -2464,9 +2567,9 @@ async function UploadUserDrivingLicencePhoto(req, res) {
     return res.status(200).json({
       msg: "Photos de la carte d'identité téléchargées avec succès",
       paths: {
-        selfiePath: selfiePath,
-        frontPath: frontPath,
-        backPath: backPath,
+        selfiePath: selfieSaved.publicPath,
+        frontPath: frontSaved.publicPath,
+        backPath: backSaved.publicPath,
       },
     });
   } catch (error) {
@@ -2483,6 +2586,38 @@ async function UploadUserDrivingLicencePhoto(req, res) {
   }
 }
 
+// Stream a GridFS file (profile image)
+async function StreamUserProfileImage(req, res) {
+  try {
+    const fileId = req.params.id;
+    if (!fileId) return res.status(400).json({ msg: 'File id is required' });
+
+    let _id;
+    try {
+      _id = new ObjectId(fileId);
+    } catch (e) {
+      console.error('Invalid file id for GridFS:', fileId, e);
+      return res.status(400).json({ msg: 'Invalid file id' });
+    }
+
+    const downloadStream = gridFSBucket.openDownloadStream(_id);
+    downloadStream.on('error', (err) => {
+      console.error('GridFS download error:', err);
+      return res.status(404).json({ msg: 'File not found' });
+    });
+
+    downloadStream.pipe(res);
+  } catch (err) {
+    console.error('Error streaming GridFS file:', err);
+    return res.status(500).json({ msg: 'Internal server error' });
+  }
+}
+
+// Stream a GridFS file for driving licence photos
+async function StreamDrivingLicenceImage(req, res) {
+  return StreamUserProfileImage(req, res);
+}
+
 module.exports = {
   RegisterUser,
   Login,
@@ -2490,6 +2625,8 @@ module.exports = {
   UploadUserProfileImage,
   DeleteUserProfileImage,
   UploadUserDrivingLicencePhoto,
+  StreamUserProfileImage,
+  StreamDrivingLicenceImage,
   Logout,
   RefresLogin,
   GetUserById,

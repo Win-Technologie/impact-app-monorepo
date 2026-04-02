@@ -139,66 +139,7 @@ const AddVehicle = () => {
     }
   };
 
-  // ==================== TESTING ONLY - REMOVE FOR PRODUCTION ====================
-  // This function autofills the form with random test data for faster testing
-  const autofillTestData = () => {
-    const brands = ["Honda", "Toyota", "Ford", "Chevrolet", "BMW", "Mercedes", "Audi"];
-    const models = ["Civic", "Camry", "F-150", "Silverado", "X5", "C-Class", "A4"];
-    const colors = ["Noir", "Blanc", "Gris", "Rouge", "Bleu", "Vert forêt", "Argent"];
-    const firstNames = ["Jean", "Marie", "Pierre", "Sophie", "Luc", "Julie", "Marc"];
-    const lastNames = ["Tremblay", "Gagnon", "Roy", "Côté", "Bouchard", "Gauthier", "Morin"];
-    const cities = ["Montréal", "Québec", "Laval", "Gatineau", "Longueuil", "Sherbrooke"];
-    const streets = ["Rue Principale", "Avenue des Érables", "Boulevard Saint-Laurent", "Rue Sainte-Catherine"];
-    
-    const randomBrand = brands[Math.floor(Math.random() * brands.length)];
-    const randomModel = models[Math.floor(Math.random() * models.length)];
-    const randomYear = (2015 + Math.floor(Math.random() * 10)).toString();
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    
-    // Generate random plate (XXX XXX format)
-    const letters = "ABCDEFGHJKLMNPRSTUVWXYZ";
-    const numbers = "0123456789";
-    const plate = 
-      letters[Math.floor(Math.random() * letters.length)] +
-      letters[Math.floor(Math.random() * letters.length)] +
-      letters[Math.floor(Math.random() * letters.length)] +
-      " " +
-      numbers[Math.floor(Math.random() * numbers.length)] +
-      letters[Math.floor(Math.random() * letters.length)] +
-      numbers[Math.floor(Math.random() * numbers.length)];
-    
-    // Generate random 13-digit registration
-    const registration = Math.floor(1000000000000 + Math.random() * 9000000000000).toString();
-    
-    // Fill vehicle fields
-    setVehicleBrand(randomBrand);
-    setVehicleModel(randomModel);
-    setVehicleYear(randomYear);
-    setVehicleColor(randomColor);
-    setPlateNumber(plate);
-    setRegistrationNumber(registration);
-    
-    // Fill owner fields if not owner is selected
-    if (!isOwner) {
-      const randomFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-      const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-      const randomCity = cities[Math.floor(Math.random() * cities.length)];
-      const randomStreet = streets[Math.floor(Math.random() * streets.length)];
-      const randomStreetNum = Math.floor(100 + Math.random() * 9900);
-      
-      setOwnerFirstName(randomFirstName);
-      setOwnerLastName(randomLastName);
-      setOwnerPhone(`(${Math.floor(100 + Math.random() * 900)}) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`);
-      setOwnerAddress(`${randomStreetNum} ${randomStreet}`);
-      setOwnerCity(randomCity);
-      setOwnerPostalCode(`${letters[Math.floor(Math.random() * letters.length)]}${numbers[Math.floor(Math.random() * numbers.length)]}${letters[Math.floor(Math.random() * letters.length)]} ${numbers[Math.floor(Math.random() * numbers.length)]}${letters[Math.floor(Math.random() * letters.length)]}${numbers[Math.floor(Math.random() * numbers.length)]}`);
-      setCountry("Canada");
-      setProvince("Québec");
-    }
-    
-    Alert.alert("Rempli!", isOwner ? "Les champs véhicule ont été remplis" : "Tous les champs ont été remplis avec des données aléatoires");
-  };
-  // ===============================================================================
+  // (Removed test autofill helper for production)
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -225,15 +166,7 @@ const AddVehicle = () => {
             </View>
           </View>
 
-          {/* ===== TESTING ONLY - REMOVE FOR PRODUCTION ===== */}
-          <TouchableOpacity 
-            style={styles.testButton} 
-            onPress={autofillTestData}
-          >
-            <MaterialIcons name="casino" size={20} color="#FFF" />
-            <Text style={styles.testButtonText}>Remplir aléatoirement (TEST)</Text>
-          </TouchableOpacity>
-          {/* ================================================= */}
+          {/* Test autofill removed for production */}
 
           {/* Vehicle Information Section */}
           <View style={styles.section}>
@@ -458,9 +391,7 @@ const AddVehicle = () => {
                   </View>
                 </View>
 
-                <TouchableOpacity style={styles.cameraButton}>
-                  <MaterialIcons name="camera-alt" size={28} color="white" />
-                </TouchableOpacity>
+                {/* Camera button removed per request */}
               </View>
             )}
           </View>
@@ -632,26 +563,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  // ===== TESTING ONLY - REMOVE FOR PRODUCTION =====
-  testButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FF6B35",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 5,
-    borderRadius: 8,
-    gap: 8,
-  },
-  testButtonText: {
-    color: "#FFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  // ================================================
+  // Test styles removed
 });
 
 export default AddVehicle;

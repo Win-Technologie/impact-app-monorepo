@@ -54,7 +54,17 @@ export default function TabsHomeScreen() {
   }, [setInsurance]);
 
   const callUrgence = () => {
-    Linking.openURL("tel:911");
+    Alert.alert(
+      "Appeler les urgences",
+      "Voulez-vous appeler le numéro d'urgence ?\n911",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Appeler",
+          onPress: () => Linking.openURL("tel:911"),
+        },
+      ]
+    );
   };
 
   const callAssurance = () => {
@@ -123,7 +133,13 @@ export default function TabsHomeScreen() {
 
   const getSelfie = async () => {
     const s = await AsyncStorage.getItem("selfie");
-    setSelfie(s);
+    let parsed;
+    try {
+      parsed = s ? JSON.parse(s) : null;
+    } catch (e) {
+      parsed = { url: s, ts: 0 };
+    }
+    setSelfie(parsed ? parsed.url : null);
   };
 
   return (
