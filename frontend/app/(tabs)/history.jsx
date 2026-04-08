@@ -1,60 +1,38 @@
 ﻿import { View, Text, StyleSheet, FlatList, StatusBar } from "react-native";
-import React from "react";
-import { AntDesign } from "@expo/vector-icons";
+import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import BoxComponent from "../../components/Home/boxComponent";
 import SearchInput from "../../components/History/searchInput";
 import HistoryBoxComponent from "../../components/History/historyBox";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// Données d'exemple pour la démonstration
-const historyData = [
-  {
-    key: "1",
-    date: "15 Mar 2023",
-    description: "Accident mineur sans blessures",
-    people: [
-      {
-        name: "John Doe",
-        imageUri: "../../../assets/splashscreen.png",
-      },
-      {
-        name: "Jane Doe",
-        imageUri: "../../../assets/splashscreen.png",
-      },
-    ],
-    accidentImageUri: "../../../assets/splashscreen.png",
-  },
-
-  {
-    key: "2",
-    date: "22 Mar 2023",
-    description: "Collision arrière avec dommages matériels",
-    people: [
-      {
-        name: "Alice Brown",
-        imageUri: "../../../assets/google.png",
-      },
-    ],
-    accidentImageUri: "../../../assets/facebook.png",
-  },
-
-  {
-    key: "3",
-    date: "22 Mar 2023",
-    description: "Collision arrière avec dommages matériels",
-    people: [
-      {
-        name: "Alice Brown",
-        imageUri: "../../../assets/google.png",
-      },
-    ],
-    accidentImageUri: "../../../assets/facebook.png",
-  },
-];
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 
 export default function HistoryPage() {
   const { t } = useTranslation();
+  const [historyData, setHistoryData] = useState([]);
+  const [query, setQuery] = useState("");
+
+  const loadLocalHistory = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("local_accidents");
+      const arr = stored ? JSON.parse(stored) : [];
+      setHistoryData(arr);
+    } catch (e) {
+      console.error("loadLocalHistory error", e);
+    }
+  };
+
+  useEffect(() => {
+    loadLocalHistory();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadLocalHistory();
+    }, []),
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -71,24 +49,40 @@ export default function HistoryPage() {
             {historyData.length} {t("historyPage.accidents")}
           </Text>
         </View>
-        <AntDesign
-          name="plus-circle"
-          size={34}
-          color="white"
-          style={styles.icon}
-        />
+        {/* plus icon removed from Historique header */}
       </BoxComponent>
 
-      <SearchInput />
+      <SearchInput value={query} onChangeText={setQuery} />
 
       <FlatList
-        data={historyData}
+        data={historyData.filter((item) => {
+          if (!query || query.trim() === "") return true;
+          const q = query.trim().toLowerCase();
+          try {
+            const d = new Date(item.date);
+            const iso = d.toISOString();
+            const ymd = iso.slice(0, 10);
+            const loc = d.toLocaleDateString();
+            const full = d.toLocaleString();
+            const desc = (item.description || "").toLowerCase();
+            return (
+              (iso && iso.toLowerCase().includes(q)) ||
+              (ymd && ymd.includes(q)) ||
+              (loc && loc.toLowerCase().includes(q)) ||
+              (full && full.toLowerCase().includes(q)) ||
+              desc.includes(q)
+            );
+          } catch (e) {
+            return (item.description || "").toLowerCase().includes(q);
+          }
+        })}
         renderItem={({ item }) => (
           <HistoryBoxComponent
             date={item.date}
-            description={item.description}
+            description={(item.data && item.data.otherSpecification) || item.description}
             people={item.people}
-            accidentImageUri={item.accidentImageUri}
+            accidentImageUri={item.accidentImageUri || (item.data && item.data.photos)}
+            onPress={() => router.push({ pathname: "historyDetail", params: { id: item.key } })}
           />
         )}
         keyExtractor={(item) => item.key}
