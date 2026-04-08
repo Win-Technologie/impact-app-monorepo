@@ -12,6 +12,7 @@ import { router } from "expo-router";
 export default function HistoryPage() {
   const { t } = useTranslation();
   const [historyData, setHistoryData] = useState([]);
+  const [query, setQuery] = useState("");
 
   const loadLocalHistory = async () => {
     try {
@@ -51,10 +52,30 @@ export default function HistoryPage() {
         {/* plus icon removed from Historique header */}
       </BoxComponent>
 
-      <SearchInput />
+      <SearchInput value={query} onChangeText={setQuery} />
 
       <FlatList
-        data={historyData}
+        data={historyData.filter((item) => {
+          if (!query || query.trim() === "") return true;
+          const q = query.trim().toLowerCase();
+          try {
+            const d = new Date(item.date);
+            const iso = d.toISOString();
+            const ymd = iso.slice(0, 10);
+            const loc = d.toLocaleDateString();
+            const full = d.toLocaleString();
+            const desc = (item.description || "").toLowerCase();
+            return (
+              (iso && iso.toLowerCase().includes(q)) ||
+              (ymd && ymd.includes(q)) ||
+              (loc && loc.toLowerCase().includes(q)) ||
+              (full && full.toLowerCase().includes(q)) ||
+              desc.includes(q)
+            );
+          } catch (e) {
+            return (item.description || "").toLowerCase().includes(q);
+          }
+        })}
         renderItem={({ item }) => (
           <HistoryBoxComponent
             date={item.date}
