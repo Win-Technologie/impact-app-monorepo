@@ -87,6 +87,38 @@ export default function HistoryDetailPage() {
     }
   };
 
+  // determine a short vehicle label to show in the header (brand/model/plate)
+  const getVehicleLabel = () => {
+    // look in multiple possible locations for vehicle info
+    const candidate =
+      data.vehicle ||
+      (data.vehicles && data.vehicles.length ? data.vehicles[0] : null) ||
+      item.vehicle ||
+      (item.vehicles && item.vehicles.length ? item.vehicles[0] : null) ||
+      data.vehicleDetails ||
+      null;
+    if (!candidate) return null;
+    const brand =
+      candidate.brand ||
+      candidate.make ||
+      candidate.marque ||
+      candidate.vehicleDetails?.make ||
+      "";
+    const model = candidate.model || candidate.modele || candidate.vehicleDetails?.model || "";
+    const plate =
+      candidate.plate ||
+      candidate.registrationNumber ||
+      candidate.licensePlate ||
+      candidate.vehicleDetails?.registrationCertificate?.licensePlateNumber ||
+      candidate.vehicleDetails?.licensePlateNumber ||
+      "";
+    const parts = [];
+    if (brand) parts.push(brand);
+    if (model) parts.push(model);
+    if (plate) parts.push(plate);
+    return parts.join(" ") || null;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
@@ -98,19 +130,26 @@ export default function HistoryDetailPage() {
           <Text style={styles.headerDeleteText}>🗑 Supprimer</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>{new Date(item.date).toLocaleDateString()}</Text>
-        <Text style={styles.subtle}>Heure: {formatTime()}</Text>
 
-        <View style={styles.section}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.card}>
+          <Text style={styles.title}>{new Date(item.date).toLocaleDateString()}</Text>
+          <Text style={styles.subtle}>Heure: {formatTime()}</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Résumé</Text>
+          <Text style={styles.summaryText}>{data.otherSpecification || data.vehicleDamageDescription || data.summary || "-"}</Text>
+        </View>
+
+        <View style={styles.card}>
           <Text style={styles.sectionTitle}>Informations principales</Text>
           <Row label="Lieu" value={data.accidentLocation || data.location || data.place || "-"} />
           <Row label="Type" value={data.type || data.accidentType || data.accitendType} />
-          <Row label="Résumé" value={data.otherSpecification || data.vehicleDamageDescription || data.summary || "-"} />
         </View>
 
         {data.owner && (
-          <View style={styles.section}>
+          <View style={styles.card}>
             <Text style={styles.sectionTitle}>Personne</Text>
             <Row label="Nom" value={`${data.owner.name || ""} ${data.owner.lastName || ""}`.trim()} />
             <Row label="Téléphone" value={data.owner.phone} />
@@ -120,19 +159,19 @@ export default function HistoryDetailPage() {
         )}
 
         {(data.vehicle || (data.vehicles && data.vehicles.length)) && (
-          <View style={styles.section}>
+          <View style={styles.card}>
             <Text style={styles.sectionTitle}>Véhicule</Text>
             {data.vehicle ? (
               <>
                 <Row label="Marque" value={data.vehicle.brand} />
                 <Row label="Modèle" value={data.vehicle.model} />
-                <Row label="Plaque" value={data.vehicle.plate} />
+                <Row label="Plaque" value={data.vehicle.plate || data.vehicle.license_plate} />
               </>
             ) : (
               data.vehicles.map((v, i) => (
-                <View key={i} style={{ marginBottom: 6 }}>
-                  <Row label={`Véhicule ${i + 1} - Propriétaire`} value={v.personalDetails?.name || v.personalDetails?.fullName} />
-                  <Row label={`V${i + 1} Plaque`} value={v.vehicleDetails?.registrationCertificate?.licensePlateNumber} />
+                <View key={i} style={{ marginBottom: 8 }}>
+                  <Row label={`Véhicule ${i + 1}`} value={v.car?.model || v.vehicleDetails?.model || v.car?.registration || "-"} />
+                  <Row label={`Plaque`} value={v.car?.license_plate || v.vehicleDetails?.registrationCertificate?.licensePlateNumber || "-"} />
                 </View>
               ))
             )}
@@ -140,29 +179,31 @@ export default function HistoryDetailPage() {
         )}
 
         {photos.length > 0 && (
-          <View style={styles.section}>
+          <View style={styles.card}>
             <Text style={styles.sectionTitle}>Photos</Text>
-            <View style={styles.imagesRow}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
               {photos.map((uri, i) => (
-                <Image key={i} source={{ uri }} style={styles.image} />
+                <Image key={i} source={{ uri }} style={styles.photoThumb} />
               ))}
-            </View>
+            </ScrollView>
           </View>
         )}
 
         {item.people && item.people.length > 0 && (
-          <View style={styles.section}>
+          <View style={styles.card}>
             <Text style={styles.sectionTitle}>Personnes impliquées</Text>
             {item.people.map((p, i) => (
-              <View key={i} style={styles.row}>
-                <Text style={styles.rowLabel}>{p.name || `Personne ${i + 1}`}</Text>
+              <View key={i} style={styles.personRow}>
+                <View style={styles.personInfo}>
+                  <Text style={styles.personName}>{p.name || `Personne ${i + 1}`}</Text>
+                  <Text style={styles.personSub}>{p.role || p.relation || ""}</Text>
+                </View>
                 {p.imageUri ? <Image source={{ uri: p.imageUri }} style={styles.personThumb} /> : null}
               </View>
             ))}
           </View>
         )}
 
-        {/* raw data removed */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -184,6 +225,14 @@ const styles = StyleSheet.create({
   personThumb: { width: 40, height: 40, borderRadius: 20 },
   rawToggle: { paddingVertical: 8 },
   rawToggleText: { color: "#0B8BA8" },
+  photoScroll: { marginTop: 8 },
+  photoThumb: { width: 140, height: 120, borderRadius: 8, marginRight: 8 },
+  card: { backgroundColor: "white", borderRadius: 10, padding: 12, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  summaryText: { fontSize: 15, color: "#333", lineHeight: 20 },
+  personRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
+  personInfo: { flex: 1 },
+  personName: { fontSize: 15, color: "#222" },
+  personSub: { fontSize: 13, color: "#666" },
   header: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, backgroundColor: "white" },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12, paddingTop: 8 },
   headerBack: { flexDirection: "row", alignItems: "center" , padding: 6},

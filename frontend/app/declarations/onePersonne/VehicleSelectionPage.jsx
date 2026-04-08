@@ -11,6 +11,7 @@ import SelectDropdown from "react-native-select-dropdown";
 import { AntDesign } from "@expo/vector-icons";
 import { useRecoilState } from "recoil";
 import { VehicleChoiceState } from "../../../GlobalState/AccidentVehiculeState";
+import { DeclarationState } from "../../../GlobalState/DeclarationState";
 import { getMyVehicles } from "../../api/users/userApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -20,6 +21,7 @@ const VehicleSelectionPage = () => {
   const [allVehicles, setAllVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [vehicleState, setVehiculeState] = useRecoilState(VehicleChoiceState);
+  const [declaration, setDeclaration] = useRecoilState(DeclarationState);
   const router = useRouter();
 
   useEffect(() => {
@@ -58,6 +60,12 @@ const VehicleSelectionPage = () => {
       if (vehicleId) {
         setSelectedVehicleId(vehicleId);
         setVehiculeState(vehicleId);
+        // also persist the selected vehicle object into the declaration so it appears in history details
+        try {
+          setDeclaration({ ...declaration, vehicle: selectedItem.car });
+        } catch (err) {
+          console.warn("Could not set declaration vehicle", err);
+        }
         router.push("./typeOfAccident");
       } else {
         Alert.alert("Erreur", "Sélection de véhicule invalide. Veuillez réessayer.");

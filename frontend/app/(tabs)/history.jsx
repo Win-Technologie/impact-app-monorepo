@@ -79,7 +79,7 @@ export default function HistoryPage() {
         renderItem={({ item }) => (
           <HistoryBoxComponent
             date={item.date}
-            description={item.description}
+            description={(item.data && item.data.otherSpecification) || item.description}
             people={item.people}
             accidentImageUri={item.accidentImageUri || (item.data && item.data.photos)}
             onPress={() => router.push({ pathname: "historyDetail", params: { id: item.key } })}
