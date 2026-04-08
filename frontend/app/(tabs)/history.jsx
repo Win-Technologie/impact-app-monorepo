@@ -1,6 +1,6 @@
 ﻿import { View, Text, StyleSheet, FlatList, StatusBar } from "react-native";
 import React, { useState, useEffect } from "react";
-import { AntDesign } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import BoxComponent from "../../components/Home/boxComponent";
 import SearchInput from "../../components/History/searchInput";
 import HistoryBoxComponent from "../../components/History/historyBox";
@@ -13,18 +13,25 @@ export default function HistoryPage() {
   const { t } = useTranslation();
   const [historyData, setHistoryData] = useState([]);
 
+  const loadLocalHistory = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("local_accidents");
+      const arr = stored ? JSON.parse(stored) : [];
+      setHistoryData(arr);
+    } catch (e) {
+      console.error("loadLocalHistory error", e);
+    }
+  };
+
   useEffect(() => {
-    const loadLocalHistory = async () => {
-      try {
-        const stored = await AsyncStorage.getItem("local_accidents");
-        const arr = stored ? JSON.parse(stored) : [];
-        setHistoryData(arr);
-      } catch (e) {
-        console.error("loadLocalHistory error", e);
-      }
-    };
     loadLocalHistory();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadLocalHistory();
+    }, []),
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -41,12 +48,7 @@ export default function HistoryPage() {
             {historyData.length} {t("historyPage.accidents")}
           </Text>
         </View>
-        <AntDesign
-          name="plus-circle"
-          size={34}
-          color="white"
-          style={styles.icon}
-        />
+        {/* plus icon removed from Historique header */}
       </BoxComponent>
 
       <SearchInput />

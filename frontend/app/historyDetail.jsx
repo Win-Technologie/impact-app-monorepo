@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -45,12 +46,40 @@ export default function HistoryDetailPage() {
     );
   };
 
+  const handleDelete = () => {
+    Alert.alert(
+      "Supprimer",
+      "Voulez-vous vraiment supprimer cette déclaration ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Supprimer",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const stored = await AsyncStorage.getItem("local_accidents");
+              const arr = stored ? JSON.parse(stored) : [];
+              const filtered = arr.filter((x) => x.key !== id);
+              await AsyncStorage.setItem("local_accidents", JSON.stringify(filtered));
+              router.back();
+            } catch (e) {
+              console.error("delete error", e);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerBack}>
           <Text style={styles.headerBackIcon}>←</Text>
           <Text style={styles.headerBackText}>Retour</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleDelete} style={styles.headerDelete}>
+          <Text style={styles.headerDeleteText}>🗑 Supprimer</Text>
         </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -149,8 +178,10 @@ const styles = StyleSheet.create({
   rawToggle: { paddingVertical: 8 },
   rawToggleText: { color: "#0B8BA8" },
   header: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, backgroundColor: "white" },
+  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12, paddingTop: 8 },
   headerBack: { flexDirection: "row", alignItems: "center" , padding: 6},
   headerBackText: { marginLeft: 8, color: "#19363C", fontWeight: "600" },
-  backButton: {},
-  backText: { color: "#19363C" },
+  headerBackIcon: { fontSize: 20, color: "#19363C" },
+  headerDelete: { padding: 8 },
+  headerDeleteText: { color: "#c62828", fontWeight: "600" },
 });

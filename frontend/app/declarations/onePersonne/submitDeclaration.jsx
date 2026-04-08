@@ -78,10 +78,20 @@ const submitDeclaration = () => {
       const newEntry = {
         key: Date.now().toString(),
         date: new Date().toISOString(),
-        description: declaration?.description || "Déclaration d'accident",
+        description:
+          declaration?.otherSpecification || declaration?.description || "Déclaration d'accident",
         people: declaration?.people || [],
-        accidentImageUri: declaration?.accidentImageUri || null,
-        data: declaration,
+        accidentImageUri:
+          declaration?.images && declaration.images.length
+            ? declaration.images[0].image
+            : declaration?.accidentImageUri || null,
+        data: {
+          ...declaration,
+          photos:
+            declaration?.images && declaration.images.length
+              ? declaration.images.map((i) => i.image)
+              : declaration?.photos || [],
+        },
       };
       arr.unshift(newEntry);
       await AsyncStorage.setItem("local_accidents", JSON.stringify(arr));
