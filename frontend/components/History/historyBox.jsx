@@ -1,50 +1,60 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 
 export default function HistoryBoxComponent({
   date,
   description,
-  people,
+  people = [],
   accidentImageUri,
+  onPress,
   width = "100%",
-  height = 200,
+  height = 100,
   style,
 }) {
   // Styles combinés pour le composant de la boîte
   const boxStyles = [styles.box, { width, height }];
 
+  // choose first image: if accidentImageUri is array, use first element
+  let thumbnailUri = null;
+  if (Array.isArray(accidentImageUri)) {
+    thumbnailUri = accidentImageUri.length ? accidentImageUri[0] : null;
+  } else {
+    thumbnailUri = accidentImageUri;
+  }
+
   return (
-    <View style={boxStyles}>
-      <Text style={styles.dateTitle}>{date}</Text>
-      <Text style={styles.description}>{description}</Text>
+    <TouchableOpacity style={boxStyles} activeOpacity={0.8} onPress={onPress}>
+      <View style={styles.row}>
+        {thumbnailUri ? (
+          <Image source={{ uri: thumbnailUri }} style={styles.thumbnail} />
+        ) : (
+          <View style={styles.placeholder} />
+        )}
 
-      <View style={styles.personImagesContainer}>
-        {people.map((person, index) => (
-          <Image
-            key={index}
-            source={{ uri: person.imageUri }}
-            style={styles.personImage}
-          />
-        ))}
+        <View style={styles.content}>
+          <Text style={styles.dateTitle}>{new Date(date).toLocaleString()}</Text>
+          <Text numberOfLines={2} style={styles.description}>
+            {description}
+          </Text>
+        </View>
       </View>
-
-      <Image source={{ uri: accidentImageUri }} style={styles.accidentImage} />
-
-      <View style={styles.bottomLine} />
-    </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   box: {
-    // flexDirection: "colunm",
-    borderWidth: 1,
-    borderColor: "white",
-    borderRadius: 5,
+    borderWidth: 0,
+    borderColor: "transparent",
+    borderRadius: 8,
     padding: 10,
-    backgroundColor: "#F1F1F1",
-    marginTop: 15,
-    alignItems: "flex-end", // Aligner les éléments à droite
+    backgroundColor: "white",
+    marginTop: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+    alignItems: "stretch",
   },
 
   dateTitle: {
@@ -61,7 +71,7 @@ const styles = StyleSheet.create({
 
   personImagesContainer: {
     flexDirection: "row",
-    justifyContent: "flex-end", // Aligner les images des personnes à droite
+    justifyContent: "flex-end",
   },
 
   personImage: {
@@ -72,20 +82,38 @@ const styles = StyleSheet.create({
   },
 
   accidentImage: {
-    width: 100, // Définissez la taille de l'image de l'accident
+    width: 100,
     height: 100,
-    marginTop: 5, // Espacer l'image de l'accident des images des personnes
+    marginTop: 5,
   },
 
   bottomLine: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 35,
-    backgroundColor: "#19363C",
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
+    height: 0,
+  },
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  thumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: 6,
+    marginRight: 12,
+    backgroundColor: "#eee",
+  },
+
+  placeholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 6,
+    marginRight: 12,
+    backgroundColor: "#eee",
+  },
+
+  content: {
+    flex: 1,
   },
 });
 

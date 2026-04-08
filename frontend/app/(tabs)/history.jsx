@@ -7,6 +7,7 @@ import HistoryBoxComponent from "../../components/History/historyBox";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 
 export default function HistoryPage() {
   const { t } = useTranslation();
@@ -57,7 +58,8 @@ export default function HistoryPage() {
             date={item.date}
             description={item.description}
             people={item.people}
-            accidentImageUri={item.accidentImageUri}
+            accidentImageUri={item.accidentImageUri || (item.data && item.data.photos)}
+            onPress={() => router.push({ pathname: "historyDetail", params: { id: item.key } })}
           />
         )}
         keyExtractor={(item) => item.key}
