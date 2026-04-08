@@ -32,7 +32,10 @@ export default function HistoryBoxComponent({
         )}
 
         <View style={styles.content}>
-          <Text style={styles.dateTitle}>{new Date(date).toLocaleString()}</Text>
+          <View style={styles.dateRow}>
+            <Text style={styles.dateTitle}>{new Date(date).toLocaleDateString()}</Text>
+            <Text style={styles.personIcon}>{people && people.length > 1 ? "👥" : "👤"}</Text>
+          </View>
           <Text numberOfLines={2} style={styles.description}>
             {description}
           </Text>
@@ -114,6 +117,15 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
+  },
+  dateRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  personIcon: {
+    fontSize: 18,
+    marginLeft: 8,
   },
 });
 

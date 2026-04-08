@@ -9,7 +9,6 @@ export default function HistoryDetailPage() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [item, setItem] = useState(null);
-  const [showRaw, setShowRaw] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -71,6 +70,23 @@ export default function HistoryDetailPage() {
     );
   };
 
+  // format time: prefer declared hour/minute, fallback to ISO time from item.date
+  const formatTime = () => {
+    const h = data.hour ?? data.accidentHour ?? data.hours ?? data.time ?? null;
+    const m = data.minute ?? data.accidentMinute ?? data.minutes ?? null;
+    if (h !== null && m !== null) {
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      return `${hh}:${mm}`;
+    }
+    try {
+      const d = new Date(item.date);
+      return d.toLocaleTimeString();
+    } catch (e) {
+      return "";
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerRow}>
@@ -83,14 +99,14 @@ export default function HistoryDetailPage() {
         </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>{new Date(item.date).toLocaleString()}</Text>
-        <Text style={styles.description}>{item.description}</Text>
+        <Text style={styles.title}>{new Date(item.date).toLocaleDateString()}</Text>
+        <Text style={styles.subtle}>Heure: {formatTime()}</Text>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informations principales</Text>
           <Row label="Lieu" value={data.accidentLocation || data.location || data.place || "-"} />
           <Row label="Type" value={data.type || data.accidentType || data.accitendType} />
-          <Row label="Résumé" value={data.vehicleDamageDescription || data.summary || "-"} />
+          <Row label="Résumé" value={data.otherSpecification || data.vehicleDamageDescription || data.summary || "-"} />
         </View>
 
         {data.owner && (
@@ -146,16 +162,7 @@ export default function HistoryDetailPage() {
           </View>
         )}
 
-        <TouchableOpacity onPress={() => setShowRaw((s) => !s)} style={styles.rawToggle}>
-          <Text style={styles.rawToggleText}>{showRaw ? "Masquer les données brutes" : "Afficher les données brutes"}</Text>
-        </TouchableOpacity>
-
-        {showRaw && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Données brutes</Text>
-            <Text style={styles.mono}>{JSON.stringify(item, null, 2)}</Text>
-          </View>
-        )}
+        {/* raw data removed */}
       </ScrollView>
     </SafeAreaView>
   );

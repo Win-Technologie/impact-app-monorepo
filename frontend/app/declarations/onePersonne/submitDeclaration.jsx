@@ -78,8 +78,8 @@ const submitDeclaration = () => {
       const newEntry = {
         key: Date.now().toString(),
         date: new Date().toISOString(),
-        description:
-          declaration?.otherSpecification || declaration?.description || "Déclaration d'accident",
+        // keep the top-line description concise; show otherSpecification under 'Résumé' in detail view
+        description: declaration?.description || "Déclaration d'accident",
         people: declaration?.people || [],
         accidentImageUri:
           declaration?.images && declaration.images.length
