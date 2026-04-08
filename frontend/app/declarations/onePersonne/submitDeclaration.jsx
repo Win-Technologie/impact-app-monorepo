@@ -11,6 +11,9 @@ import { router } from "expo-router";
 import Stepper from "../../../components/SignUp/stepper";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRecoilValue } from "recoil";
+import { DeclarationState } from "../../../GlobalState/DeclarationState";
 
 const MainPageListItem = ({ item, slideAnim }) => (
   <>
@@ -39,6 +42,7 @@ const submitDeclaration = () => {
   const [visible, setVisible] = React.useState(false);
   const [minute, setMinute] = React.useState(null);
   const [hour, setHour] = React.useState(null);
+  const declaration = useRecoilValue(DeclarationState);
 
   const info = {
     title: "Vous avez completez l'ensemble de toute votre déclaration",
@@ -67,8 +71,25 @@ const submitDeclaration = () => {
     router.back();
   };
 
-  const next = () => {
-    router.navigate("(tabs)");
+  const submitAndNavigate = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("local_accidents");
+      const arr = stored ? JSON.parse(stored) : [];
+      const newEntry = {
+        key: Date.now().toString(),
+        date: new Date().toISOString(),
+        description: declaration?.description || "Déclaration d'accident",
+        people: declaration?.people || [],
+        accidentImageUri: declaration?.accidentImageUri || null,
+        data: declaration,
+      };
+      arr.unshift(newEntry);
+      await AsyncStorage.setItem("local_accidents", JSON.stringify(arr));
+    } catch (e) {
+      console.error("submitAndNavigate error", e);
+    } finally {
+      router.navigate("(tabs)");
+    }
   };
 
   return (
@@ -96,7 +117,7 @@ const submitDeclaration = () => {
             leftButtonTitle="Retour"
             rightButtonTitle="Confirmer"
             onPressBack={() => back()}
-            onPressContinue={() => next()}
+            onPressContinue={() => submitAndNavigate()}
           />
         </View>
       </ImageBackground>

@@ -1,17 +1,29 @@
 ﻿import { View, Text, StyleSheet, FlatList, StatusBar } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AntDesign } from "@expo/vector-icons";
 import BoxComponent from "../../components/Home/boxComponent";
 import SearchInput from "../../components/History/searchInput";
 import HistoryBoxComponent from "../../components/History/historyBox";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// Placeholder data removed — use real data or fetch from API instead
-const [historyData, setHistoryData] = useState([]);
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function HistoryPage() {
   const { t } = useTranslation();
+  const [historyData, setHistoryData] = useState([]);
+
+  useEffect(() => {
+    const loadLocalHistory = async () => {
+      try {
+        const stored = await AsyncStorage.getItem("local_accidents");
+        const arr = stored ? JSON.parse(stored) : [];
+        setHistoryData(arr);
+      } catch (e) {
+        console.error("loadLocalHistory error", e);
+      }
+    };
+    loadLocalHistory();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
