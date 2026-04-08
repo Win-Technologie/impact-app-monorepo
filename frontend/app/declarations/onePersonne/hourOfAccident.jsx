@@ -63,7 +63,7 @@ const hourOfAccident = () => {
           ],
         );
       } else {
-        setDeclaration({ ...declaration, hour: hour, minute: minute });
+        setDeclaration({ ...declaration, hour: hour, minute: minute, step: 3 });
         router.navigate("declarations/onePersonne/otherSpecification");
       }
     } catch (error) {
@@ -72,12 +72,7 @@ const hourOfAccident = () => {
     }
   };
 
-  const generateTestTime = () => {
-    const randomHour = Math.floor(Math.random() * 24);
-    const randomMinute = Math.floor(Math.random() * 60);
-    setHour(randomHour);
-    setMinute(randomMinute);
-  };
+  
 
   return (
     <SafeAreaView style={styles.outerContainer}>
@@ -127,20 +122,15 @@ const hourOfAccident = () => {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.testButton}
-          onPress={generateTestTime}
-        >
-          <Text style={styles.testButtonText}>Générer heure test</Text>
-        </TouchableOpacity>
+        
 
         <View>
           <TimePickerModal
             visible={visible}
             onDismiss={onDismiss}
             onConfirm={onConfirm}
-            hours={12}
-            minutes={14}
+            hours={0}
+            minutes={0}
           />
         </View>
       </View>
@@ -262,19 +252,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
 
-  testButton: {
-    backgroundColor: "#6c757d",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginTop: 15,
-  },
-
-  testButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "500",
-  },
+  
 });
 
 export default hourOfAccident;

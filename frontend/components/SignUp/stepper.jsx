@@ -1,10 +1,15 @@
 // Stepper.js
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { useRecoilValue } from "recoil";
+import { DeclarationState } from "../../GlobalState/DeclarationState";
 
 const Stepper = ({ currentStep, totalSteps, displayStep }) => {
+  // Prefer an explicit displayStep prop, then a global declaration step, then local currentStep
+  const globalDeclaration = useRecoilValue(DeclarationState);
+  const globalStep = globalDeclaration && typeof globalDeclaration.step === "number" ? globalDeclaration.step : null;
   // Always show step as 1-based (never 0)
-  let visibleStep = displayStep ?? currentStep;
+  let visibleStep = displayStep ?? globalStep ?? currentStep;
   if (!visibleStep || visibleStep < 1) visibleStep = 1;
   const normalizedStep = Math.min(Math.max(visibleStep, 1), totalSteps);
   const progress = (normalizedStep / totalSteps) * 100;

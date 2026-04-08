@@ -65,7 +65,7 @@ const hourOfAccident = () => {
           ],
         );
       } else {
-        setDeclaration({ ...declaration, hour: hour, minute: minute });
+        setDeclaration({ ...declaration, hour: hour, minute: minute, step: 3 });
         router.navigate("declarations/twoPersonnes/otherSpecification");
       }
     } catch (error) {
@@ -133,8 +133,8 @@ const hourOfAccident = () => {
             visible={visible}
             onDismiss={onDismiss}
             onConfirm={onConfirm}
-            hours={12}
-            minutes={14}
+            hours={0}
+            minutes={0}
           />
         </View>
       </View>

@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  ScrollView,
-  Alert,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, FlatList } from "react-native";
 import AnimatedButton from "../../../components/SignUp/animatedButton";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
@@ -33,6 +25,8 @@ const placeOfAccident = () => {
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
   const [selectedCoords, setSelectedCoords] = useState(null);
   const googlePlacesRef = useRef(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const debounceRef = useRef(null);
 
   console.log(declaration);
 
@@ -48,7 +42,7 @@ const placeOfAccident = () => {
   const next = () => {
     try {
       if (place) {
-        setDeclaration({ ...declaration, place: place });
+        setDeclaration({ ...declaration, place: place, step: 2 });
         router.navigate("declarations/twoPersonnes/hourOfAccident");
       } else {
         Alert.alert(
@@ -148,50 +142,64 @@ const placeOfAccident = () => {
         style={styles.stepper}
       />
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.container}>
         <Text style={styles.title}> Ou l'accident a t-il eu lieu ? </Text>
 
         <View style={{ zIndex: 9999, marginTop: 20 }}>
-          <GooglePlacesAutocomplete
-            ref={googlePlacesRef}
-            placeholder="chercher une adresse"            textInputValue={place}            query={{
-              key: "AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY",
-              language: 'fr',
-              components: 'country:fr',
+          <TextInput
+            placeholder="chercher une adresse"
+            value={place}
+            onChangeText={(text) => {
+              setPlace(text);
+              if (debounceRef.current) clearTimeout(debounceRef.current);
+              debounceRef.current = setTimeout(async () => {
+                if (!text || text.length < 2) {
+                  setSuggestions([]);
+                  return;
+                }
+                try {
+                  const key = 'AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY';
+                  const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+                    text,
+                  )}&key=${key}&language=fr&components=country:ca`;
+                  const res = await fetch(url);
+                  const json = await res.json();
+                  if (json && json.predictions) setSuggestions(json.predictions);
+                  else setSuggestions([]);
+                } catch (e) {
+                  console.error("Places autocomplete error", e);
+                  setSuggestions([]);
+                }
+              }, 400);
             }}
-            fetchDetails={true}
-            onPress={(data, details = null) => selectPlace(data, details)}
-            onFail={(error) => {
-              console.error("Google Places API error:", error);
-              Alert.alert("Erreur", "Impossible de rechercher l'adresse. Vérifiez votre connexion internet.");
-            }}
-            onNotFound={() => {
-              console.log("no results");
-              Alert.alert("Information", "Aucune adresse trouvée. Essayez une autre recherche.");
-            }}
-            enablePoweredByContainer={false}
-            listViewDisplayed='auto'
-            keepResultsAfterBlur={true}
-            predefinedPlaces={[]}
-            debounce={400}
-            minLength={2}
-            nearbyPlacesAPI='GooglePlacesSearch'
-            textInputProps={{
-              onFocus: () => {},
-              onBlur: () => {},
-              autoCorrect: false,
-              autoCapitalize: 'none',
-              onChangeText: (text) => setPlace(text),
-            }}
-            styles={{
-              textInput: {
-                borderRadius: 5,
-                borderWidth: 1,
-                borderColor: "gray",
-                height: 50,
-              },
+            style={{
+              borderRadius: 5,
+              borderWidth: 1,
+              borderColor: "gray",
+              height: 50,
+              paddingHorizontal: 10,
             }}
           />
+
+          {suggestions.length > 0 && (
+            <View style={{ backgroundColor: "white", maxHeight: 200 }}>
+              <FlatList
+                data={suggestions}
+                keyExtractor={(item) => item.place_id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={{ padding: 12, borderBottomWidth: 1, borderColor: "#eee" }}
+                    onPress={() => {
+                      setPlace(item.description);
+                      setSuggestions([]);
+                    }}
+                  >
+                    <Text>{item.description}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
         </View>
 
         <View style={styles.mapContainer}>
@@ -216,7 +224,7 @@ const placeOfAccident = () => {
             )}
           </MapView>
         </View>
-      </ScrollView>
+      </View>
 
       {/*<View style={{
                 position: "absolute",

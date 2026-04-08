@@ -35,7 +35,7 @@ const MainPageListItem = ({ item, slideAnim }) => (
 
 const submitDeclaration = () => {
   const [currentStep, setCurrentStep] = useState(4); // Example step state
-  const totalSteps = 5; // Example total steps
+  const totalSteps = 4; // Example total steps
   const [visible, setVisible] = React.useState(false);
   const [minute, setMinute] = React.useState(null);
   const [hour, setHour] = React.useState(null);
