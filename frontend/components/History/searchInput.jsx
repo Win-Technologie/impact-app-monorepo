@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { View, TextInput, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 
 export default function SearchInput({ value = "", onChangeText = () => {} }) {
@@ -24,7 +24,7 @@ export default function SearchInput({ value = "", onChangeText = () => {} }) {
       />
       {value.length > 0 && (
         <TouchableOpacity onPress={handleClear} style={styles.iconRight}>
-          <AntDesign name="closecircle" size={20} color="black" />
+          <Text style={styles.clearText}>✕</Text>
         </TouchableOpacity>
       )}
     </View>
