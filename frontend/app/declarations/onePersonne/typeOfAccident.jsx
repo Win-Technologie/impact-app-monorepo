@@ -269,12 +269,7 @@ const typeOfAccident = () => {
                 />
                 <Text style={styles.counter}>{`${plateNumber.replace(' ', '').length}/7`}</Text>
               </View>
-              <TouchableOpacity
-                style={styles.testButton}
-                onPress={generateTestPlate}
-              >
-                <Text style={styles.testButtonText}>Générer plaque test</Text>
-              </TouchableOpacity>
+              {/* test plate generator removed per request */}
             </View>
           )}
 
