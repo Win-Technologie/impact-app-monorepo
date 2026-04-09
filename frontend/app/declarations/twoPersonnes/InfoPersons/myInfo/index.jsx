@@ -9,7 +9,6 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import QRCode from "react-native-qrcode-svg";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -26,13 +25,11 @@ import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState
 
 const MyInfo = () => {
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
-  const [qrValue, setQrValue] = useState(""); // Initial QR code value
-  const [qrImageUri, setQrImageUri] = useState(null); // URI of the QR code image
+  // QR code generation disabled for now
   const [allVehicles, setAllVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [errorVehicleState, setErrorVehicleState] = useState("");
   const [vehicleState, setVehiculeState] = useRecoilState(accidentVehicleState);
-  const [textData, setTextData] = useState(""); // State to hold the text data
   const ENDPOINT = "vehicles/";
   const ENDPOINT2 = "users/user/vehicle/info/";
   const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
@@ -41,38 +38,7 @@ const MyInfo = () => {
     loadVehicles();
   }, []);
 
-  const fetchTokenAndQR = async (vehicleId) => {
-    const token = await AsyncStorage.getItem("userToken");
-    const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-    if (!API_URL) {
-      return;
-    }
-    if (!vehicleId) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}users/code/generate`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ vehicleId }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setQrImageUri(data.qrImage);
-        setTextData(data.AlphNumCode);
-      } else {
-        throw new Error(data.msg || "Failed to fetch QR code");
-      }
-    } catch (error) {
-      // console.error("Error fetching QR code:", error.message);
-    }
-  };
+  // QR generation removed — not used in current flow
 
   const loadVehicles = async () => {
     const userToken = await AsyncStorage.getItem("userToken");
@@ -89,11 +55,9 @@ const MyInfo = () => {
     if (vehicleId) {
       setSelectedVehicleId(vehicleId);
       setVehiculeState(vehicleId);
-      fetchTokenAndQR(vehicleId); // Fetch QR Code using the correct vehicle ID
       userInformation(vehicleId);
       setErrorVehicleState(""); // Clear any previous errors
     } else {
-      //console.error("Selected item is invalid:", selectedItem);
       setErrorVehicleState("Invalid vehicle selection. Please try again.");
     }
   };
@@ -206,28 +170,7 @@ const MyInfo = () => {
           />
         </View>
 
-        <View style={styles.qrContainer}>
-          {qrImageUri ? (
-            <Image source={{ uri: qrImageUri }} style={styles.qrImage} />
-          ) : (
-            <Text style={{ color: "gray", fontSize: 12 }}>
-              Chargement du QR Code...
-            </Text>
-          )}
-          <View style={styles.inputContainer}>
-            <View style={styles.rowContainer}>
-              <TouchableOpacity
-                onPress={() => console.log("clicked")}
-                style={styles.iconButton}
-              >
-                <Icon name="content-copy" size={36} color="#FFF" />
-                <Text style={styles.textStyle}>
-                  {textData.toUpperCase() || "Some Text"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+        {/* QR generation/display removed — use manual sharing or account data */}
 
         <View style={styles.infoSection}>
           <Text style={styles.sectionTitle}>Consulter mes informations</Text>

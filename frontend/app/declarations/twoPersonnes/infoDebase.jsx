@@ -35,7 +35,7 @@ export default function InfoDeBase() {
           {
             title: "Fournir mes informations",
             description:
-              "Fournissez vos informations aux autres individus impliqués grâce à votre code QR ou en fournissant manuellement vos données personnelles.",
+              "Fournissez vos informations aux autres individus impliqués en fournissant manuellement vos données personnelles.",
             subtitle: "Accéder à mes informations",
             number: i,
           },
@@ -46,7 +46,7 @@ export default function InfoDeBase() {
           {
             title: "Recevoir des informations",
             description:
-              "Recevez les informations des autres individus impliqués en scannant leur code QR ou en rentrant manuellement leurs données personnelles.",
+              "Recevez les informations des autres individus impliqués en rentrant manuellement leurs données personnelles.",
             subtitle: "Saisir des informations",
             number: i,
           },
