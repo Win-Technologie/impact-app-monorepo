@@ -9,7 +9,6 @@ import {
   SafeAreaView,
 } from "react-native";
 import { router } from "expo-router";
-import Stepper from "../../../components/SignUp/stepper";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
 
 const MainPageListItem = ({ item, slideAnim }) => (
@@ -78,13 +77,7 @@ const submitDeclaration = () => {
         resizeMode="cover"
         style={{ flex: 1, width: "100%" }}
       >
-        <View style={{ padding: 20 }}>
-          <Stepper
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            style={styles.stepper}
-          />
-        </View>
+        {/* Stepper removed on final screen - no need to display step header */}
 
         <View style={[styles.popupContainer]}>
           <View style={styles.popupContent}>
