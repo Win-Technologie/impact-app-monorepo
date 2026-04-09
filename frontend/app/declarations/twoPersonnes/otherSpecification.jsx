@@ -30,6 +30,10 @@ const otherspecification = () => {
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
   const [otherSpec, setOtherSpec] = useState(null);
 
+  useEffect(() => {
+    setDeclaration((prev) => ({ ...prev, step: 4 }));
+  }, []);
+
   const back = () => {
     try {
       router.back();

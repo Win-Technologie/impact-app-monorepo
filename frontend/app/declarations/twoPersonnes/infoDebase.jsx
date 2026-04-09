@@ -22,7 +22,7 @@ export default function InfoDeBase() {
   const person = Number(individus);
 
   const next = () => {
-    router.navigate("declarations/twoPersonnes/placeOfAccident");
+    router.navigate("declarations/twoPersonnes/typeOfAccident");
   };
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -24,6 +24,10 @@ const hourOfAccident = () => {
   const [minute, setMinute] = React.useState(null);
   const [hour, setHour] = React.useState(null);
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+
+  useEffect(() => {
+    setDeclaration((prev) => ({ ...prev, step: 3 }));
+  }, []);
 
   console.log(declaration);
 

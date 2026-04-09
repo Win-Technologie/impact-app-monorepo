@@ -133,6 +133,11 @@ const placeOfAccident = () => {
       }
     })();
   }, []);
+  
+  // Ensure the global declaration step is set when this screen mounts
+  useEffect(() => {
+    setDeclaration((prev) => ({ ...prev, step: 2 }));
+  }, []);
 
   return (
     <SafeAreaView style={styles.outerContainer}>

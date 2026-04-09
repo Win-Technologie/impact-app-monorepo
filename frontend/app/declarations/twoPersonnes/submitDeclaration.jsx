@@ -10,6 +10,9 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRecoilValue } from "recoil";
+import { DeclarationState } from "../../../GlobalState/DeclarationState";
 
 const MainPageListItem = ({ item, slideAnim }) => (
   <>
@@ -48,6 +51,8 @@ const submitDeclaration = () => {
   const slideUpAnim = useRef(new Animated.Value(400)).current;
   const slideAnim = useRef(new Animated.Value(-1000)).current;
 
+  const declaration = useRecoilValue(DeclarationState);
+
   const onDismiss = React.useCallback(() => {
     setVisible(false);
   }, [setVisible]);
@@ -70,6 +75,37 @@ const submitDeclaration = () => {
     router.navigate("(tabs)");
   };
 
+  const submitAndNavigate = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("local_accidents");
+      const arr = stored ? JSON.parse(stored) : [];
+      const newEntry = {
+        key: Date.now().toString(),
+        date: new Date().toISOString(),
+        description:
+          declaration?.otherSpecification || declaration?.description || "Déclaration d'accident",
+        people: declaration?.people || [],
+        accidentImageUri:
+          declaration?.images && declaration.images.length
+            ? declaration.images[0].image
+            : declaration?.accidentImageUri || null,
+        data: {
+          ...declaration,
+          photos:
+            declaration?.images && declaration.images.length
+              ? declaration.images.map((i) => i.image)
+              : declaration?.photos || [],
+        },
+      };
+      arr.unshift(newEntry);
+      await AsyncStorage.setItem("local_accidents", JSON.stringify(arr));
+    } catch (e) {
+      console.error("submitAndNavigate error", e);
+    } finally {
+      router.navigate("(tabs)");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.outerContainer}>
       <ImageBackground
@@ -89,7 +125,7 @@ const submitDeclaration = () => {
             leftButtonTitle="Retour"
             rightButtonTitle="Confirmer"
             onPressBack={() => back()}
-            onPressContinue={() => next()}
+            onPressContinue={() => submitAndNavigate()}
           />
         </View>
       </ImageBackground>

@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -27,6 +27,10 @@ const typeOfAccident = () => {
   const [accidentType, setAccidentType] = useState("");
   const [plateNumber, setPlateNumber] = useState("");
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+
+  useEffect(() => {
+    setDeclaration((prev) => ({ ...prev, step: 1 }));
+  }, []);
 
   const formatPlateNumber = (text) => {
     // Remove all spaces and special characters, keep only alphanumeric
