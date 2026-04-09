@@ -37,11 +37,11 @@ export default function DeclarationPage() {
 
   const next = () => {
     if (isAlone) {
-      setDeclaration({ individus: 1 });
+      setDeclaration((prev) => ({ ...prev, individus: 1 }));
       router.navigate("declarations/onePersonne/VehicleSelectionPage");
     } else {
       if (value) {
-        setDeclaration({ individus: Number(value) });
+        setDeclaration((prev) => ({ ...prev, individus: Number(value) }));
         router.navigate({
           pathname: "declarations/twoPersonnes/infoDebase",
           params: { individus: value },

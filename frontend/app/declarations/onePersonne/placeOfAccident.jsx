@@ -131,6 +131,12 @@ const placeOfAccident = () => {
     })();
   }, []);
 
+  useEffect(() => {
+    // Mark this screen as step 2 when mounted
+    setDeclaration((prev) => ({ ...prev, step: 2 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <SafeAreaView style={styles.outerContainer}>
       <Stepper

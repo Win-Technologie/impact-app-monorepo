@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -24,6 +24,12 @@ const hourOfAccident = () => {
   const [minute, setMinute] = React.useState(null);
   const [hour, setHour] = React.useState(null);
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+
+  useEffect(() => {
+    // Mark this screen as step 3 when mounted
+    setDeclaration((prev) => ({ ...prev, step: 3 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onDismiss = React.useCallback(() => {
     setVisible(false);

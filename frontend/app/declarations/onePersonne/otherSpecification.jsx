@@ -30,6 +30,12 @@ const otherspecification = () => {
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
   const [otherSpec, setOtherSpec] = useState(null);
 
+  useEffect(() => {
+    // Ensure this screen shows step 4 when mounted
+    setDeclaration((prev) => ({ ...prev, step: 4 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const back = () => {
     try {
       router.back();
