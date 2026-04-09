@@ -38,17 +38,6 @@ const OtherInfo = () => {
 
   // QR scanning logic removed.
 
-  if (hasPermission === null) {
-    return (
-      <View style={styles.centered}>
-        <Text>Requesting for camera permission...</Text>
-      </View>
-    );
-  }
-
-  if (hasPermission === false) {
-    return <Text>No access to camera</Text>;
-  }
 
   return (
     <SafeAreaView style={styles.container}>
