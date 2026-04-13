@@ -99,8 +99,9 @@ async function addInsurance(req, res) {
     await validateInsuranceFields(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.error("Invalid insurance add payload:", req.body, errors.array());
       const errorMessage = errors.array()[0].msg;
-      return res.status(400).json({ error: errorMessage });
+      return res.status(400).json({ error: errorMessage, details: errors.array() });
     }
 
     // Extraire l'ID du véhicule à assurer depuis les paramètres de la requête
@@ -244,6 +245,11 @@ async function editInsurance(req, res) {
 
     // Exécution des validations
     await validateUpdateInsuranceFields(req);
+    const updateErrors = validationResult(req);
+    if (!updateErrors.isEmpty()) {
+      console.error("Invalid insurance update payload:", req.body, updateErrors.array());
+      return res.status(400).json({ error: updateErrors.array()[0].msg, details: updateErrors.array() });
+    }
 
     const { policyNumber, expirationDate, vehicleId } = req.body;
 
