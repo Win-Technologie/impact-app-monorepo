@@ -162,18 +162,6 @@ export default function VehicleInfo() {
       )}
 
       <ScrollView keyboardShouldPersistTaps="handled">
-        <View style={styles.fillButtonContainer}>
-          <TouchableOpacity
-            style={styles.fillFromAccountButton}
-            onPress={handleFillFromAccount}
-          >
-            <AntDesign name="car" size={20} color="#0B8BA8" />
-            <Text style={styles.fillFromAccountText}>
-              Remplir a partir du compte
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.contentContainer}>
           <Text style={styles.fieldLabel}>Numéro du certificat d'immatriculation</Text>
           <TextInput style={styles.input} value={serialNumber} onChangeText={setSerialNumber} />
