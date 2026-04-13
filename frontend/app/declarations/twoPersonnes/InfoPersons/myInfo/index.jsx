@@ -41,24 +41,37 @@ const MyInfo = () => {
   // QR generation removed — not used in current flow
 
   const loadVehicles = async () => {
-    const userToken = await AsyncStorage.getItem("userToken");
-    const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
-    if (vehiclesResponse.status === 200) {
-      setAllVehicles(vehiclesResponse.data.carsWithInsurances);
-    } else {
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+      const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
+      console.log("loadVehicles response:", vehiclesResponse);
+      if (vehiclesResponse && vehiclesResponse.status === 200) {
+        setAllVehicles(vehiclesResponse.data.carsWithInsurances || []);
+      } else {
+        console.error("Failed to load vehicles", vehiclesResponse);
+        setAllVehicles([]);
+        setErrorVehicleState("Impossible de charger vos véhicules");
+      }
+    } catch (err) {
+      console.error("loadVehicles failed", err);
+      setErrorVehicleState("Erreur réseau lors du chargement des véhicules");
+      setAllVehicles([]);
     }
   };
 
   const handleVehicleSelect = (selectedItem) => {
-    // Backend returns {car, insurance} - access car._id
-    const vehicleId = selectedItem?.car?._id || selectedItem._id;
+    console.log("vehicle selected raw:", selectedItem);
+    // Backend items may be { car, insurance } or a direct car object
+    const vehicleId = selectedItem?.car?._id || selectedItem?._id;
     if (vehicleId) {
       setSelectedVehicleId(vehicleId);
       setVehiculeState(vehicleId);
       userInformation(vehicleId);
       setErrorVehicleState(""); // Clear any previous errors
     } else {
+      console.error("Invalid vehicle selection", selectedItem);
       setErrorVehicleState("Invalid vehicle selection. Please try again.");
+      Alert.alert("Erreur", "Sélection de véhicule invalide. Veuillez réessayer.");
     }
   };
 
@@ -156,9 +169,9 @@ const MyInfo = () => {
           <SelectDropdown
             data={allVehicles}
             defaultButtonText="Choisir une voiture"
-            onSelect={(selectedItem) => handleVehicleSelect(selectedItem.car)} // Pass the full selected item
-            buttonTextAfterSelection={(selectedItem) => selectedItem.car.model}
-            rowTextForSelection={(item) => item.car.model}
+            onSelect={(selectedItem) => handleVehicleSelect(selectedItem)}
+            buttonTextAfterSelection={(selectedItem) => selectedItem.car?.model || selectedItem.model}
+            rowTextForSelection={(item) => item.car?.model || item.model}
             buttonStyle={styles.dropdown1BtnStyle}
             buttonTextStyle={styles.dropdown1BtnTxtStyle}
             dropdownStyle={styles.dropdown1DropdownStyle}

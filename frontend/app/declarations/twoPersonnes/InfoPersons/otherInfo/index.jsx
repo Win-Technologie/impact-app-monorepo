@@ -71,14 +71,7 @@ const OtherInfo = () => {
       </View>
 
       <ScrollView>
-        <View style={styles.qrContainer}>
-          <View style={styles.noQrNotice}>
-            <Text style={{ textAlign: "center" }}>
-              QR scanning temporarily disabled. Please enter the other person's
-              information manually below.
-            </Text>
-          </View>
-        </View>
+        {/* QR feature removed — nothing to show here */}
 
         <View style={styles.infoSection}>
           <Text style={styles.sectionTitle}>

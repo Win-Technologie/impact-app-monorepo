@@ -7,8 +7,6 @@
     <list default="true" id="c639f96e-fef7-4527-96e7-992153c7f5ef" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/app/profile/editProfile.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/app/profile/editProfile.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/components/Account/headerBox.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/components/Account/headerBox.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,7 +37,7 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "modifierprofil",
+    "git-widget-placeholder": "declarerincident",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/snipe/Downloads/impact-app-monorepo",
     "settings.editor.selected.configurable": "AndroidSdkUpdater"
