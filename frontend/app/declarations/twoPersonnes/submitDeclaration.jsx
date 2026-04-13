@@ -79,12 +79,23 @@ const submitDeclaration = () => {
     try {
       const stored = await AsyncStorage.getItem("local_accidents");
       const arr = stored ? JSON.parse(stored) : [];
+      // Ensure people array reflects declared number of individuals when explicit people data is missing
+      let peopleArray = [];
+      if (declaration?.people && declaration.people.length > 0) {
+        peopleArray = declaration.people;
+      } else if (typeof declaration?.individus === "number" && declaration.individus > 0) {
+        // create placeholder entries to reflect count (names may be filled later)
+        peopleArray = Array.from({ length: declaration.individus }).map((_, i) => ({ name: `Personne ${i + 1}` }));
+      } else {
+        peopleArray = [];
+      }
+
       const newEntry = {
         key: Date.now().toString(),
         date: new Date().toISOString(),
         description:
           declaration?.otherSpecification || declaration?.description || "Déclaration d'accident",
-        people: declaration?.people || [],
+        people: peopleArray,
         accidentImageUri:
           declaration?.images && declaration.images.length
             ? declaration.images[0].image
