@@ -155,18 +155,6 @@ export default function PersonanalInformation() {
       )}
 
       <ScrollView keyboardShouldPersistTaps="handled">
-        <View style={styles.fillButtonContainer}>
-          <TouchableOpacity
-            style={styles.fillFromAccountButton}
-            onPress={handleFillFromAccount}
-          >
-            <AntDesign name="user" size={20} color="#0B8BA8" />
-            <Text style={styles.fillFromAccountText}>
-              Remplir a partir du compte
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.contentContainer}>
           <Text style={styles.fieldLabel}>Prénom</Text>
           <TextInput style={styles.input} value={name} onChangeText={setName} />

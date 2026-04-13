@@ -30,6 +30,12 @@ const otherspecification = () => {
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
   const [otherSpec, setOtherSpec] = useState(null);
 
+  useEffect(() => {
+    // Ensure this screen shows step 4 when mounted
+    setDeclaration((prev) => ({ ...prev, step: 4 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const back = () => {
     try {
       router.back();
@@ -45,6 +51,7 @@ const otherspecification = () => {
         ...declaration,
         otherSpecification: otherSpec || "",
         images: images || [],
+        step: 4,
       });
 
       console.log(declaration);
@@ -117,12 +124,7 @@ const otherspecification = () => {
           Avez-vous d'autre spécifications à ajouter ?
         </Text>
 
-        <TouchableOpacity
-          style={styles.testButton}
-          onPress={generateTestSpecifications}
-        >
-          <Text style={styles.testButtonText}>Générer texte test</Text>
-        </TouchableOpacity>
+        
 
         <View style={styles.inputSection}>
           <TextInput
@@ -268,13 +270,13 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
-    fontSize: 14.5, // Regular text style
-    color: "grey", // Default color
+    fontSize: 14.5,
+    color: "grey",
   },
 
   activeButtonText: {
-    fontSize: 14.5, // Keep the same size or adjust as needed
-    color: "white", // Color changes to white when active
+    fontSize: 14.5,
+    color: "white",
   },
 
   activeButton: {

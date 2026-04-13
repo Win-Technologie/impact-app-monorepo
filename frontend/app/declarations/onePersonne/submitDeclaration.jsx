@@ -8,7 +8,6 @@ import {
   StyleSheet,
 } from "react-native";
 import { router } from "expo-router";
-import Stepper from "../../../components/SignUp/stepper";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -38,7 +37,7 @@ const MainPageListItem = ({ item, slideAnim }) => (
 
 const submitDeclaration = () => {
   const [currentStep, setCurrentStep] = useState(4); // Example step state
-  const totalSteps = 5; // Example total steps
+  const totalSteps = 4; // Example total steps
   const [visible, setVisible] = React.useState(false);
   const [minute, setMinute] = React.useState(null);
   const [hour, setHour] = React.useState(null);
@@ -109,13 +108,7 @@ const submitDeclaration = () => {
         resizeMode="cover"
         style={{ flex: 1, width: "100%" }}
       >
-        <View style={{ padding: 20 }}>
-          <Stepper
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            style={styles.stepper}
-          />
-        </View>
+        {/* Stepper removed on final screen - no need to display step header */}
 
         <View style={[styles.popupContainer]}>
           <View style={styles.popupContent}>

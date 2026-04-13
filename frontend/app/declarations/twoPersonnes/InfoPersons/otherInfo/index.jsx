@@ -6,24 +6,17 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { Camera, CameraType } from "expo-camera";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { router } from "expo-router";
 //import { getMyVehicles } from "../../../../api/users/userApi";
-import { sendScannedDataToServer } from "../../../../api/users/userApi";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ScannedQrCodeData } from "../../../../../GlobalState/ScannedQrCodeData";
-import { useSetRecoilState } from "recoil";
+// QR scanner removed — using manual entry only
 import { AntDesign } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { Octicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const OtherInfo = () => {
-  const [hasPermission, setHasPermission] = useState(null);
-  const [isScannerActive, setIsScannerActive] = useState(false);
   const [scannedData, setLocalScannedData] = useState(null);
-  const setScannedData = useSetRecoilState(ScannedQrCodeData);
 
   const consultInformation = (type) => {
     if (type == 1) {
@@ -41,30 +34,10 @@ const OtherInfo = () => {
     }
   };
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
-    })();
-  }, []);
+  // Camera scanner removed; manual entry available below.
 
-  const handleBarCodeScanned = ({ type, data }) => {
-    setIsScannerActive(false); // Turn off the scanner
-    setLocalScannedData(data); // Save the scanned data
-    sendScannedDataToServer(data, setScannedData);
-  };
+  // QR scanning logic removed.
 
-  if (hasPermission === null) {
-    return (
-      <View style={styles.centered}>
-        <Text>Requesting for camera permission...</Text>
-      </View>
-    );
-  }
-
-  if (hasPermission === false) {
-    return <Text>No access to camera</Text>;
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -98,31 +71,7 @@ const OtherInfo = () => {
       </View>
 
       <ScrollView>
-        <View style={styles.qrContainer}>
-          {isScannerActive ? (
-            <Camera
-              style={styles.camera}
-              type={Camera.Constants.Type.back}
-              onBarCodeScanned={handleBarCodeScanned}
-            >
-              <View style={styles.cameraView}>
-                {/*<Text style={styles.cameraText}>Scanning...</Text>*/}
-              </View>
-            </Camera>
-          ) : (
-            <TouchableOpacity
-              onPress={() => setIsScannerActive(true)}
-              style={styles.scanButton}
-            >
-              <Text>
-                {scannedData
-                  ? "Scanner  un autre code QR"
-                  : "Scanner le code QR"}
-              </Text>
-            </TouchableOpacity>
-          )}
-          {/* <Text>{scannedData ? `Scanned Data: ${scannedData}` : 'No QR code scanned'}</Text>*/}
-        </View>
+        {/* QR feature removed — nothing to show here */}
 
         <View style={styles.infoSection}>
           <Text style={styles.sectionTitle}>
@@ -271,6 +220,12 @@ const styles = StyleSheet.create({
   infoTextContainer: {
     flex: 1,
     marginLeft: 10,
+  },
+
+  noQrNotice: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   iconBackground: {

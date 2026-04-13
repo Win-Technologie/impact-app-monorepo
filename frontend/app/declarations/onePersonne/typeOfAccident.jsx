@@ -17,6 +17,7 @@ import { router } from "expo-router";
 import { DeclarationState } from "../../../GlobalState/DeclarationState";
 import { useRecoilState } from "recoil";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect } from "react";
 
 const typeOfAccident = () => {
   const [selectedType, setSelectedType] = useState("");
@@ -27,6 +28,12 @@ const typeOfAccident = () => {
   const [accidentType, setAccidentType] = useState("");
   const [plateNumber, setPlateNumber] = useState("");
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+
+  useEffect(() => {
+    // Ensure global step is set to 1 when this screen is focused/mounted
+    setDeclaration((prev) => ({ ...prev, step: 1 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatPlateNumber = (text) => {
     // Remove all spaces and special characters, keep only alphanumeric
@@ -262,12 +269,7 @@ const typeOfAccident = () => {
                 />
                 <Text style={styles.counter}>{`${plateNumber.replace(' ', '').length}/7`}</Text>
               </View>
-              <TouchableOpacity
-                style={styles.testButton}
-                onPress={generateTestPlate}
-              >
-                <Text style={styles.testButtonText}>Générer plaque test</Text>
-              </TouchableOpacity>
+              {/* test plate generator removed per request */}
             </View>
           )}
 

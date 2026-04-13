@@ -30,6 +30,10 @@ const otherspecification = () => {
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
   const [otherSpec, setOtherSpec] = useState(null);
 
+  useEffect(() => {
+    setDeclaration((prev) => ({ ...prev, step: 4 }));
+  }, []);
+
   const back = () => {
     try {
       router.back();
@@ -45,6 +49,7 @@ const otherspecification = () => {
         ...declaration,
         otherSpecification: otherSpec || "",
         images: images || [],
+        step: 4,
       });
 
       console.log(declaration);
@@ -56,17 +61,6 @@ const otherspecification = () => {
     }
   };
 
-  const generateTestSpecifications = () => {
-    const testSpecs = [
-      "Le véhicule a percuté un poteau d'éclairage public sur le côté droit. Dommages importants à l'avant du véhicule.",
-      "Accident causé par une perte de contrôle sur chaussée glissante. Aucun autre véhicule impliqué. Dommages légers.",
-      "Le rétroviseur latéral a été endommagé lors d'une manoeuvre de stationnement. Rayures sur la porte conducteur.",
-      "Impact avec un véhicule stationné sans surveillance. Pare-choc avant endommagé. Pas de blessés.",
-      "Accrochage mineur dans un stationnement. Éraflures sur le pare-choc arrière. L'autre véhicule était vide.",
-    ];
-    const randomSpec = testSpecs[Math.floor(Math.random() * testSpecs.length)];
-    setOtherSpec(randomSpec);
-  };
 
   const openPickupImage = () => {
     try {
@@ -117,12 +111,7 @@ const otherspecification = () => {
           Avez-vous d'autre spécifications à ajouter ?
         </Text>
 
-        <TouchableOpacity
-          style={styles.testButton}
-          onPress={generateTestSpecifications}
-        >
-          <Text style={styles.testButtonText}>Générer texte test</Text>
-        </TouchableOpacity>
+        
 
         <View style={styles.inputSection}>
           <TextInput
@@ -269,13 +258,13 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
-    fontSize: 14.5, // Regular text style
-    color: "grey", // Default color
+    fontSize: 14.5,
+    color: "grey",
   },
 
   activeButtonText: {
-    fontSize: 14.5, // Keep the same size or adjust as needed
-    color: "white", // Color changes to white when active
+    fontSize: 14.5,
+    color: "white",
   },
 
   activeButton: {

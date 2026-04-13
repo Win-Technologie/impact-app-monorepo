@@ -9,8 +9,10 @@ import {
   SafeAreaView,
 } from "react-native";
 import { router } from "expo-router";
-import Stepper from "../../../components/SignUp/stepper";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRecoilValue } from "recoil";
+import { DeclarationState } from "../../../GlobalState/DeclarationState";
 
 const MainPageListItem = ({ item, slideAnim }) => (
   <>
@@ -35,7 +37,7 @@ const MainPageListItem = ({ item, slideAnim }) => (
 
 const submitDeclaration = () => {
   const [currentStep, setCurrentStep] = useState(4); // Example step state
-  const totalSteps = 5; // Example total steps
+  const totalSteps = 4; // Example total steps
   const [visible, setVisible] = React.useState(false);
   const [minute, setMinute] = React.useState(null);
   const [hour, setHour] = React.useState(null);
@@ -48,6 +50,8 @@ const submitDeclaration = () => {
 
   const slideUpAnim = useRef(new Animated.Value(400)).current;
   const slideAnim = useRef(new Animated.Value(-1000)).current;
+
+  const declaration = useRecoilValue(DeclarationState);
 
   const onDismiss = React.useCallback(() => {
     setVisible(false);
@@ -71,6 +75,48 @@ const submitDeclaration = () => {
     router.navigate("(tabs)");
   };
 
+  const submitAndNavigate = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("local_accidents");
+      const arr = stored ? JSON.parse(stored) : [];
+      // Ensure people array reflects declared number of individuals when explicit people data is missing
+      let peopleArray = [];
+      if (declaration?.people && declaration.people.length > 0) {
+        peopleArray = declaration.people;
+      } else if (typeof declaration?.individus === "number" && declaration.individus > 0) {
+        // create placeholder entries to reflect count (names may be filled later)
+        peopleArray = Array.from({ length: declaration.individus }).map((_, i) => ({ name: `Personne ${i + 1}` }));
+      } else {
+        peopleArray = [];
+      }
+
+      const newEntry = {
+        key: Date.now().toString(),
+        date: new Date().toISOString(),
+        description:
+          declaration?.otherSpecification || declaration?.description || "Déclaration d'accident",
+        people: peopleArray,
+        accidentImageUri:
+          declaration?.images && declaration.images.length
+            ? declaration.images[0].image
+            : declaration?.accidentImageUri || null,
+        data: {
+          ...declaration,
+          photos:
+            declaration?.images && declaration.images.length
+              ? declaration.images.map((i) => i.image)
+              : declaration?.photos || [],
+        },
+      };
+      arr.unshift(newEntry);
+      await AsyncStorage.setItem("local_accidents", JSON.stringify(arr));
+    } catch (e) {
+      console.error("submitAndNavigate error", e);
+    } finally {
+      router.navigate("(tabs)");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.outerContainer}>
       <ImageBackground
@@ -78,13 +124,7 @@ const submitDeclaration = () => {
         resizeMode="cover"
         style={{ flex: 1, width: "100%" }}
       >
-        <View style={{ padding: 20 }}>
-          <Stepper
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            style={styles.stepper}
-          />
-        </View>
+        {/* Stepper removed on final screen - no need to display step header */}
 
         <View style={[styles.popupContainer]}>
           <View style={styles.popupContent}>
@@ -96,7 +136,7 @@ const submitDeclaration = () => {
             leftButtonTitle="Retour"
             rightButtonTitle="Confirmer"
             onPressBack={() => back()}
-            onPressContinue={() => next()}
+            onPressContinue={() => submitAndNavigate()}
           />
         </View>
       </ImageBackground>

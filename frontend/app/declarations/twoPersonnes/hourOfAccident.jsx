@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -24,6 +24,10 @@ const hourOfAccident = () => {
   const [minute, setMinute] = React.useState(null);
   const [hour, setHour] = React.useState(null);
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+
+  useEffect(() => {
+    setDeclaration((prev) => ({ ...prev, step: 3 }));
+  }, []);
 
   console.log(declaration);
 
@@ -65,7 +69,7 @@ const hourOfAccident = () => {
           ],
         );
       } else {
-        setDeclaration({ ...declaration, hour: hour, minute: minute });
+        setDeclaration({ ...declaration, hour: hour, minute: minute, step: 3 });
         router.navigate("declarations/twoPersonnes/otherSpecification");
       }
     } catch (error) {
@@ -133,8 +137,8 @@ const hourOfAccident = () => {
             visible={visible}
             onDismiss={onDismiss}
             onConfirm={onConfirm}
-            hours={12}
-            minutes={14}
+            hours={0}
+            minutes={0}
           />
         </View>
       </View>

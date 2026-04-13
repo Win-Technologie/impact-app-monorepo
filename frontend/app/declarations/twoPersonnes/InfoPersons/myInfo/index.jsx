@@ -9,7 +9,6 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import QRCode from "react-native-qrcode-svg";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -26,13 +25,11 @@ import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState
 
 const MyInfo = () => {
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
-  const [qrValue, setQrValue] = useState(""); // Initial QR code value
-  const [qrImageUri, setQrImageUri] = useState(null); // URI of the QR code image
+  // QR code generation disabled for now
   const [allVehicles, setAllVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [errorVehicleState, setErrorVehicleState] = useState("");
   const [vehicleState, setVehiculeState] = useRecoilState(accidentVehicleState);
-  const [textData, setTextData] = useState(""); // State to hold the text data
   const ENDPOINT = "vehicles/";
   const ENDPOINT2 = "users/user/vehicle/info/";
   const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
@@ -41,60 +38,55 @@ const MyInfo = () => {
     loadVehicles();
   }, []);
 
-  const fetchTokenAndQR = async (vehicleId) => {
-    const token = await AsyncStorage.getItem("userToken");
-    const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-    if (!API_URL) {
-      return;
-    }
-    if (!vehicleId) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}users/code/generate`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ vehicleId }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setQrImageUri(data.qrImage);
-        setTextData(data.AlphNumCode);
-      } else {
-        throw new Error(data.msg || "Failed to fetch QR code");
+  // When vehicles load, if there's a global selected vehicle, restore it
+  useEffect(() => {
+    if (allVehicles && allVehicles.length > 0 && vehicleState) {
+      // find the matching item in the loaded list
+      const matching = allVehicles.find(
+        (it) => (it.car && it.car._id === vehicleState) || it._id === vehicleState,
+      );
+      if (matching) {
+        setSelectedVehicleId(vehicleState);
+        // ensure personal info is loaded for that vehicle
+        userInformation(vehicleState);
       }
-    } catch (error) {
-      // console.error("Error fetching QR code:", error.message);
     }
-  };
+  }, [allVehicles]);
+
+  // QR generation removed — not used in current flow
 
   const loadVehicles = async () => {
-    const userToken = await AsyncStorage.getItem("userToken");
-    const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
-    if (vehiclesResponse.status === 200) {
-      setAllVehicles(vehiclesResponse.data.carsWithInsurances);
-    } else {
+    try {
+      const userToken = await AsyncStorage.getItem("userToken");
+      const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
+      console.log("loadVehicles response:", vehiclesResponse);
+      if (vehiclesResponse && vehiclesResponse.status === 200) {
+        setAllVehicles(vehiclesResponse.data.carsWithInsurances || []);
+      } else {
+        console.error("Failed to load vehicles", vehiclesResponse);
+        setAllVehicles([]);
+        setErrorVehicleState("Impossible de charger vos véhicules");
+      }
+    } catch (err) {
+      console.error("loadVehicles failed", err);
+      setErrorVehicleState("Erreur réseau lors du chargement des véhicules");
+      setAllVehicles([]);
     }
   };
 
   const handleVehicleSelect = (selectedItem) => {
-    // Backend returns {car, insurance} - access car._id
-    const vehicleId = selectedItem?.car?._id || selectedItem._id;
+    console.log("vehicle selected raw:", selectedItem);
+    // Backend items may be { car, insurance } or a direct car object
+    const vehicleId = selectedItem?.car?._id || selectedItem?._id;
     if (vehicleId) {
       setSelectedVehicleId(vehicleId);
       setVehiculeState(vehicleId);
-      fetchTokenAndQR(vehicleId); // Fetch QR Code using the correct vehicle ID
       userInformation(vehicleId);
       setErrorVehicleState(""); // Clear any previous errors
     } else {
-      //console.error("Selected item is invalid:", selectedItem);
+      console.error("Invalid vehicle selection", selectedItem);
       setErrorVehicleState("Invalid vehicle selection. Please try again.");
+      Alert.alert("Erreur", "Sélection de véhicule invalide. Veuillez réessayer.");
     }
   };
 
@@ -192,9 +184,14 @@ const MyInfo = () => {
           <SelectDropdown
             data={allVehicles}
             defaultButtonText="Choisir une voiture"
-            onSelect={(selectedItem) => handleVehicleSelect(selectedItem.car)} // Pass the full selected item
-            buttonTextAfterSelection={(selectedItem) => selectedItem.car.model}
-            rowTextForSelection={(item) => item.car.model}
+            defaultValue={
+              allVehicles && selectedVehicleId
+                ? allVehicles.find((it) => (it.car && it.car._id === selectedVehicleId) || it._id === selectedVehicleId)
+                : null
+            }
+            onSelect={(selectedItem) => handleVehicleSelect(selectedItem)}
+            buttonTextAfterSelection={(selectedItem) => selectedItem.car?.model || selectedItem.model}
+            rowTextForSelection={(item) => item.car?.model || item.model}
             buttonStyle={styles.dropdown1BtnStyle}
             buttonTextStyle={styles.dropdown1BtnTxtStyle}
             dropdownStyle={styles.dropdown1DropdownStyle}
@@ -206,28 +203,7 @@ const MyInfo = () => {
           />
         </View>
 
-        <View style={styles.qrContainer}>
-          {qrImageUri ? (
-            <Image source={{ uri: qrImageUri }} style={styles.qrImage} />
-          ) : (
-            <Text style={{ color: "gray", fontSize: 12 }}>
-              Chargement du QR Code...
-            </Text>
-          )}
-          <View style={styles.inputContainer}>
-            <View style={styles.rowContainer}>
-              <TouchableOpacity
-                onPress={() => console.log("clicked")}
-                style={styles.iconButton}
-              >
-                <Icon name="content-copy" size={36} color="#FFF" />
-                <Text style={styles.textStyle}>
-                  {textData.toUpperCase() || "Some Text"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+        {/* QR generation/display removed — use manual sharing or account data */}
 
         <View style={styles.infoSection}>
           <Text style={styles.sectionTitle}>Consulter mes informations</Text>
