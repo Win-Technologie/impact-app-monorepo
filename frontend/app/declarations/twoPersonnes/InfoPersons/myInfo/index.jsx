@@ -38,6 +38,21 @@ const MyInfo = () => {
     loadVehicles();
   }, []);
 
+  // When vehicles load, if there's a global selected vehicle, restore it
+  useEffect(() => {
+    if (allVehicles && allVehicles.length > 0 && vehicleState) {
+      // find the matching item in the loaded list
+      const matching = allVehicles.find(
+        (it) => (it.car && it.car._id === vehicleState) || it._id === vehicleState,
+      );
+      if (matching) {
+        setSelectedVehicleId(vehicleState);
+        // ensure personal info is loaded for that vehicle
+        userInformation(vehicleState);
+      }
+    }
+  }, [allVehicles]);
+
   // QR generation removed — not used in current flow
 
   const loadVehicles = async () => {
@@ -169,6 +184,11 @@ const MyInfo = () => {
           <SelectDropdown
             data={allVehicles}
             defaultButtonText="Choisir une voiture"
+            defaultValue={
+              allVehicles && selectedVehicleId
+                ? allVehicles.find((it) => (it.car && it.car._id === selectedVehicleId) || it._id === selectedVehicleId)
+                : null
+            }
             onSelect={(selectedItem) => handleVehicleSelect(selectedItem)}
             buttonTextAfterSelection={(selectedItem) => selectedItem.car?.model || selectedItem.model}
             rowTextForSelection={(item) => item.car?.model || item.model}
