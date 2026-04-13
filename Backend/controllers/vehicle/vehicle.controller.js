@@ -333,21 +333,45 @@ async function editCar(req, res) {
         .json({ error: "L'utilisateur n'a pas accès à cette voiture" });
     }
 
-    // Mettre à jour les informations de la voiture dans la base de données
-    const updatedCar = await vehicleCollection.findOneAndUpdate(
-      { _id: carId },
-      { $set: fieldsToUpdate },
-      { new: true },
-    );
+    // Log incoming update payload for debugging
+    try {
+      console.log(`Updating vehicle ${carId} for owner ${ownerId} with payload:`, JSON.stringify(fieldsToUpdate));
+    } catch (e) {
+      console.log("Updating vehicle - unable to stringify payload", e);
+    }
 
-    if (!updatedCar) {
+    // Ensure year is numeric if provided
+    if (fieldsToUpdate.year !== undefined && fieldsToUpdate.year !== null) {
+      const parsedYear = Number(fieldsToUpdate.year);
+      if (!isNaN(parsedYear)) fieldsToUpdate.year = parsedYear;
+      else delete fieldsToUpdate.year; // remove invalid year to avoid schema issues
+    }
+
+    // Mettre à jour les informations de la voiture dans la base de données
+    let updatedCar;
+    try {
+      updatedCar = await vehicleCollection.findOneAndUpdate(
+        { _id: carId },
+        { $set: fieldsToUpdate },
+        { returnDocument: "after" },
+      );
+    } catch (dbErr) {
+      console.error("Database error while updating vehicle:", dbErr);
+      return res.status(500).json({ error: "Erreur lors de la mise à jour en base de données" });
+    }
+
+    // updatedCar is an object with a `value` property when using the native driver
+    // If driver didn't return the updated document in `value`, read it explicitly
+    let carInDataBase = updatedCar && updatedCar.value;
+    if (!carInDataBase) {
+      carInDataBase = await vehicleCollection.findOne({ _id: carId });
+    }
+
+    if (!carInDataBase) {
       return res.status(404).json({ error: "Voiture non trouvée" });
     }
 
-    // Récupérer les informations de la voiture mises à jour depuis la base de données
-    const carInDataBase = await vehicleCollection.findOne({ _id: carId });
-
-    // Renvoyer les informations de la voiture mises à jour directement depuis la mise à jour dans la base de données
+    console.log('Updated car in DB:', JSON.stringify(carInDataBase));
     return res
       .status(200)
       .json({ message: "Voiture mise à jour avec succès", car: carInDataBase });
