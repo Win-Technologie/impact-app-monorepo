@@ -137,7 +137,7 @@ export default function VehicleInfo() {
           {infoVehicle.length === 0 ? (
             <Loading text="Chargement..." />
           ) : (
-            <InputsShowGroup dataToShow={infoVehicle} />
+            <InputsShowGroup dataToShow={infoVehicle} editable={false} />
           )}
           <View>
             <Text
@@ -152,7 +152,7 @@ export default function VehicleInfo() {
             {vehicleOwner.length === 0 ? (
               <Loading text="Chargement" />
             ) : (
-              <InputsShowGroup dataToShow={vehicleOwner} />
+              <InputsShowGroup dataToShow={vehicleOwner} editable={false} />
             )}
           </View>
         </View>

@@ -10,6 +10,9 @@
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { router } from "expo-router";
+import { useRecoilState } from "recoil";
+import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
+import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
 import { fetchUserInfoAndVehicle, getMyVehicles } from "../../../../api/users/userApi";
@@ -82,6 +85,30 @@ export default function PersonanalInformation() {
     } catch (error) {
       Alert.alert("Erreur", "Impossible de charger les informations");
     }
+  };
+
+  const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
+
+  const handleSave = () => {
+    setPersonalInfoState((prev) => ({
+      ...prev,
+      owner: {
+        name,
+        lastName,
+        email,
+        phone,
+        address,
+        city,
+        postalCode,
+        country,
+        province,
+      },
+      driverLicense: {
+        number: dlNumber,
+        expires: dlExpires,
+      },
+    }));
+    Alert.alert("Succès", "Informations enregistrées");
   };
 
 
@@ -175,7 +202,9 @@ export default function PersonanalInformation() {
         </View>
       </ScrollView>
 
-      {/* Continued navigation removed: user should not auto-advance from this view */}
+      <View style={styles.footContainer}>
+        <SingleBottomButton onPress={handleSave}>Enregistrer</SingleBottomButton>
+      </View>
     </SafeAreaView>
   );
 }

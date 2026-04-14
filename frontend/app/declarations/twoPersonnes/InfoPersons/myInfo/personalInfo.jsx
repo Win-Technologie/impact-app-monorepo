@@ -174,7 +174,7 @@ export default function PersonanalInformation() {
               </Text>
             </>
           ) : (
-            <InputsShowGroup dataToShow={userData} editable={true} />
+            <InputsShowGroup dataToShow={userData} editable={false} />
           )}
         </View>
       </ScrollView>

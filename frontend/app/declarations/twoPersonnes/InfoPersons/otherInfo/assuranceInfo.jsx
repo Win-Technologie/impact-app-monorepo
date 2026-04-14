@@ -6,11 +6,15 @@
   ScrollView,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import { router } from "expo-router";
 import { AntDesign } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRecoilState } from "recoil";
+import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
+import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 
 export default function assuranceInfo() {
   // Insurance fields - blank by default
@@ -29,6 +33,30 @@ export default function assuranceInfo() {
   const [country, setCountry] = useState("");
   const [province, setProvince] = useState("");
 
+  const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
+
+  const handleSave = () => {
+    setPersonalInfoState((prev) => ({
+      ...prev,
+      insurance: {
+        insuranceCompany,
+        policyNumber,
+        expirationDate,
+      },
+      owner: {
+        name,
+        lastName,
+        email,
+        phone,
+        address,
+        city,
+        postalCode,
+        country,
+        province,
+      },
+    }));
+    Alert.alert("Succès", "Informations enregistrées");
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -95,7 +123,9 @@ export default function assuranceInfo() {
         </View>
       </ScrollView>
 
-      {/* Continued navigation removed: user should not auto-advance from this view */}
+      <View style={styles.footContainer}>
+        <SingleBottomButton onPress={handleSave}>Enregistrer</SingleBottomButton>
+      </View>
     </SafeAreaView>
   );
 }

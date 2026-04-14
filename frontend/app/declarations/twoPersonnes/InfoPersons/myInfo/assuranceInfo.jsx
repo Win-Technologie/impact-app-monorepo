@@ -133,7 +133,7 @@ export default function assuranceInfo() {
               <Text style={styles.noInsuranceSubText}>Veuillez ajouter une assurance dans votre profil.</Text>
             </View>
           ) : (
-            <InputsShowGroup dataToShow={infoInsurance} />
+            <InputsShowGroup dataToShow={infoInsurance} editable={false} />
           )}
           <View>
             <Text
@@ -145,7 +145,7 @@ export default function assuranceInfo() {
             >
               Informations de l’assuré
             </Text>
-            <InputsShowGroup dataToShow={userDataInsurance} />
+            <InputsShowGroup dataToShow={userDataInsurance} editable={false} />
           </View>
         </View>
       </ScrollView>

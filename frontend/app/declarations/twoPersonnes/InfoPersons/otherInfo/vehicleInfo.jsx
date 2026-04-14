@@ -1,4 +1,4 @@
-﻿import {
+import {
   StyleSheet,
   Text,
   View,
@@ -15,6 +15,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchUserInfoAndVehicle, getMyVehicles } from "../../../../api/users/userApi";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SelectDropdown from "react-native-select-dropdown";
+import { useRecoilState } from "recoil";
+import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
+import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 
 export default function VehicleInfo() {
   const ENDPOINT = "users/user/vehicle/info/";
@@ -39,6 +42,8 @@ export default function VehicleInfo() {
   const [ownerCountry, setOwnerCountry] = useState("");
   const [ownerProvince, setOwnerProvince] = useState("");
 
+  const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
+
   useEffect(() => {
     loadMyVehicles();
   }, []);
@@ -46,8 +51,8 @@ export default function VehicleInfo() {
   const loadMyVehicles = async () => {
     const userToken = await AsyncStorage.getItem("userToken");
     const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
-    if (vehiclesResponse.status === 200) {
-      setAllVehicles(vehiclesResponse.data.carsWithInsurances);
+    if (vehiclesResponse && vehiclesResponse.status === 200) {
+      setAllVehicles(vehiclesResponse.data.carsWithInsurances || []);
     }
   };
 
@@ -60,7 +65,7 @@ export default function VehicleInfo() {
   };
 
   const handleVehicleSelect = async (selectedItem) => {
-    const vehicleId = selectedItem?.car?._id;
+    const vehicleId = selectedItem?.car?._id || selectedItem?._id;
     if (!vehicleId) {
       Alert.alert("Erreur", "Véhicule invalide");
       return;
@@ -92,6 +97,30 @@ export default function VehicleInfo() {
     }
   };
 
+  const handleSave = () => {
+    setPersonalInfoState((prev) => ({
+      ...prev,
+      vehicle: {
+        serialNumber,
+        plate,
+        model,
+        year,
+        color,
+      },
+      owner: {
+        name: ownerName,
+        lastName: ownerLastName,
+        email: ownerEmail,
+        phone: ownerPhone,
+        address: ownerAddress,
+        city: ownerCity,
+        postalCode: ownerPostalCode,
+        country: ownerCountry,
+        province: ownerProvince,
+      },
+    }));
+    Alert.alert("Succès", "Informations enregistrées");
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -134,9 +163,9 @@ export default function VehicleInfo() {
             defaultButtonText="Choisir un véhicule"
             onSelect={handleVehicleSelect}
             buttonTextAfterSelection={(selectedItem) =>
-              selectedItem?.car?.model
+              selectedItem?.car?.model || selectedItem?.model
             }
-            rowTextForSelection={(item) => item.car.model}
+            rowTextForSelection={(item) => item.car?.model || item.model}
             buttonStyle={styles.dropdownBtnStyle}
             buttonTextStyle={styles.dropdownBtnTxtStyle}
             dropdownStyle={styles.dropdownDropdownStyle}
@@ -193,7 +222,9 @@ export default function VehicleInfo() {
         </View>
       </ScrollView>
 
-      {/* Continued navigation removed: user should not auto-advance from this view */}
+      <View style={styles.footContainer}>
+        <SingleBottomButton onPress={handleSave}>Enregistrer</SingleBottomButton>
+      </View>
     </SafeAreaView>
   );
 }
