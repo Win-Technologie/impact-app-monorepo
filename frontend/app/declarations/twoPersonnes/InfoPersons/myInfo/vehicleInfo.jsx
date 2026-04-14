@@ -13,7 +13,6 @@ import {
 import React, { useState } from "react";
 import { router } from "expo-router";
 import InputsShowGroup from "../../../../../components/Utils/Inputs/InputsShowGroup";
-import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import { AntDesign } from "@expo/vector-icons";
 import { useRecoilValue } from "recoil";
 import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
@@ -101,11 +100,6 @@ export default function VehicleInfo() {
     },
   ];
 
-  const handlePressContinue = () => {
-    router.navigate(
-      "/declarations/twoPersonnes/InfoPersons/myInfo/assuranceInfo",
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -164,12 +158,7 @@ export default function VehicleInfo() {
         </View>
       </ScrollView>
 
-      <View style={styles.footContainer}>
-        <SingleBottomButton
-          children="Continuer"
-          onPress={handlePressContinue}
-        />
-      </View>
+      {/* Continued navigation removed: user should not auto-advance from this view */}
     </SafeAreaView>
   );
 }

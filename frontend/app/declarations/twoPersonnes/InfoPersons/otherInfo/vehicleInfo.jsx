@@ -10,7 +10,6 @@
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { router } from "expo-router";
-import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchUserInfoAndVehicle, getMyVehicles } from "../../../../api/users/userApi";
@@ -93,11 +92,6 @@ export default function VehicleInfo() {
     }
   };
 
-  const handlePressContinue = () => {
-    router.navigate(
-      "/declarations/twoPersonnes/InfoPersons/otherInfo/assuranceInfo",
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -199,12 +193,7 @@ export default function VehicleInfo() {
         </View>
       </ScrollView>
 
-      <View style={styles.footContainer}>
-        <SingleBottomButton
-          children="Continuer"
-          onPress={handlePressContinue}
-        />
-      </View>
+      {/* Continued navigation removed: user should not auto-advance from this view */}
     </SafeAreaView>
   );
 }

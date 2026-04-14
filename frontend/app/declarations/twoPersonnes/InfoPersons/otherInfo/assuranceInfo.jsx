@@ -9,7 +9,6 @@
 } from "react-native";
 import React, { useState } from "react";
 import { router } from "expo-router";
-import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import { AntDesign } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,9 +29,6 @@ export default function assuranceInfo() {
   const [country, setCountry] = useState("");
   const [province, setProvince] = useState("");
 
-  const handlePressContinue = () => {
-    router.push("declarations/twoPersonnes/infoDebase");
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -99,12 +95,7 @@ export default function assuranceInfo() {
         </View>
       </ScrollView>
 
-      <View style={styles.footContainer}>
-        <SingleBottomButton
-          children="Continuer"
-          onPress={handlePressContinue}
-        />
-      </View>
+      {/* Continued navigation removed: user should not auto-advance from this view */}
     </SafeAreaView>
   );
 }

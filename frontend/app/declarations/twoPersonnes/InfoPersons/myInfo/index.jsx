@@ -132,7 +132,7 @@ const MyInfo = () => {
         );
       } else if (type == 3) {
         router.navigate(
-          "/declarations/twoPersonnes/InfoPersons/myInfo/vehicleInfo",
+          "/declarations/twoPersonnes/InfoPersons/myInfo/assuranceInfo",
         );
       }
     } else {

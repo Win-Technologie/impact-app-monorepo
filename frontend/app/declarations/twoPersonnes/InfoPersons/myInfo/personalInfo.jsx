@@ -14,7 +14,6 @@ import {
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useForm, Controller } from "react-hook-form";
-import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import { AntDesign } from "@expo/vector-icons";
 import InputsShowGroup from "../../../../../components/Utils/Inputs/InputsShowGroup";
 import { fetchUserInfoAndVehicle } from "../../../../api/users/userApi";
@@ -131,11 +130,6 @@ export default function PersonanalInformation() {
     setUserData(dataToShow);
   };
 
-  const handlePressContinue = () => {
-    router.navigate(
-      "/declarations/twoPersonnes/InfoPersons/myInfo/vehicleInfo",
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -185,12 +179,7 @@ export default function PersonanalInformation() {
         </View>
       </ScrollView>
 
-      <View style={styles.footContainer}>
-        <SingleBottomButton
-          children="Continuer"
-          onPress={handlePressContinue}
-        />
-      </View>
+      {/* Continued navigation removed: user should not auto-advance from this view */}
     </SafeAreaView>
   );
 }
