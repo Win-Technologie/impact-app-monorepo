@@ -11,7 +11,7 @@ import {
 import { router } from "expo-router";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 import { DeclarationState } from "../../../GlobalState/DeclarationState";
 
 const MainPageListItem = ({ item, slideAnim }) => (
@@ -51,7 +51,7 @@ const submitDeclaration = () => {
   const slideUpAnim = useRef(new Animated.Value(400)).current;
   const slideAnim = useRef(new Animated.Value(-1000)).current;
 
-  const declaration = useRecoilValue(DeclarationState);
+  const [declaration, setDeclaration] = useRecoilState(DeclarationState);
 
   const onDismiss = React.useCallback(() => {
     setVisible(false);
@@ -82,7 +82,11 @@ const submitDeclaration = () => {
       // Ensure people array reflects declared number of individuals when explicit people data is missing
       let peopleArray = [];
       if (declaration?.people && declaration.people.length > 0) {
-        peopleArray = declaration.people;
+        peopleArray = declaration.people.map((p, i) => {
+          // normalize to ensure a display name exists
+          const name = p.name || (p.owner ? `${p.owner.name || ""} ${p.owner.lastName || ""}`.trim() : null) || (p.vehicle ? p.vehicle.model : null) || `Personne ${i + 1}`;
+          return { ...p, name };
+        });
       } else if (typeof declaration?.individus === "number" && declaration.individus > 0) {
         // create placeholder entries to reflect count (names may be filled later)
         peopleArray = Array.from({ length: declaration.individus }).map((_, i) => ({ name: `Personne ${i + 1}` }));
@@ -110,6 +114,12 @@ const submitDeclaration = () => {
       };
       arr.unshift(newEntry);
       await AsyncStorage.setItem("local_accidents", JSON.stringify(arr));
+      // clear transient declaration data (manual inputs) after successful save
+      try {
+        setDeclaration({ step: 1, individus: null, people: [] });
+      } catch (e) {
+        console.warn("Failed to reset declaration state", e);
+      }
     } catch (e) {
       console.error("submitAndNavigate error", e);
     } finally {

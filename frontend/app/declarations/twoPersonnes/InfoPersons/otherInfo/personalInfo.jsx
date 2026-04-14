@@ -9,9 +9,9 @@
   Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useRecoilState } from "recoil";
-import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
+import { DeclarationState } from "../../../../../GlobalState/DeclarationState";
 import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
@@ -87,11 +87,35 @@ export default function PersonanalInformation() {
     }
   };
 
-  const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
+  const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+  const params = useLocalSearchParams();
+  const personIndex = Number(params.person ?? 1);
+
+  useEffect(() => {
+    const saved = declaration?.people?.[personIndex];
+    if (saved?.owner) {
+      setName(saved.owner.name || "");
+      setLastName(saved.owner.lastName || "");
+      setEmail(saved.owner.email || "");
+      setPhone(saved.owner.phone || "");
+      setAddress(saved.owner.address || "");
+      setCity(saved.owner.city || "");
+      setPostalCode(saved.owner.postalCode || "");
+      setCountry(saved.owner.country || "");
+      setProvince(saved.owner.province || "");
+    }
+    if (saved?.driverLicense) {
+      setDlNumber(saved.driverLicense.number || "");
+      setDlExpires(saved.driverLicense.expires || "");
+    }
+  }, [declaration, personIndex]);
 
   const handleSave = () => {
-    setPersonalInfoState((prev) => ({
-      ...prev,
+    const people = declaration?.people ? [...declaration.people] : [];
+    const idx = personIndex;
+    while (people.length <= idx) people.push({});
+    people[idx] = {
+      ...(people[idx] || {}),
       owner: {
         name,
         lastName,
@@ -107,7 +131,10 @@ export default function PersonanalInformation() {
         number: dlNumber,
         expires: dlExpires,
       },
-    }));
+    };
+    // set a display name for the person
+    people[idx].name = `${name || ""} ${lastName || ""}`.trim() || `Personne ${idx + 1}`;
+    setDeclaration((prev) => ({ ...prev, people }));
     Alert.alert("Succès", "Informations enregistrées");
   };
 

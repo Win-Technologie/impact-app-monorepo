@@ -9,14 +9,14 @@ import {
   Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchUserInfoAndVehicle, getMyVehicles } from "../../../../api/users/userApi";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SelectDropdown from "react-native-select-dropdown";
 import { useRecoilState } from "recoil";
-import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
+import { DeclarationState } from "../../../../../GlobalState/DeclarationState";
 import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 
 export default function VehicleInfo() {
@@ -42,7 +42,32 @@ export default function VehicleInfo() {
   const [ownerCountry, setOwnerCountry] = useState("");
   const [ownerProvince, setOwnerProvince] = useState("");
 
-  const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
+  const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+  const params = useLocalSearchParams();
+  const personIndex = Number(params.person ?? 1);
+
+  useEffect(() => {
+    const saved = declaration?.people?.[personIndex];
+    if (!saved) return;
+    if (saved.vehicle) {
+      setSerialNumber(saved.vehicle.serialNumber || "");
+      setPlate(saved.vehicle.plate || "");
+      setModel(saved.vehicle.model || "");
+      setYear(saved.vehicle.year ? String(saved.vehicle.year) : "");
+      setColor(saved.vehicle.color || "");
+    }
+    if (saved.owner) {
+      setOwnerName(saved.owner.name || "");
+      setOwnerLastName(saved.owner.lastName || "");
+      setOwnerEmail(saved.owner.email || "");
+      setOwnerPhone(saved.owner.phone || "");
+      setOwnerAddress(saved.owner.address || "");
+      setOwnerCity(saved.owner.city || "");
+      setOwnerPostalCode(saved.owner.postalCode || "");
+      setOwnerCountry(saved.owner.country || "");
+      setOwnerProvince(saved.owner.province || "");
+    }
+  }, [declaration, personIndex]);
 
   useEffect(() => {
     loadMyVehicles();
@@ -98,8 +123,11 @@ export default function VehicleInfo() {
   };
 
   const handleSave = () => {
-    setPersonalInfoState((prev) => ({
-      ...prev,
+    const people = declaration?.people ? [...declaration.people] : [];
+    const idx = personIndex;
+    while (people.length <= idx) people.push({});
+    people[idx] = {
+      ...(people[idx] || {}),
       vehicle: {
         serialNumber,
         plate,
@@ -118,7 +146,9 @@ export default function VehicleInfo() {
         country: ownerCountry,
         province: ownerProvince,
       },
-    }));
+    };
+    people[idx].name = `${ownerName || ""} ${ownerLastName || ""}`.trim() || (model ? model : `Personne ${idx + 1}`);
+    setDeclaration((prev) => ({ ...prev, people }));
     Alert.alert("Succès", "Informations enregistrées");
   };
 

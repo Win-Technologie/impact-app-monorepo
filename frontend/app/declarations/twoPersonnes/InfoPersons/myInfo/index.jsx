@@ -22,6 +22,7 @@ import { useRecoilState } from "recoil";
 import { accidentVehicleState } from "../../../../../GlobalState/AccidentVehiculeState";
 import { fetchUserInfoAndVehicle } from "../../../../api/users/userApi";
 import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
+import { DeclarationState } from "../../../../../GlobalState/DeclarationState";
 
 const MyInfo = () => {
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -33,6 +34,7 @@ const MyInfo = () => {
   const ENDPOINT = "vehicles/";
   const ENDPOINT2 = "users/user/vehicle/info/";
   const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
+  const [declaration, setDeclaration] = useRecoilState(DeclarationState);
 
   useEffect(() => {
     loadVehicles();
@@ -112,6 +114,13 @@ const MyInfo = () => {
       }
 
       setPersonalInfoState(result.data);
+      // also store reporter's info as person 0 in the declaration
+      setDeclaration((prev) => {
+        const people = prev?.people ? [...prev.people] : [];
+        while (people.length <= 0) people.push({});
+        people[0] = result.data;
+        return { ...prev, people };
+      });
       // console.log(result.data);  // Log data to debug and confirm it's being received
     } catch (error) {
       // Error handling if the try block fails

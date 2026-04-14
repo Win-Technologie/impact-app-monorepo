@@ -59,9 +59,9 @@ export default function InfoDeBase() {
 
   const goTo = (number) => {
     if (number == 0) {
-      router.navigate("declarations/twoPersonnes/InfoPersons/myInfo");
+      router.push({ pathname: "declarations/twoPersonnes/InfoPersons/myInfo", params: { person: number } });
     } else {
-      router.navigate("declarations/twoPersonnes/InfoPersons/otherInfo");
+      router.push({ pathname: "declarations/twoPersonnes/InfoPersons/otherInfo", params: { person: number } });
     }
   };
 
