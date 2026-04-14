@@ -137,9 +137,20 @@ const InsuranceInfo = () => {
   const insuranceInfo = insuranceState
     ? [
         { name: "insuranceCompany", style: "column", label: t("insuranceInfo.companyName"), value: insuranceState?.insuranceCompany || "" },
-        { name: "policyAndExpiration", style: "row", firstLabel: t("insuranceInfo.policyNumber"), valueFirstLabel: insuranceState?.policyNumber || "", secondLabel: t("insuranceInfo.expirationDate"), valueSecondLabel: insuranceState?.expirationDate || "" },
+        { name: "policyAndExpiration", style: "row", firstLabel: t("insuranceInfo.policyNumber"), valueFirstLabel: insuranceState?.policyNumber || "", secondLabel: t("insuranceInfo.expirationDate"), valueSecondLabel: formatForDisplay(insuranceState?.expirationDate) },
       ]
     : [];
+
+  function formatForDisplay(raw) {
+    if (!raw && raw !== "") return "";
+    let s = String(raw ?? "");
+    // If it's an ISO datetime like 2022-01-02T00:00:00.000Z, show only the date part
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
+    // If it's already YYYY-MM-DD, return as-is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    // Otherwise return the raw string (lets user-entered formats remain unchanged)
+    return s;
+  }
 
   // If vehicle has ownerInfo (meaning user is NOT the owner), use that. Otherwise use user's profile.
   const displayOwner = (vehicleData?.isOwner === false && vehicleData?.ownerInfo) ? vehicleData.ownerInfo : userProfile;
@@ -276,6 +287,58 @@ const InsuranceInfo = () => {
         if (response.ok) {
           Alert.alert("Succès", "Assurance mise à jour");
         } else {
+          // Try to handle cases where the client _id is stale: attempt a fallback lookup by vehicle
+          if (response.status === 404) {
+            console.warn('Update returned 404 — attempting fallback lookup by vehicle');
+            try {
+              const insResp = await fetch(`${API_URL}insurances/vehicle/${selectedVehicleId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (insResp.ok) {
+                const insBody = await insResp.json();
+                const list = insBody.insurances || insBody.insurance || [];
+                // Try to find same policyNumber, otherwise use first
+                let candidate = null;
+                if (Array.isArray(list) && list.length) {
+                  candidate = list.find(i => String(i.policyNumber) === String(insuranceState.policyNumber)) || list[0];
+                }
+                if (candidate && candidate._id) {
+                  console.log('Found candidate insurance via vehicle lookup', candidate._id);
+                  const retryPayload = {
+                    policyNumber: insuranceState.policyNumber,
+                    expirationDate: parsedExpirationIso,
+                    vehicleId: selectedVehicleId,
+                  };
+                  const retryRes = await fetch(`${API_URL}insurances/${candidate._id}`, {
+                    method: 'PATCH',
+                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(retryPayload),
+                  });
+                  if (retryRes.ok) {
+                    Alert.alert('Succès', 'Assurance mise à jour (via fallback)');
+                    setSaving(false);
+                    return;
+                  } else {
+                    const txt = await retryRes.text();
+                    try {
+                      const parsed = JSON.parse(txt);
+                      console.error('Retry update failed', parsed);
+                      const detail = parsed.details ? JSON.stringify(parsed.details) : '';
+                      Alert.alert('Erreur', `${parsed.error || 'Impossible de mettre à jour l\'assurance'}\n${detail}`);
+                    } catch (ee) {
+                      console.error('Retry update failed', txt);
+                      Alert.alert('Erreur', 'Impossible de mettre à jour l\'assurance');
+                    }
+                    setSaving(false);
+                    return;
+                  }
+                }
+              }
+            } catch (e) {
+              console.error('Fallback vehicle lookup failed', e);
+            }
+          }
+
           let bodyText = await response.text();
           try {
             const parsed = JSON.parse(bodyText);

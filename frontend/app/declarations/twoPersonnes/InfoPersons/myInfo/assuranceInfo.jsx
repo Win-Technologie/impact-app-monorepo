@@ -12,7 +12,6 @@
 import React from "react";
 import { router } from "expo-router";
 import InputsShowGroup from "../../../../../components/Utils/Inputs/InputsShowGroup";
-import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import { AntDesign } from "@expo/vector-icons";
 import { useRecoilValue } from "recoil";
 import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
@@ -94,11 +93,6 @@ export default function assuranceInfo() {
     },
   ];
 
-  // Continuer à la prochaine étape après la soumission du formulaire.
-  const handlePressContinue = () => {
-    // Redirige l'utilisateur à l'étape suivante
-    router.push("declarations/twoPersonnes/infoDebase");
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -139,7 +133,7 @@ export default function assuranceInfo() {
               <Text style={styles.noInsuranceSubText}>Veuillez ajouter une assurance dans votre profil.</Text>
             </View>
           ) : (
-            <InputsShowGroup dataToShow={infoInsurance} />
+            <InputsShowGroup dataToShow={infoInsurance} editable={false} />
           )}
           <View>
             <Text
@@ -151,17 +145,12 @@ export default function assuranceInfo() {
             >
               Informations de l’assuré
             </Text>
-            <InputsShowGroup dataToShow={userDataInsurance} />
+            <InputsShowGroup dataToShow={userDataInsurance} editable={false} />
           </View>
         </View>
       </ScrollView>
 
-      <View style={styles.footContainer}>
-        <SingleBottomButton
-          children="Continuer"
-          onPress={handlePressContinue}
-        />
-      </View>
+      {/* Continued navigation removed: user should not auto-advance from this view */}
     </SafeAreaView>
   );
 }

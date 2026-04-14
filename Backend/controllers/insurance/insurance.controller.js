@@ -229,15 +229,17 @@ async function editInsurance(req, res) {
       return res.status(400).json({ error: "Token invalide" });
     }
     const subscriber = myToken.user_id;
+    console.log(`editInsurance called for id=${insuranceId} by subscriber=${subscriber}`);
 
     //Verifier si l'assurance appartient à l'utilisateur
-    const existingInsurance = await insuranceCollection.findOne({
-      _id: insuranceId,
-    });
+    const existingInsurance = await insuranceCollection.findOne({ _id: insuranceId });
     if (!existingInsurance) {
+      console.log(`editInsurance: no insurance found with id=${insuranceId}`);
       return res.status(404).json({ error: "Cette assurance n'existe pas" });
     }
+    console.log(`editInsurance: found insurance id=${existingInsurance._id} subscriber=${existingInsurance.subscriber}`);
     if (existingInsurance.subscriber !== subscriber) {
+      console.log(`editInsurance: subscriber mismatch (token=${subscriber} vs doc=${existingInsurance.subscriber})`);
       return res
         .status(403)
         .json({ error: "Vous n'êtes pas autorisé à modifier cette assurance" });
@@ -271,27 +273,47 @@ async function editInsurance(req, res) {
       vehicleModel: model,
       vehicleYear: year,
     };
+    // Log the update attempt details for debugging
+    console.log('editInsurance: attempting update with filter=', { _id: insuranceId });
+    console.log('editInsurance: fieldsToUpdate=', fieldsToUpdate);
 
-    const updatedInsurance = await insuranceCollection.findOneAndUpdate(
-      { _id: insuranceId },
-      { $set: fieldsToUpdate },
-      { returnDocument: "after" },
-    );
+    try {
+      // Use updateOne then fetch the document to better observe the result and possible write errors
+      const updateResult = await insuranceCollection.updateOne(
+        { _id: insuranceId },
+        { $set: fieldsToUpdate },
+      );
+      console.log('editInsurance: updateOne result=', updateResult);
 
-    // Mettre à jour le cache
-    if (updatedInsurance.value) {
+      if (updateResult.matchedCount === 0) {
+        console.log(`editInsurance: no document matched for id=${insuranceId}`);
+        return res.status(404).json({ error: "Assurance non trouvée" });
+      }
+
+      if (updateResult.modifiedCount === 0) {
+        console.log(`editInsurance: document matched but not modified for id=${insuranceId}`);
+        // Still fetch the document to return current state
+      }
+
+      const refreshed = await insuranceCollection.findOne({ _id: insuranceId });
+      if (!refreshed) {
+        console.log(`editInsurance: document disappeared after update for id=${insuranceId}`);
+        return res.status(404).json({ error: "Assurance non trouvée" });
+      }
+
+      // Update cache
       const cacheKey = `${subscriber}_${insuranceId}`;
-      const encryptedData = encryptData(updatedInsurance.value, AES_KEY);
+      const encryptedData = encryptData(refreshed, AES_KEY);
       myCache.set(cacheKey, encryptedData, 600);
 
-      return res
-        .status(200)
-        .json({
-          message: "Assurance mise à jour avec succès",
-          insurance: updatedInsurance.value,
-        });
-    } else {
-      return res.status(404).json({ error: "Assurance non trouvée" });
+      return res.status(200).json({ message: "Assurance mise à jour avec succès", insurance: refreshed });
+    } catch (dbErr) {
+      console.error('editInsurance: database error during update', dbErr);
+      // If it's a duplicate key error, surface a clear message
+      if (dbErr && dbErr.code === 11000) {
+        return res.status(400).json({ error: "Une assurance avec ce numéro existe déjà.", details: dbErr.keyValue });
+      }
+      return res.status(500).json({ error: "Erreur interne du serveur" });
     }
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'assurance :", error);

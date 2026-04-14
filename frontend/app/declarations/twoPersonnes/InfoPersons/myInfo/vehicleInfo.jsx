@@ -13,7 +13,6 @@ import {
 import React, { useState } from "react";
 import { router } from "expo-router";
 import InputsShowGroup from "../../../../../components/Utils/Inputs/InputsShowGroup";
-import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 import { AntDesign } from "@expo/vector-icons";
 import { useRecoilValue } from "recoil";
 import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
@@ -101,11 +100,6 @@ export default function VehicleInfo() {
     },
   ];
 
-  const handlePressContinue = () => {
-    router.navigate(
-      "/declarations/twoPersonnes/InfoPersons/myInfo/assuranceInfo",
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -143,7 +137,7 @@ export default function VehicleInfo() {
           {infoVehicle.length === 0 ? (
             <Loading text="Chargement..." />
           ) : (
-            <InputsShowGroup dataToShow={infoVehicle} />
+            <InputsShowGroup dataToShow={infoVehicle} editable={false} />
           )}
           <View>
             <Text
@@ -158,18 +152,13 @@ export default function VehicleInfo() {
             {vehicleOwner.length === 0 ? (
               <Loading text="Chargement" />
             ) : (
-              <InputsShowGroup dataToShow={vehicleOwner} />
+              <InputsShowGroup dataToShow={vehicleOwner} editable={false} />
             )}
           </View>
         </View>
       </ScrollView>
 
-      <View style={styles.footContainer}>
-        <SingleBottomButton
-          children="Continuer"
-          onPress={handlePressContinue}
-        />
-      </View>
+      {/* Continued navigation removed: user should not auto-advance from this view */}
     </SafeAreaView>
   );
 }
