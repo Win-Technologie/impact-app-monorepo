@@ -93,7 +93,7 @@
     "contactInsurance": "Contactez votre assurance dès maintenant",
     "towing": "Remorquage",
     "contactTowing": "Contactez un remorqueur près de votre position",
-    "declareIncident": "Déclarer un incident"
+    "declareIncident": "Déclarer un accident"
   },
 
   "forgottenPasswordScreen": {
@@ -391,7 +391,7 @@
     "insuranceDescription": "Contactez votre assurance dès maintenant",
     "towing": "Remorquage",
     "towingDescription": "Contactez un remorqueur près de votre position",
-    "declareIncident": "Déclarer un incident"
+    "declareIncident": "Déclarer un accident"
   },
 
   "tabs": {
@@ -408,11 +408,11 @@
     "multiple": "Nous sommes plusieurs individus impliqués",
     "numberOfIndividuals": "Nombre d'individus impliqués",
     "numberofpersoninvoved": "Vous devez choisir le nombre de personnes impliqués avant de pouvoir continuer",
-    "onepeople": "Un individus",
-    "twopeoples": "Deux individus",
-    "threepeoples": "Trois individus",
-    "fourpeoples": "Quatre individus",
-    "fivepeoples": "Cinq individus"
+    "onepeople": "1 personne",
+    "twopeoples": "2 personnes",
+    "threepeoples": "3 personnes",
+    "fourpeoples": "4 personnes",
+    "fivepeoples": "5 personnes"
   },
 
   "historyPage": {

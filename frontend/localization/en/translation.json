@@ -115,7 +115,7 @@
     "contactInsurance": "Contact your insurance now",
     "towing": "Towing",
     "contactTowing": "Contact a tow truck near your location",
-    "declareIncident": "Declare an incident"
+    "declareIncident": "Declare an accident"
   },
 
   "forgottenPasswordScreen": {
@@ -387,7 +387,7 @@
     "insuranceDescription": "Contact your insurance company now",
     "towing": "Towing",
     "towingDescription": "Contact a tow truck near your location",
-    "declareIncident": "Declare an incident"
+    "declareIncident": "Declare an accident"
   },
 
   "tabs": {
@@ -404,10 +404,11 @@
     "multiple": "We are multiple individuals involved",
     "numberOfIndividuals": "Number of individuals involved",
     "numberofpersoninvoved": "You must choose the number of people involved before you can continue",
-    "onepeople": "One people",
-    "twopeoples": "Two peoplse",
-    "threepeoples": "Three peoples",
-    "fourpeoples": "four peoples"
+    "onepeople": "One person",
+    "twopeoples": "Two people",
+    "threepeoples": "Three people",
+    "fourpeoples": "Four people",
+    "fivepeoples": "Five people"
   },
 
   "historyPage": {
