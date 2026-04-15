@@ -94,6 +94,9 @@ router.post("/user/register/verify", userController.RegisterUserVerifyCode);
 // Route pour permettre aux utilisateurs de se connecter
 router.post("/user/login", userController.Login);
 
+// Route pour l'authentification Google OAuth
+router.post("/user/google-auth", userController.GoogleAuth);
+
 // Route pour permettre aux utilisateurs de se déconnecter
 // Utilise le middleware d'authentification
 router.post("/user/logout", [userAuth.ensureAuth], userController.Logout);

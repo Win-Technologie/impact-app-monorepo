@@ -2,6 +2,7 @@
   "expo": {
     "name": "impact",
     "slug": "impact",
+    "owner": "seblxx",
     "scheme": "impactapp",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,7 +13,9 @@
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -26,7 +29,9 @@
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
       "package": "com.nano92.impact11"
     },
@@ -44,7 +49,9 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/Font/InterDynamic.ttf"]
+          "fonts": [
+            "./assets/Font/InterDynamic.ttf"
+          ]
         }
       ],
       [
@@ -60,7 +67,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "8e114a3d-6759-4823-9ed5-47d1f47a2d8d"
+        "projectId": "7b35ce31-5eea-4b78-9a65-a9bba9a866a8"
       }
     }
   }
