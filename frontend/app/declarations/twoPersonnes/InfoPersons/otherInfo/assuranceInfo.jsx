@@ -6,12 +6,15 @@
   ScrollView,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from "react-native";
-import React, { useState } from "react";
-import { router } from "expo-router";
-import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
+import React, { useState, useEffect } from "react";
+import { router, useLocalSearchParams } from "expo-router";
 import { AntDesign } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRecoilState } from "recoil";
+import { DeclarationState } from "../../../../../GlobalState/DeclarationState";
+import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 
 export default function assuranceInfo() {
   // Insurance fields - blank by default
@@ -30,8 +33,58 @@ export default function assuranceInfo() {
   const [country, setCountry] = useState("");
   const [province, setProvince] = useState("");
 
-  const handlePressContinue = () => {
-    router.push("declarations/twoPersonnes/infoDebase");
+  const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+  const params = useLocalSearchParams();
+  const personIndex = Number(params.person ?? 1);
+
+  useEffect(() => {
+    const saved = declaration?.people?.[personIndex];
+    if (!saved) return;
+    if (saved.insurance) {
+      setInsuranceCompany(saved.insurance.insuranceCompany || "");
+      setPolicyNumber(saved.insurance.policyNumber || "");
+      setExpirationDate(saved.insurance.expirationDate || "");
+    }
+    if (saved.owner) {
+      setName(saved.owner.name || "");
+      setLastName(saved.owner.lastName || "");
+      setEmail(saved.owner.email || "");
+      setPhone(saved.owner.phone || "");
+      setAddress(saved.owner.address || "");
+      setCity(saved.owner.city || "");
+      setPostalCode(saved.owner.postalCode || "");
+      setCountry(saved.owner.country || "");
+      setProvince(saved.owner.province || "");
+    }
+  }, [declaration, personIndex]);
+
+  const handleSave = () => {
+    const people = declaration?.people ? [...declaration.people] : [];
+    const idx = personIndex;
+    while (people.length <= idx) people.push({});
+    people[idx] = {
+      ...(people[idx] || {}),
+      insurance: {
+        insuranceCompany,
+        policyNumber,
+        expirationDate,
+      },
+      owner: {
+        name,
+        lastName,
+        email,
+        phone,
+        address,
+        city,
+        postalCode,
+        country,
+        province,
+      },
+    };
+    // set display name
+    people[idx].name = `${name || ""} ${lastName || ""}`.trim() || `Personne ${idx + 1}`;
+    setDeclaration((prev) => ({ ...prev, people }));
+    Alert.alert("Succès", "Informations enregistrées");
   };
 
   return (
@@ -100,10 +153,7 @@ export default function assuranceInfo() {
       </ScrollView>
 
       <View style={styles.footContainer}>
-        <SingleBottomButton
-          children="Continuer"
-          onPress={handlePressContinue}
-        />
+        <SingleBottomButton onPress={handleSave}>Enregistrer</SingleBottomButton>
       </View>
     </SafeAreaView>
   );

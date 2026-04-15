@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from "react-native";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 //import { getMyVehicles } from "../../../../api/users/userApi";
 // QR scanner removed — using manual entry only
 import { AntDesign } from "@expo/vector-icons";
@@ -18,19 +18,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const OtherInfo = () => {
   const [scannedData, setLocalScannedData] = useState(null);
 
+  const params = useLocalSearchParams();
+  const person = Number(params.person ?? 1);
+
   const consultInformation = (type) => {
     if (type == 1) {
-      router.navigate(
-        "/declarations/twoPersonnes/InfoPersons/otherInfo/personalInfo",
-      );
+      router.push({ pathname: "/declarations/twoPersonnes/InfoPersons/otherInfo/personalInfo", params: { person } });
     } else if (type == 2) {
-      router.navigate(
-        "/declarations/twoPersonnes/InfoPersons/otherInfo/vehicleInfo",
-      );
+      router.push({ pathname: "/declarations/twoPersonnes/InfoPersons/otherInfo/vehicleInfo", params: { person } });
     } else if (type == 3) {
-      router.navigate(
-        "/declarations/twoPersonnes/InfoPersons/otherInfo/assuranceInfo",
-      );
+      router.push({ pathname: "/declarations/twoPersonnes/InfoPersons/otherInfo/assuranceInfo", params: { person } });
     }
   };
 

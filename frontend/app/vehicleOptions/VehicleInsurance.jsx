@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import InputsShowGroup from "../../components/Utils/Inputs/InputsShowGroup";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert, ActivityIndicator } from "react-native";
 import { useRecoilValue } from "recoil";
 import { useLocalSearchParams } from "expo-router";
 import { UserInfoState } from "../../GlobalState/UserInfoState";
@@ -20,6 +21,7 @@ import { AntDesign } from "@expo/vector-icons";
 
 const formatDate = (dateString, format = "year/mm/dd") => {
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -42,6 +44,8 @@ const InsuranceInfo = () => {
   const ownerDetails = useRecoilValue(UserInfoState);
   const [insuranceDetails, setInsuranceDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [insuranceState, setInsuranceState] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [vehicleData, setVehicleData] = useState(null);
 
@@ -89,7 +93,11 @@ const InsuranceInfo = () => {
           
           if (selectedVehicleData?.insurance) {
             setInsuranceDetails(selectedVehicleData.insurance);
+            setInsuranceState(selectedVehicleData.insurance);
           } else {
+            // Initialize empty insurance state so user can add one
+            setInsuranceDetails(null);
+            setInsuranceState({ insuranceCompany: "", policyNumber: "", expirationDate: "" });
             console.log("No insurance found for vehicle ID:", selectedVehicleId);
           }
         } else {
@@ -126,22 +134,23 @@ const InsuranceInfo = () => {
     );
   }
 
-  const insuranceInfo = [
-    {
-      style: "column",
-      label: t("insuranceInfo.companyName"),
-      value: insuranceDetails?.insuranceCompany || "N/A",
-    },
-    {
-      style: "row",
-      firstLabel: t("insuranceInfo.policyNumber"),
-      valueFirstLabel: insuranceDetails?.policyNumber || "N/A",
-      secondLabel: t("insuranceInfo.expirationDate"),
-      valueSecondLabel: insuranceDetails?.expirationDate
-        ? formatDate(insuranceDetails?.expirationDate, "year/mm/dd")
-        : "N/A",
-    },
-  ];
+  const insuranceInfo = insuranceState
+    ? [
+        { name: "insuranceCompany", style: "column", label: t("insuranceInfo.companyName"), value: insuranceState?.insuranceCompany || "" },
+        { name: "policyAndExpiration", style: "row", firstLabel: t("insuranceInfo.policyNumber"), valueFirstLabel: insuranceState?.policyNumber || "", secondLabel: t("insuranceInfo.expirationDate"), valueSecondLabel: formatForDisplay(insuranceState?.expirationDate) },
+      ]
+    : [];
+
+  function formatForDisplay(raw) {
+    if (!raw && raw !== "") return "";
+    let s = String(raw ?? "");
+    // If it's an ISO datetime like 2022-01-02T00:00:00.000Z, show only the date part
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
+    // If it's already YYYY-MM-DD, return as-is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    // Otherwise return the raw string (lets user-entered formats remain unchanged)
+    return s;
+  }
 
   // If vehicle has ownerInfo (meaning user is NOT the owner), use that. Otherwise use user's profile.
   const displayOwner = (vehicleData?.isOwner === false && vehicleData?.ownerInfo) ? vehicleData.ownerInfo : userProfile;
@@ -188,6 +197,196 @@ const InsuranceInfo = () => {
     },
   ];
 
+  const handleFieldChange = (name, text) => {
+    if (!insuranceState) return;
+    if (name === "insuranceCompany") {
+      setInsuranceState(prev => ({ ...prev, insuranceCompany: text }));
+      return;
+    }
+    if (name.startsWith("policyAndExpiration")) {
+      const isFirst = name.endsWith("-first");
+      if (isFirst) setInsuranceState(prev => ({ ...prev, policyNumber: text }));
+      else setInsuranceState(prev => ({ ...prev, expirationDate: text }));
+      return;
+    }
+  };
+
+  const toIsoIfPossible = (dateStr) => {
+    if (!dateStr) return dateStr;
+    // Already ISO-ish
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) return d.toISOString();
+    }
+
+    // Try native parse first
+    const native = new Date(dateStr);
+    if (!isNaN(native.getTime())) {
+      const y = native.getFullYear();
+      if (y >= 1900 && y <= 2100) return native.toISOString();
+    }
+
+    // Try common localized formats like DD/MM/YYYY or MM/DD/YYYY
+    const m = String(dateStr).trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (m) {
+      let p1 = parseInt(m[1], 10);
+      let p2 = parseInt(m[2], 10);
+      let py = parseInt(m[3], 10);
+      if (m[3].length === 2) py = py + (py < 50 ? 2000 : 1900);
+
+      // Try treat as DD/MM/YYYY
+      let d1 = new Date(py, p2 - 1, p1);
+      if (!isNaN(d1.getTime()) && d1.getFullYear() === py && d1.getMonth() === p2 - 1 && d1.getDate() === p1 && py >= 1900 && py <= 2100) {
+        return d1.toISOString();
+      }
+
+      // Try treat as MM/DD/YYYY
+      let d2 = new Date(py, p1 - 1, p2);
+      if (!isNaN(d2.getTime()) && d2.getFullYear() === py && d2.getMonth() === p1 - 1 && d2.getDate() === p2 && py >= 1900 && py <= 2100) {
+        return d2.toISOString();
+      }
+    }
+
+    // If we couldn't parse into a sensible year range, return original so server validation can report.
+    return dateStr;
+  };
+
+  const saveInsurance = async () => {
+    setSaving(true);
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) {
+        Alert.alert("Erreur", "Session expirée");
+        setSaving(false);
+        return;
+      }
+
+      // Client-side validation for expiration date
+      const parsedExpirationIso = toIsoIfPossible(insuranceState?.expirationDate);
+      const isIsoLike = typeof parsedExpirationIso === "string" && /^\d{4}-\d{2}-\d{2}T/.test(parsedExpirationIso);
+      if (!insuranceState?.expirationDate || !isIsoLike) {
+        Alert.alert("Erreur", "Date d'expiration invalide. Utilisez JJ/MM/AAAA ou AAAA-MM-JJ.");
+        setSaving(false);
+        return;
+      }
+
+      if (insuranceState && insuranceState._id) {
+        // edit existing - backend requires policyNumber, expirationDate (ISO), vehicleId
+        const payload = {
+          policyNumber: insuranceState.policyNumber,
+          expirationDate: parsedExpirationIso,
+          vehicleId: selectedVehicleId,
+        };
+
+        const response = await fetch(`${API_URL}insurances/${insuranceState._id}`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          Alert.alert("Succès", "Assurance mise à jour");
+        } else {
+          // Try to handle cases where the client _id is stale: attempt a fallback lookup by vehicle
+          if (response.status === 404) {
+            console.warn('Update returned 404 — attempting fallback lookup by vehicle');
+            try {
+              const insResp = await fetch(`${API_URL}insurances/vehicle/${selectedVehicleId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (insResp.ok) {
+                const insBody = await insResp.json();
+                const list = insBody.insurances || insBody.insurance || [];
+                // Try to find same policyNumber, otherwise use first
+                let candidate = null;
+                if (Array.isArray(list) && list.length) {
+                  candidate = list.find(i => String(i.policyNumber) === String(insuranceState.policyNumber)) || list[0];
+                }
+                if (candidate && candidate._id) {
+                  console.log('Found candidate insurance via vehicle lookup', candidate._id);
+                  const retryPayload = {
+                    policyNumber: insuranceState.policyNumber,
+                    expirationDate: parsedExpirationIso,
+                    vehicleId: selectedVehicleId,
+                  };
+                  const retryRes = await fetch(`${API_URL}insurances/${candidate._id}`, {
+                    method: 'PATCH',
+                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(retryPayload),
+                  });
+                  if (retryRes.ok) {
+                    Alert.alert('Succès', 'Assurance mise à jour (via fallback)');
+                    setSaving(false);
+                    return;
+                  } else {
+                    const txt = await retryRes.text();
+                    try {
+                      const parsed = JSON.parse(txt);
+                      console.error('Retry update failed', parsed);
+                      const detail = parsed.details ? JSON.stringify(parsed.details) : '';
+                      Alert.alert('Erreur', `${parsed.error || 'Impossible de mettre à jour l\'assurance'}\n${detail}`);
+                    } catch (ee) {
+                      console.error('Retry update failed', txt);
+                      Alert.alert('Erreur', 'Impossible de mettre à jour l\'assurance');
+                    }
+                    setSaving(false);
+                    return;
+                  }
+                }
+              }
+            } catch (e) {
+              console.error('Fallback vehicle lookup failed', e);
+            }
+          }
+
+          let bodyText = await response.text();
+          try {
+            const parsed = JSON.parse(bodyText);
+            console.error("Insurance update failed", parsed);
+            const detail = parsed.details ? JSON.stringify(parsed.details) : "";
+            Alert.alert("Erreur", `${parsed.error || 'Impossible de mettre à jour l\'assurance'}\n${detail}`);
+          } catch (e) {
+            console.error("Insurance update failed", bodyText);
+            Alert.alert("Erreur", "Impossible de mettre à jour l'assurance");
+          }
+        }
+      } else {
+        // add new - backend expects insuranceCompany, policyNumber, expirationDate in body and vehicleId in URL
+        const payload = {
+          insuranceCompany: insuranceState.insuranceCompany,
+          policyNumber: insuranceState.policyNumber,
+          expirationDate: parsedExpirationIso,
+        };
+
+        const response = await fetch(`${API_URL}insurances/add/${selectedVehicleId}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          Alert.alert("Succès", "Assurance ajoutée");
+        } else {
+          let bodyText = await response.text();
+          try {
+            const parsed = JSON.parse(bodyText);
+            console.error("Insurance add failed", parsed);
+            const detail = parsed.details ? JSON.stringify(parsed.details) : "";
+            Alert.alert("Erreur", `${parsed.error || 'Impossible d\'ajouter l\'assurance'}\n${detail}`);
+          } catch (e) {
+            console.error("Insurance add failed", bodyText);
+            Alert.alert("Erreur", "Impossible d'ajouter l'assurance");
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erreur", "Une erreur est survenue");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View
@@ -227,7 +426,7 @@ const InsuranceInfo = () => {
         <View>
           <View style={styles.column}>
             <Text style={styles.sectionTitle}>{t("insuranceInfo.title")}</Text>
-            <InputsShowGroup dataToShow={insuranceInfo} editable={false} />
+            <InputsShowGroup dataToShow={insuranceInfo} editable={true} onChange={handleFieldChange} />
           </View>
           <View>
             <Text style={styles.sectionTitle}>
@@ -235,6 +434,15 @@ const InsuranceInfo = () => {
             </Text>
             <InputsShowGroup dataToShow={ownerInfo} editable={false} />
           </View>
+        </View>
+        <View style={{ marginTop: 20 }}>
+          <TouchableOpacity
+            style={{ backgroundColor: "#0B8BA8", padding: 15, borderRadius: 6, alignItems: "center" }}
+            onPress={saveInsurance}
+            disabled={saving}
+          >
+            {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "white", fontWeight: "600" }}>Enregistrer</Text>}
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>

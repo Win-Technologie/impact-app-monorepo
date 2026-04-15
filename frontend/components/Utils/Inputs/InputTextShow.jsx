@@ -1,11 +1,27 @@
 import { StyleSheet, Text, View, TextInput } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
-function InputTextShow({ label, info, editable = true }) {
+function InputTextShow({ label, info, editable = true, onChange, name }) {
+  const [value, setValue] = useState(info ?? "");
+
+  useEffect(() => {
+    setValue(info ?? "");
+  }, [info]);
+
+  const handleChange = (text) => {
+    setValue(text);
+    if (typeof onChange === "function") onChange(name, text);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput style={styles.input} value={info} editable={editable} />
+      <TextInput
+        style={styles.input}
+        value={value}
+        editable={editable}
+        onChangeText={handleChange}
+      />
     </View>
   );
 }
