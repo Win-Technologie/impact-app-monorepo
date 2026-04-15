@@ -1,6 +1,7 @@
 // Stepper.js
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useRecoilValue } from "recoil";
 import { DeclarationState } from "../../GlobalState/DeclarationState";
 
@@ -15,9 +16,11 @@ const Stepper = ({ currentStep, totalSteps, displayStep }) => {
   const progress = (normalizedStep / totalSteps) * 100;
   //console.log(`Progress width: ${progress}%`);
 
+  const { t } = useTranslation();
+
   return (
     <View style={styles.container}>
-      <Text>Étape {visibleStep} sur {totalSteps}</Text>
+      <Text>{t("declaration.step", { current: visibleStep, total: totalSteps })}</Text>
       <View style={styles.progressBarBackground}>
         <View
           style={[styles.progressBarForeground, { width: `${progress}%` }]}

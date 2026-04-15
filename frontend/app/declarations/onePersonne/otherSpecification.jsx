@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -29,6 +30,8 @@ const otherspecification = () => {
   const [images, setImages] = React.useState([]);
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
   const [otherSpec, setOtherSpec] = useState(null);
+
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Ensure this screen shows step 4 when mounted
@@ -120,24 +123,22 @@ const otherspecification = () => {
       />
 
       <ScrollView style={styles.container}>
-        <Text style={styles.title}>
-          Avez-vous d'autre spécifications à ajouter ?
-        </Text>
+        <Text style={styles.title}>{t("declaration.otherSpecificationTitle")}</Text>
 
         
 
         <View style={styles.inputSection}>
-          <TextInput
-            multiline={true}
-            numberOfLines={10}
-            style={styles.textInput}
-            placeholder="Redigez toute autres information"
-            value={otherSpec}
-            onChangeText={setOtherSpec}
-          />
+            <TextInput
+              multiline={true}
+              numberOfLines={10}
+              style={styles.textInput}
+              placeholder={t("declaration.otherSpecPlaceholder")}
+              value={otherSpec}
+              onChangeText={setOtherSpec}
+            />
         </View>
 
-        <Text style={styles.title}>Avez-vous des photos à ajouter ?</Text>
+        <Text style={styles.title}>{t("declaration.addPhotosTitle")}</Text>
         <View style={styles.inputSection}>
           <View
             style={{
@@ -155,12 +156,7 @@ const otherspecification = () => {
             >
               <SimpleLineIcons name="cloud-upload" size={24} color="#1B6878" />
 
-              <Text style={{ textAlign: "center" }}>
-                Telecharger une photo de{" "}
-                <Text style={{ color: "#0B7BA8" }}>l'accident </Text> ou du
-                <Text style={{ color: "#0B7BA8" }}> véhicule </Text> au moment
-                de l'accident'
-              </Text>
+              <Text style={{ textAlign: "center" }}>{t("declaration.uploadPhotoText")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -209,8 +205,8 @@ const otherspecification = () => {
 
       <View style={styles.footContainer}>
         <DualOptionButton
-          leftButtonTitle="Annuler"
-          rightButtonTitle="Confirmer"
+          leftButtonTitle={t("buttons.cancel")}
+          rightButtonTitle={t("buttons.confirm")}
           onPressBack={() => back()}
           onPressContinue={() => next()}
         />

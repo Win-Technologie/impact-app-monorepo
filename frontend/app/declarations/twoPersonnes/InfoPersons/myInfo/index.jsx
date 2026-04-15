@@ -23,6 +23,7 @@ import { accidentVehicleState } from "../../../../../GlobalState/AccidentVehicul
 import { fetchUserInfoAndVehicle } from "../../../../api/users/userApi";
 import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
 import { DeclarationState } from "../../../../../GlobalState/DeclarationState";
+import { useTranslation } from "react-i18next";
 
 const MyInfo = () => {
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -35,6 +36,7 @@ const MyInfo = () => {
   const ENDPOINT2 = "users/user/vehicle/info/";
   const [, setPersonalInfoState] = useRecoilState(globalPersonalInfo);
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+  const { t } = useTranslation();
 
   useEffect(() => {
     loadVehicles();
@@ -67,7 +69,7 @@ const MyInfo = () => {
       } else {
         console.error("Failed to load vehicles", vehiclesResponse);
         setAllVehicles([]);
-        setErrorVehicleState("Impossible de charger vos véhicules");
+        setErrorVehicleState(t("declaration.loadVehiclesFailed"));
       }
     } catch (err) {
       console.error("loadVehicles failed", err);
@@ -87,8 +89,8 @@ const MyInfo = () => {
       setErrorVehicleState(""); // Clear any previous errors
     } else {
       console.error("Invalid vehicle selection", selectedItem);
-      setErrorVehicleState("Invalid vehicle selection. Please try again.");
-      Alert.alert("Erreur", "Sélection de véhicule invalide. Veuillez réessayer.");
+      setErrorVehicleState(t("declaration.selectVehicleInvalid"));
+      Alert.alert(t("common.error"), t("declaration.selectVehicleInvalid"));
     }
   };
 
@@ -145,9 +147,9 @@ const MyInfo = () => {
         );
       }
     } else {
-      Alert.alert("Erreur", "Veuillez choisir une voiture avant de continuer", [
+      Alert.alert(t("common.error"), t("declaration.chooseCarBeforeContinue"), [
         {
-          text: "Ok",
+          text: t("buttons.confirm"),
           // onPress: () => console.log('Cancel Pressed'),
           style: "cancel",
         },
@@ -181,15 +183,13 @@ const MyInfo = () => {
 
         <View>
           <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            Fournir mes informations
+            {t("declaration.provideMyInfo")}
           </Text>
         </View>
       </View>
       <ScrollView>
         <View style={styles.selectContainer}>
-          <Text style={styles.titleSelect}>
-            Veuillez sélectionner le véhicule impliqué dans l'accident:
-          </Text>
+          <Text style={styles.titleSelect}>{t("declaration.selectVehiclePrompt")}</Text>
           <SelectDropdown
             data={allVehicles}
             defaultButtonText="Choisir une voiture"

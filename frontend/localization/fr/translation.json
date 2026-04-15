@@ -377,7 +377,8 @@
   "buttons": {
     "cancel": "Annuler",
     "confirm": "Confirmer",
-    "continue": "Continuer"
+    "continue": "Continuer",
+    "ok": "Ok"
   },
 
   "home": {
@@ -524,6 +525,35 @@
     "privacyPolicyTitle": "Politique de confidentialité",
     "privacyPolicySubtitle": "Informations que nous recevons et ce que nous en faisons.",
     "learnMoreButton": "En savoir plus sur Impact"
+  },
+
+  "declaration": {
+    "whereDidAccidentOccur": "Où l'accident a-t-il eu lieu ?",
+    "searchAddressPlaceholder": "Rechercher une adresse ou un lieu",
+    "step": "Étape {{current}} sur {{total}}",
+    "submissionCompleteTitle": "Vous avez complété votre déclaration",
+    "submissionCompleteDescription": "Il ne vous reste plus qu’à communiquer avec votre compagnie d’assurance. Une fois confirmé, vous ne pourrez plus revenir en arrière.",
+    "provideMyInfo": "Fournir mes informations",
+    "selectVehiclePrompt": "Veuillez sélectionner le véhicule impliqué dans l'accident:",
+    "sessionExpired": "Session expirée. Veuillez vous reconnecter.",
+    "loadVehiclesFailed": "Impossible de charger les véhicules. Veuillez réessayer plus tard.",
+    "selectVehicleInvalid": "Veuillez sélectionner un véhicule pour continuer.",
+    "choosePlaceBeforeContinue": "Veuillez choisir le lieu de l'accident avant de continuer.",
+    "enterAccidentType": "Veuillez indiquer le type d'accident.",
+    "enterPlateNumber": "Veuillez entrer le numéro d'immatriculation du véhicule.",
+    "placeSelectedTitle": "Lieu sélectionné",
+    "addressNotFound": "Adresse introuvable",
+    "selectPlaceError": "Veuillez sélectionner un lieu sur la carte.",
+    "unableToContinue": "Impossible de continuer. Veuillez remplir tous les champs requis.",
+    "chooseAccidentType": "Choisissez le type d'accident",
+    "hourOfAccidentTitle": "À quelle heure l'accident s'est-il déroulé ?",
+    "hourPlaceholder": "heure",
+    "minutePlaceholder": "minute",
+    "selectTimeRequired": "Vous devez choisir l'heure de l'accident avant de continuer.",
+    "otherSpecificationTitle": "Avez-vous d'autres spécifications à ajouter ?",
+    "otherSpecPlaceholder": "Rédigez toute autre information",
+    "addPhotosTitle": "Avez-vous des photos à ajouter ?",
+    "uploadPhotoText": "Téléchargez une photo de l'accident ou du véhicule au moment de l'accident"
   },
 
   "addVehicle": {

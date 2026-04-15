@@ -373,7 +373,8 @@
   "buttons": {
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "continue": "Continue"
+    "continue": "Continue",
+    "ok": "Ok"
   },
 
   "home": {
@@ -578,6 +579,35 @@
     "privacyPolicyTitle": "Privacy Policy",
     "privacyPolicySubtitle": "Information we receive and what we do with it.",
     "learnMoreButton": "Learn more about Impact"
+  },
+
+  "declaration": {
+    "whereDidAccidentOccur": "Where did the accident occur?",
+    "searchAddressPlaceholder": "Search address or place",
+    "step": "Step {{current}} of {{total}}",
+    "submissionCompleteTitle": "You have completed your declaration",
+    "submissionCompleteDescription": "The only step left is to contact your insurance company. Once you confirm, you won't be able to go back.",
+    "provideMyInfo": "Provide my information",
+    "selectVehiclePrompt": "Please select the vehicle involved in the accident:",
+    "sessionExpired": "Session expired. Please log in again.",
+    "loadVehiclesFailed": "Unable to load vehicles. Please try again later.",
+    "selectVehicleInvalid": "Please select a vehicle to continue.",
+    "choosePlaceBeforeContinue": "Please choose the place of the accident before continuing.",
+    "enterAccidentType": "Please enter the type of accident.",
+    "enterPlateNumber": "Please enter the vehicle registration number.",
+    "placeSelectedTitle": "Place selected",
+    "addressNotFound": "Address not found",
+    "selectPlaceError": "Please select a place on the map.",
+    "unableToContinue": "Unable to continue. Please complete all required fields.",
+    "chooseAccidentType": "Choose the type of accident",
+    "hourOfAccidentTitle": "What time did the accident occur?",
+    "hourPlaceholder": "hour",
+    "minutePlaceholder": "minute",
+    "selectTimeRequired": "You must choose the accident time before continuing.",
+    "otherSpecificationTitle": "Do you have any additional specifications to add?",
+    "otherSpecPlaceholder": "Write any additional information",
+    "addPhotosTitle": "Do you have photos to add?",
+    "uploadPhotoText": "Upload a photo of the accident or the vehicle at the time of the accident"
   },
 
   "verified": {

@@ -17,6 +17,7 @@ import { router } from "expo-router";
 import { DeclarationState } from "../../../GlobalState/DeclarationState";
 import { useRecoilState } from "recoil";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 const typeOfAccident = () => {
   const [selectedType, setSelectedType] = useState("");
@@ -27,6 +28,7 @@ const typeOfAccident = () => {
   const [accidentType, setAccidentType] = useState("");
   const [plateNumber, setPlateNumber] = useState("");
   const [declaration, setDeclaration] = useRecoilState(DeclarationState);
+  const { t } = useTranslation();
 
   useEffect(() => {
     setDeclaration((prev) => ({ ...prev, step: 1 }));
@@ -66,8 +68,8 @@ const typeOfAccident = () => {
 
   const handlePress = (type) => {
     setSelectedType(type);
-    setShowAdditionalInput(type === "Accrochage avec un véhicule vide");
-    setShowAccidentTypeInput(type === "Autre");
+    setShowAdditionalInput(type === t("accidentTypes.vehicleCollisionWithEmptyVehicle"));
+    setShowAccidentTypeInput(type === t("accidentTypes.other"));
     setDeclaration({ ...declaration, type: type });
   };
 
@@ -84,26 +86,16 @@ const typeOfAccident = () => {
     try {
       // type d'accident choisie
       if (!!selectedType) {
-        if (selectedType === "Autre") {
+        if (selectedType === t("accidentTypes.other")) {
           // Accident choisi
           if (!!accidentType) {
             setDeclaration({ ...declaration, type: accidentType });
 
             router.navigate("declarations/twoPersonnes/placeOfAccident");
           } else {
-            Alert.alert(
-              "Erreur",
-              "Vous devez inscrire le type d'accident avant de continuer",
-              [
-                {
-                  text: "Ok",
-                  onPress: () => null,
-                  style: "cancel",
-                },
-              ],
-            );
+            Alert.alert(t("common.error"), t("declaration.enterAccidentType"));
           }
-        } else if (selectedType === "Accrochage avec un véhicule vide") {
+        } else if (selectedType === t("accidentTypes.vehicleCollisionWithEmptyVehicle")) {
           // numéro de la carte inscrit
           if (!!plateNumber) {
             // Remove spaces before saving
@@ -113,39 +105,19 @@ const typeOfAccident = () => {
             //alert("okay accident choisi");
             //console.log(declaration);
           } else {
-            Alert.alert(
-              "Erreur",
-              "Vous devez inscrire le numéro de la carte d'immatriculation du vehicule touché",
-              [
-                {
-                  text: "Ok",
-                  onPress: () => null,
-                  style: "cancel",
-                },
-              ],
-            );
+            Alert.alert(t("common.error"), t("declaration.enterPlateNumber"));
           }
         } else {
           router.navigate("declarations/twoPersonnes/placeOfAccident");
         }
       } else {
-        Alert.alert(
-          "Erreur",
-          "Vous devez choisir  le type d'accident avant de continuer",
-          [
-            {
-              text: "Ok",
-              onPress: () => null,
-              style: "cancel",
-            },
-          ],
-        );
+        Alert.alert(t("common.error"), t("declaration.chooseAccidentType"));
       }
 
       console.log(declaration);
     } catch (error) {
       console.error("Navigation error:", error);
-      Alert.alert("Erreur", "Impossible de continuer. Veuillez réessayer.");
+      Alert.alert(t("common.error"), t("declaration.unableToContinue"));
     }
   };
 
@@ -167,83 +139,77 @@ const typeOfAccident = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.container}>
-            <Text style={styles.title}>
-              De quel type d'accident est-il question?
-            </Text>
+            <Text style={styles.title}>{t("accidentTypes.title")}</Text>
 
           <View style={styles.buttonContainer}>
             <AnimatedButton
-              title="Accrochage avec un véhicule vide"
-              onPress={() => handlePress("Accrochage avec un véhicule vide")}
+              title={t("accidentTypes.vehicleCollisionWithEmptyVehicle")}
+              onPress={() => handlePress(t("accidentTypes.vehicleCollisionWithEmptyVehicle"))}
               customStyle={
-                selectedType === "Accrochage avec un véhicule vide"
+                selectedType === t("accidentTypes.vehicleCollisionWithEmptyVehicle")
                   ? styles.activeButton
                   : styles.button
               }
               textStyle={
-                selectedType === "Accrochage avec un véhicule vide"
+                selectedType === t("accidentTypes.vehicleCollisionWithEmptyVehicle")
                   ? styles.activeButtonText
                   : styles.buttonText
               }
             />
 
             <AnimatedButton
-              title="Accrochage d'un item public avec dommage"
-              onPress={() =>
-                handlePress("Accrochage d'un item public avec dommage")
-              }
+              title={t("accidentTypes.publicItemCollisionWithDamage")}
+              onPress={() => handlePress(t("accidentTypes.publicItemCollisionWithDamage"))}
               customStyle={
-                selectedType === "Accrochage d'un item public avec dommage"
+                selectedType === t("accidentTypes.publicItemCollisionWithDamage")
                   ? styles.activeButton
                   : styles.button
               }
               textStyle={
-                selectedType === "Accrochage d'un item public avec dommage"
+                selectedType === t("accidentTypes.publicItemCollisionWithDamage")
                   ? styles.activeButtonText
                   : styles.buttonText
               }
             />
 
             <AnimatedButton
-              title="Accrochage d'un item public sans dommage"
-              onPress={() =>
-                handlePress("Accrochage d\'un item public sans dommage")
-              }
+              title={t("accidentTypes.publicItemCollisionWithoutDamage")}
+              onPress={() => handlePress(t("accidentTypes.publicItemCollisionWithoutDamage"))}
               customStyle={
-                selectedType === "Accrochage d'un item public sans dommage"
+                selectedType === t("accidentTypes.publicItemCollisionWithoutDamage")
                   ? styles.activeButton
                   : styles.button
               }
               textStyle={
-                selectedType === "Accrochage d'un item public sans dommage"
+                selectedType === t("accidentTypes.publicItemCollisionWithoutDamage")
                   ? styles.activeButtonText
                   : styles.buttonText
               }
             />
 
             <AnimatedButton
-              title="Accrochage d'un item privé"
-              onPress={() => handlePress("Accrochage d'un item privé")}
+              title={t("accidentTypes.privateItemCollision")}
+              onPress={() => handlePress(t("accidentTypes.privateItemCollision"))}
               customStyle={
-                selectedType === "Accrochage d'un item privé"
+                selectedType === t("accidentTypes.privateItemCollision")
                   ? styles.activeButton
                   : styles.button
               }
               textStyle={
-                selectedType === "Accrochage d'un item privé"
+                selectedType === t("accidentTypes.privateItemCollision")
                   ? styles.activeButtonText
                   : styles.buttonText
               }
             />
 
             <AnimatedButton
-              title="Autre"
-              onPress={() => handlePress("Autre")}
+              title={t("accidentTypes.other")}
+              onPress={() => handlePress(t("accidentTypes.other"))}
               customStyle={
-                selectedType === "Autre" ? styles.activeButton : styles.button
+                selectedType === t("accidentTypes.other") ? styles.activeButton : styles.button
               }
               textStyle={
-                selectedType === "Autre"
+                selectedType === t("accidentTypes.other")
                   ? styles.activeButtonText
                   : styles.buttonText
               }
@@ -258,7 +224,7 @@ const typeOfAccident = () => {
               <View style={styles.inputWithCounter}>
                 <TextInput
                   style={styles.textInput}
-                  placeholder="Plaque d'immatriculation"
+                  placeholder={t("vehicleRegistration.plateNumberPlaceholder")}
                   value={plateNumber}
                   onChangeText={(text) => setPlateNumber(formatPlateNumber(text))}
                   autoCapitalize="characters"
@@ -278,7 +244,7 @@ const typeOfAccident = () => {
               <View style={styles.inputWithCounter}>
                 <TextInput
                   style={styles.textInput}
-                  placeholder="Type d'accident"
+                  placeholder={t("accidentTypes.accidentType")}
                   value={accidentType}
                   onChangeText={setAccidentType}
                 />
@@ -291,8 +257,8 @@ const typeOfAccident = () => {
 
       <View style={styles.footContainer}>
         <DualOptionButton
-          leftButtonTitle="Annuler"
-          rightButtonTitle="Confirmer"
+          leftButtonTitle={t("buttons.cancel")}
+          rightButtonTitle={t("buttons.confirm")}
           onPressBack={() => back()}
           onPressContinue={() => next()}
         />
