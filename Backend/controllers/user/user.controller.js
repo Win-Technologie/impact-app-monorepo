@@ -2586,6 +2586,93 @@ async function UploadUserDrivingLicencePhoto(req, res) {
   }
 }
 
+// Google OAuth handler - receives user info from frontend
+async function GoogleAuth(req, res) {
+  try {
+    const { email, googleId, name, picture } = req.body;
+
+    if (!email || !googleId) {
+      return res.status(400).json({ msg: "Email et Google ID requis" });
+    }
+
+    const emailLowerCase = email.toLowerCase();
+
+    // Find or create user
+    let user = await userCollection.findOne({ email: emailLowerCase });
+
+    if (!user) {
+      // Create new user with string _id to match the Mongoose User model convention
+      const nameParts = (name || "").split(" ");
+      const newUser = {
+        _id: new ObjectId().toString(),
+        email: emailLowerCase,
+        googleId: googleId,
+        name: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        profileImage: picture || "",
+        verified: true,
+        active: true,
+        allFieldsComplete: false,
+        createdAt: new Date(),
+      };
+
+      await userCollection.insertOne(newUser);
+      user = newUser;
+
+      // Return temporal token for incomplete profile
+      const temporalToken = jwt.createTemporalToken(user);
+      return res.status(201).json({
+        msg: "Nouveau compte Google créé",
+        TA7: temporalToken,
+        user: { _id: user._id, email: user.email, name: user.name, lastName: user.lastName },
+      });
+    }
+
+    // Always sync Google profile data on login
+    const nameParts = (name || "").split(" ");
+    const updates = {};
+    if (!user.googleId) {
+      updates.verified = true;
+    }
+    updates.googleId = googleId;
+    if (picture) {
+      updates.profileImage = picture;
+    }
+    if (name) {
+      updates.name = nameParts[0] || "";
+      updates.lastName = nameParts.slice(1).join(" ") || "";
+    }
+    if (Object.keys(updates).length > 0) {
+      await userCollection.updateOne(
+        { _id: user._id },
+        { $set: updates }
+      );
+      Object.assign(user, updates);
+    }
+
+    // Existing user — always do full login (profile completeness handled in-app)
+    if (!user.active) {
+      return res.status(401).json({ msg: "Compte inactif" });
+    }
+
+    const accessToken = jwt.createAccessToken(user);
+    const userSystemInfo = await getUserSystemInfo(user);
+
+    return res.status(200).json({
+      msg: "Authentification Google réussie",
+      A7: accessToken,
+      user: userSystemInfo,
+    });
+
+  } catch (error) {
+    console.error("Google auth error:", error);
+    return res.status(500).json({ 
+      msg: "Erreur serveur lors de l'authentification Google",
+      error: error.message 
+    });
+  }
+}
+
 // Stream a GridFS file (profile image)
 async function StreamUserProfileImage(req, res) {
   try {
@@ -2646,4 +2733,5 @@ module.exports = {
   RegisterUserSendCode,
   RegisterUserVerifyCode,
   resendVerificationCode,
+  GoogleAuth,
 };

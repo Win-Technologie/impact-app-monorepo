@@ -26,6 +26,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import LoadingModal from "../../components/LoadingModal";
 import { useNavigation } from "expo-router";
+import { signInWithGoogle } from "../../utils/googleAuth";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -331,7 +332,7 @@ export default function SignUp() {
             <SocialButton
               source={require("../../assets/google.png")}
               text="Google"
-              onPress={() => console.log("Google Sign Up")}
+              onPress={signInWithGoogle}
             />
           </View>
         </KeyboardAvoidingView>

@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import LoadingModal from "../../components/LoadingModal";
 import { jwtDecode } from "jwt-decode";
 import { useNavigation } from "expo-router";
+import { signInWithGoogle } from "../../utils/googleAuth";
 
 export default function SignIn() {
   const [isPasswordShown, setPasswordShown] = useState(false);
@@ -204,7 +205,7 @@ export default function SignIn() {
               <Text>Facebook</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} onPress={signInWithGoogle}>
               <Image
                 source={require("../../assets/google.png")}
                 style={styles.socialIcon}
