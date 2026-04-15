@@ -56,6 +56,23 @@
     "Login": "Me déconnecter"
   },
 
+  "notifications": {
+    "title": "Notifications",
+    "header": "Paramètres de notifications",
+    "categories": "Catégories",
+    "generalTitle": "Général",
+    "generalSubtitle": "Informations générales et confirmations",
+    "updatesTitle": "Mises à jour",
+    "updatesSubtitle": "Annonces de nouvelles versions et améliorations",
+    "promotionsTitle": "Promotions",
+    "promotionsSubtitle": "Offres et promotions ponctuelles",
+    "securityTitle": "Alertes de sécurité",
+    "securitySubtitle": "Alertes importantes concernant votre compte",
+    "helpText": "Choisissez les catégories de notifications que vous souhaitez recevoir. Ces préférences seront utilisées pour filtrer les notifications côté serveur ou localement.",
+    "disabledTitle": "Notifications désactivées",
+    "disabledMessage": "Vous avez désactivé cette catégorie de notifications."
+  },
+
   "mainScreen": {
     "complicatedSituationTitle": "À chaque situation compliquée, sa solution simple",
     "complicatedSituationDescription": "Nous savons qu'un accident n'est pas un évènement facile. C'est pour cette raison que l'application Impact vous aidera en vous guidant dans la démarche à suivre suite à un accident.",

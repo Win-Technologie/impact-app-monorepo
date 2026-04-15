@@ -66,8 +66,8 @@
   "account": {
     "modifyyourprofil": "Modidy your profil",
     "settings": "Settings",
-    "subscription": "subscription",
-    "vehicles": "vehicles",
+    "subscription": "Subscription",
+    "vehicles": "Vehicles",
     "language": "Language",
     "notification": "Notifications",
     "informationandother": "Informations and others",
@@ -76,6 +76,23 @@
     "conditionandregulation": "Conditions and regulations",
     "updateandreinstallation": "Update and reinstallation",
     "Login": "Logout"
+  },
+
+  "notifications": {
+    "title": "Notifications",
+    "header": "Notification Settings",
+    "categories": "Categories",
+    "generalTitle": "General",
+    "generalSubtitle": "General information and confirmations",
+    "updatesTitle": "Updates",
+    "updatesSubtitle": "Release announcements and improvements",
+    "promotionsTitle": "Promotions",
+    "promotionsSubtitle": "One-time offers and promotions",
+    "securityTitle": "Security Alerts",
+    "securitySubtitle": "Important alerts regarding your account",
+    "helpText": "Choose the notification categories you want to receive. These preferences will be used to filter notifications on the server or locally.",
+    "disabledTitle": "Notifications disabled",
+    "disabledMessage": "You have disabled this notification category."
   },
 
   "mainScreen": {
