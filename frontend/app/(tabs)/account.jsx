@@ -133,7 +133,7 @@ export default function Index() {
         />
 
         <Button style={styles.button} onPress={signout}>
-          <Text style={{ color: "white" }}>Me déconnecter</Text>
+          <Text style={{ color: "white" }}>{t("account.logout")}</Text>
         </Button>
       </ScrollView>
     </SafeAreaView>

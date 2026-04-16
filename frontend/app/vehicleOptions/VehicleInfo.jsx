@@ -101,7 +101,7 @@ const VehicleInfo = () => {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Loading...</Text>
+        <Text>{t("pleasewait")}</Text>
       </SafeAreaView>
     );
   }
@@ -110,9 +110,9 @@ const VehicleInfo = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
-          <Text>Véhicule non trouvé</Text>
+          <Text>{t("vehicleInfoMessages.notFound")}</Text>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={{color: '#19363C', marginTop: 20}}>Retour</Text>
+            <Text style={{color: '#19363C', marginTop: 20}}>{t("common.back")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -218,10 +218,10 @@ const VehicleInfo = () => {
           setVehicleState(resJson.car);
         }
         console.log('Vehicle update response:', resJson || resText);
-        Alert.alert("Succès", "Véhicule mis à jour");
+        Alert.alert(t("common.success", { defaultValue: "Succès" }), t("vehicleInfoMessages.updateSuccess", { defaultValue: "Vehicle updated" }));
       } else {
         console.error("Update failed:", response.status, resText);
-        Alert.alert("Erreur", resJson?.error || "Impossible de mettre à jour le véhicule");
+        Alert.alert(t("common.error", { defaultValue: "Erreur" }), resJson?.error || t("vehicleInfoMessages.updateFailed", { defaultValue: "Unable to update the vehicle" }));
       }
     } catch (error) {
       console.error("Error saving vehicle:", error);
@@ -231,7 +231,7 @@ const VehicleInfo = () => {
     }
   };
 
-  return (
+    return (
     <SafeAreaView style={styles.container}>
       <View
         style={{

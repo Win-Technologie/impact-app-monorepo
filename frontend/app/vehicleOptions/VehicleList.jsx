@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -22,6 +23,7 @@ const VehicleList = () => {
   const setGlobalSelectedVehicleId = useSetRecoilState(SelectedVehicleState);
   const router = useRouter();
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchVehicles();
@@ -79,18 +81,18 @@ const VehicleList = () => {
 
   const handleDeleteVehicle = async (vehicleId, vehicleName) => {
     Alert.alert(
-      "Retirer",
-      `Voulez-vous vraiment retirer ${vehicleName}?`,
+      t("vehicleList.deleteAlertTitle", { defaultValue: "Delete" }),
+      t("vehicleList.deleteAlertMessageWithName", { name: vehicleName }),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: t("vehicleList.deleteAlertCancel", { defaultValue: "Cancel" }), style: "cancel" },
         {
-          text: "Retirer",
+          text: t("vehicleList.deleteAlertConfirm", { defaultValue: "Delete" }),
           style: "destructive",
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem("userToken");
               if (!token) {
-                Alert.alert("Erreur", "Session expirée");
+                Alert.alert(t("common.error", { defaultValue: "Error" }), t("vehicleList.sessionExpired", { defaultValue: "Session expired" }));
                 return;
               }
 
@@ -112,11 +114,11 @@ const VehicleList = () => {
                   setSelectedVehicleId(null);
                 }
               } else {
-                Alert.alert("Erreur", "Impossible de retirer le véhicule");
+                Alert.alert(t("common.error", { defaultValue: "Error" }), t("vehicleList.removeFailed", { defaultValue: "Unable to remove the vehicle" }));
               }
             } catch (error) {
               console.error("Error deleting vehicle:", error);
-              Alert.alert("Erreur", "Une erreur est survenue");
+              Alert.alert(t("common.error", { defaultValue: "Error" }), t("common.unknownError", { defaultValue: "An unknown error occurred" }));
             }
           },
         },
@@ -157,14 +159,14 @@ const VehicleList = () => {
           {isSelected ? (
             <View style={styles.selectedBadge}>
               <MaterialIcons name="check-circle" size={20} color="white" />
-              <Text style={styles.selectedText}>Sélectionné</Text>
+              <Text style={styles.selectedText}>{t("vehicleList.selected")}</Text>
             </View>
           ) : (
             <TouchableOpacity 
               style={styles.deleteButton}
               onPress={() => handleDeleteVehicle(item._id, vehicleName)}
             >
-              <Text style={styles.deleteText}>Retirer</Text>
+              <Text style={styles.deleteText}>{t("vehicleList.remove")}</Text>
               <MaterialIcons name="delete-outline" size={20} color="#666" />
             </TouchableOpacity>
           )}
@@ -176,9 +178,9 @@ const VehicleList = () => {
           onPress={() => handleNavigateToVehicleInfo(item._id)}
         >
           <View>
-            <Text style={styles.detailTitle}>Informations du véhicule</Text>
+            <Text style={styles.detailTitle}>{t("vehicleList.vehicleInfo")}</Text>
             <Text style={styles.detailSubtitle}>
-              Modèle, année, numéro de plaque...
+              {t("vehicleList.vehicleInfoSubtitle")}
             </Text>
           </View>
           <MaterialIcons name="chevron-right" size={24} color="#666" />
@@ -191,9 +193,9 @@ const VehicleList = () => {
           onPress={() => handleNavigateToInsurance(item._id)}
         >
           <View>
-            <Text style={styles.detailTitle}>Informations d'assurances</Text>
+            <Text style={styles.detailTitle}>{t("vehicleList.insuranceInfo")}</Text>
             <Text style={styles.detailSubtitle}>
-              Nom de la société, numéro d'assurance...
+              {t("vehicleList.insuranceInfoSubtitle")}
             </Text>
           </View>
           <MaterialIcons name="chevron-right" size={24} color="#666" />
@@ -221,16 +223,16 @@ const VehicleList = () => {
           onPress={() => router.back()}
         >
           <MaterialIcons name="arrow-back" size={20} color="#19363C" />
-          <Text style={{ color: "#19363C", marginLeft: 8 }}>Retour</Text>
+            <Text style={{ color: "#19363C", marginLeft: 8 }}>{t("common.back")}</Text>
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Gestion des véhicules</Text>
+            <Text style={styles.headerTitle}>{t("vehicleList.title")}</Text>
         </View>
       </View>
 
-      {vehicles.length > 0 && (
-        <Text style={styles.sectionTitle}>Mes véhicules</Text>
-      )}
+        {vehicles.length > 0 && (
+          <Text style={styles.sectionTitle}>{t("vehicleList.myVehicles")}</Text>
+        )}
 
       <FlatList
         data={vehicles}
@@ -240,9 +242,9 @@ const VehicleList = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <MaterialIcons name="directions-car" size={64} color="#CCC" />
-            <Text style={styles.emptyText}>Aucun véhicule</Text>
+            <Text style={styles.emptyText}>{t("vehicleList.noVehicles")}</Text>
             <Text style={styles.emptySubtext}>
-              Ajoutez votre premier véhicule
+              {t("vehicleList.addFirstVehicle")}
             </Text>
           </View>
         }
@@ -250,8 +252,8 @@ const VehicleList = () => {
 
       {/* Add Vehicle Button */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddVehicle}>
-          <Text style={styles.addButtonText}>Ajouter un véhicule</Text>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddVehicle}>
+          <Text style={styles.addButtonText}>{t("vehicleList.addVehicle")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

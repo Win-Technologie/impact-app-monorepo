@@ -53,7 +53,8 @@
     "about": "À propos",
     "conditionandregulation": "Conditions and règlements",
     "updateandreinstallation": "Mise à jour et installations",
-    "Login": "Me déconnecter"
+    "Login": "Me déconnecter",
+    "logout": "Me déconnecter"
   },
 
   "notifications": {
@@ -462,6 +463,11 @@
     "addVehicle": "Ajouter un véhicule",
     "deleteAlertTitle": "Supprimer",
     "deleteAlertMessage": "Êtes-vous sûr de vouloir supprimer ce véhicule?",
+    "deleteAlertMessageWithName": "Voulez-vous vraiment retirer {{name}}?",
+    "noVehicles": "Aucun véhicule",
+    "addFirstVehicle": "Ajoutez votre premier véhicule",
+    "sessionExpired": "Session expirée",
+    "removeFailed": "Impossible de retirer le véhicule",
     "deleteAlertCancel": "Annuler",
     "deleteAlertConfirm": "Supprimer"
   },
@@ -486,6 +492,12 @@
     "ownerProvince": "Province"
   },
 
+  "vehicleInfoMessages": {
+    "notFound": "Véhicule non trouvé",
+    "updateSuccess": "Véhicule mis à jour",
+    "updateFailed": "Impossible de mettre à jour le véhicule"
+  },
+
   "insuranceInfo": {
     "title": "Informations sur l'assurance",
     "companyName": "Nom de la compagnie",
@@ -501,6 +513,14 @@
     "ownerPostalCode": "Code postal ",
     "ownerCountry": "Pays du propriétaire",
     "ownerProvince": "Province du propriétaire"
+  },
+  "insuranceInfoMessages": {
+    "updateSuccess": "Assurance mise à jour",
+    "addSuccess": "Assurance ajoutée",
+    "updateFailed": "Impossible de mettre à jour l'assurance",
+    "addFailed": "Impossible d'ajouter l'assurance",
+    "invalidExpiration": "Date d'expiration invalide. Utilisez JJ/MM/AAAA ou AAAA-MM-JJ.",
+    "updateFallbackSuccess": "Assurance mise à jour (via fallback)"
   },
 
   "about": {
@@ -541,7 +561,34 @@
   "subscription": {
     "selectPlan": "Sélectionner un forfait",
     "paymentMethods": "Modes de paiement",
-    "start": "Démarrer mon abonnement"
+    "start": "Démarrer mon abonnement",
+    "headerTitle": "Abonnement",
+    "mainTitle": "Abonnez-vous à Impact dès maintenant !",
+    "impactName": "Impact",
+    "feature1": {
+      "title": "Fonction sentinelle",
+      "description": "L'abonnement vous donne accès à la capture vidéo automatique comme preuve en cas d'accident."
+    },
+    "feature2": {
+      "title": "Plus aucune publicité",
+      "description": "Profitez d'une expérience sans publicité dans l'application lorsque vous utilisez les fonctionnalités premium."
+    },
+    "feature3": {
+      "title": "Annulation à tout moment",
+      "description": "Annulez votre abonnement à tout moment sans frais ni pénalités."
+    },
+    "sectionTitle": "Choisissez la durée d'abonnement premium qui vous convient.",
+    "plan": {
+      "monthly": "Mensuel",
+      "monthlyPrice": "2,98$ / mois",
+      "annual": "Annuel",
+      "annualPrice": "17,98$ / an"
+    },
+    "terms": {
+      "line1": "* Avantages applicables pour la durée entière de la sélection de l'abonnement.",
+      "line2": "** Ce forfait d'abonnement est valable pour une période de 30 jours et expirera après ce délai. Offre limitée dans le temps — décidez rapidement pour profiter de la valeur complète."
+    },
+    "subscribeButton": "Passer à un abonnement premium"
   },
 
   "termsAndConditions": {

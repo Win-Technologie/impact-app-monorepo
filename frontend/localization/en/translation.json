@@ -75,7 +75,8 @@
     "about": "About",
     "conditionandregulation": "Conditions and regulations",
     "updateandreinstallation": "Update and reinstallation",
-    "Login": "Logout"
+    "Login": "Logout",
+    "logout": "Log out"
   },
 
   "notifications": {
@@ -507,6 +508,11 @@
     "addVehicle": "Add a vehicle",
     "deleteAlertTitle": "Delete",
     "deleteAlertMessage": "Are you sure you want to delete this vehicle?",
+    "deleteAlertMessageWithName": "Are you sure you want to remove {{name}}?",
+    "noVehicles": "No vehicles",
+    "addFirstVehicle": "Add your first vehicle",
+    "sessionExpired": "Session expired",
+    "removeFailed": "Unable to remove the vehicle",
     "deleteAlertCancel": "Cancel",
     "deleteAlertConfirm": "Delete"
   },
@@ -529,6 +535,20 @@
     "ownerPostalCode": "Postal Code",
     "ownerCountry": "Country",
     "ownerProvince": "Province"
+  },
+  "insuranceInfoMessages": {
+    "updateSuccess": "Insurance updated",
+    "addSuccess": "Insurance added",
+    "updateFailed": "Unable to update the insurance",
+    "addFailed": "Unable to add the insurance",
+    "invalidExpiration": "Invalid expiration date. Use DD/MM/YYYY or YYYY-MM-DD.",
+    "updateFallbackSuccess": "Insurance updated (via fallback)"
+  },
+
+  "vehicleInfoMessages": {
+    "notFound": "Vehicle not found",
+    "updateSuccess": "Vehicle updated",
+    "updateFailed": "Unable to update the vehicle"
   },
 
   "insuranceInfo": {
@@ -595,7 +615,34 @@
   "subscription": {
     "selectPlan": "Select a plan",
     "paymentMethods": "Payment methods",
-    "start": "Start my subscription"
+    "start": "Start my subscription",
+    "headerTitle": "Subscription",
+    "mainTitle": "Subscribe to Impact now!",
+    "impactName": "Impact",
+    "feature1": {
+      "title": "Sentinel feature",
+      "description": "Subscription gives you access to automatic video capture for evidence in case of an accident."
+    },
+    "feature2": {
+      "title": "No more ads",
+      "description": "Enjoy an ad-free experience throughout the app while using premium features."
+    },
+    "feature3": {
+      "title": "Cancel anytime",
+      "description": "Cancel your subscription anytime without penalties or extra fees."
+    },
+    "sectionTitle": "Choose the premium subscription duration that fits you.",
+    "plan": {
+      "monthly": "Monthly",
+      "monthlyPrice": "$2.98 / month",
+      "annual": "Annual",
+      "annualPrice": "$17.98 / year"
+    },
+    "terms": {
+      "line1": "* Benefits apply for the full duration of the selected subscription.",
+      "line2": "** This subscription is valid for 30 days and will expire after that period. Limited-time offer—please decide quickly to access the full value."
+    },
+    "subscribeButton": "Upgrade to premium"
   },
 
   "termsAndConditions": {
