@@ -166,25 +166,13 @@ const MyInfo = () => {
           paddingBottom: 20,
         }}
       >
-        <TouchableOpacity
-          style={{ flexDirection: "row" }}
-          onPress={() => {
-            router.back();
-          }}
-        >
-          <AntDesign
-            name="arrow-left"
-            size={20}
-            color="#19363C"
-            style={{ fontWeight: "200" }}
-          />
-          <Text style={{ color: "#19363C" }}>{"   "}Retour</Text>
+        <TouchableOpacity style={{ flexDirection: "row" }} onPress={() => router.back()}>
+          <AntDesign name="arrow-left" size={20} color="#19363C" style={{ fontWeight: "200" }} />
+          <Text style={{ color: "#19363C" }}>{"   "}{t("back")}</Text>
         </TouchableOpacity>
 
         <View>
-          <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            {t("declaration.provideMyInfo")}
-          </Text>
+          <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>{t("declaration.provideMyInfo")}</Text>
         </View>
       </View>
       <ScrollView>
@@ -192,7 +180,7 @@ const MyInfo = () => {
           <Text style={styles.titleSelect}>{t("declaration.selectVehiclePrompt")}</Text>
           <SelectDropdown
             data={allVehicles}
-            defaultButtonText="Choisir une voiture"
+            defaultButtonText={t("declaration.selectVehiclePrompt") || "Choose a vehicle"}
             defaultValue={
               allVehicles && selectedVehicleId
                 ? allVehicles.find((it) => (it.car && it.car._id === selectedVehicleId) || it._id === selectedVehicleId)
@@ -215,7 +203,7 @@ const MyInfo = () => {
         {/* QR generation/display removed — use manual sharing or account data */}
 
         <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>Consulter mes informations</Text>
+          <Text style={styles.sectionTitle}>{t("declaration.accessMyInfo")}</Text>
 
           <TouchableOpacity
             style={styles.infoBox}
@@ -226,10 +214,8 @@ const MyInfo = () => {
             </View>
 
             <View style={{ flex: 9 }}>
-              <Text style={styles.infoTextPerso}>
-                Informations personnelles
-              </Text>
-              <Text style={styles.subInfoText}>Nom,âge,adresse...</Text>
+              <Text style={styles.infoTextPerso}>{t("declaration.personalInformation")}</Text>
+              <Text style={styles.subInfoText}>{t("declarationShorts.personalInfoShort")}</Text>
             </View>
 
             <View style={{ flex: 1 }}>
@@ -246,8 +232,8 @@ const MyInfo = () => {
             </View>
 
             <View style={{ flex: 9 }}>
-              <Text style={styles.infoTextCar}>Informations du véhicule</Text>
-              <Text style={styles.subInfoText}>Modèle,numéro de plaque...</Text>
+              <Text style={styles.infoTextCar}>{t("declaration.vehicleInformation")}</Text>
+              <Text style={styles.subInfoText}>{t("declarationShorts.vehicleInfoShort")}</Text>
             </View>
 
             <View style={{ flex: 1 }}>
@@ -264,10 +250,8 @@ const MyInfo = () => {
             </View>
 
             <View style={{ flex: 9 }}>
-              <Text style={styles.infoText}>Informations d'assurance</Text>
-              <Text style={styles.subInfoText}>
-                Numéro d'assurance, nom de société...
-              </Text>
+              <Text style={styles.infoText}>{t("declaration.insuranceInformation")}</Text>
+              <Text style={styles.subInfoText}>{t("declarationShorts.insuranceInfoShort")}</Text>
             </View>
 
             <View style={{ flex: 1 }}>

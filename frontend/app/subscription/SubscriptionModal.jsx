@@ -30,7 +30,7 @@ export default function SubscriptionModal({ visible, onClose }) {
     >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.title}>Sélectionner un forfait</Text>
+          <Text style={styles.title}>{t("subscription.selectPlan")}</Text>
 
           <TouchableOpacity
             style={[
@@ -73,13 +73,13 @@ export default function SubscriptionModal({ visible, onClose }) {
               style={[styles.button, styles.cancelButton]}
               onPress={onClose}
             >
-              <Text style={styles.cancelButtonText}>Annuler</Text>
+              <Text style={styles.cancelButtonText}>{t("buttons.cancel")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, styles.confirmButton]}
               onPress={handleContinue}
             >
-              <Text style={styles.confirmButtonText}>Continuer</Text>
+              <Text style={styles.confirmButtonText}>{t("buttons.continue")}</Text>
             </TouchableOpacity>
           </View>
         </View>

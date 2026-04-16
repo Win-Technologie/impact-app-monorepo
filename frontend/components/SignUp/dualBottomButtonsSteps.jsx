@@ -1,12 +1,11 @@
 // DualOptionButton.js
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useTranslation } from "react-i18next";
 
-const DualOptionButton = ({
-  onPressBack,
-  onPressContinue,
-  continueLabel = "Continuer",
-}) => {
+const DualOptionButton = ({ onPressBack, onPressContinue, continueLabel }) => {
+  const { t } = useTranslation();
+  const label = continueLabel || t("buttons.continue");
   return (
     <View style={styles.bottomButtonContainer}>
       <TouchableOpacity
@@ -20,7 +19,7 @@ const DualOptionButton = ({
         style={[styles.bottomButton, styles.continueButton]}
         onPress={onPressContinue}
       >
-        <Text style={styles.buttonText}>{continueLabel}</Text>
+        <Text style={styles.buttonText}>{label}</Text>
       </TouchableOpacity>
     </View>
   );

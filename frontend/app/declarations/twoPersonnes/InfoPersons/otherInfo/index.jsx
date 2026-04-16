@@ -14,6 +14,7 @@ import { AntDesign } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { Octicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 const OtherInfo = () => {
   const [scannedData, setLocalScannedData] = useState(null);
@@ -36,6 +37,8 @@ const OtherInfo = () => {
   // QR scanning logic removed.
 
 
+  const { t } = useTranslation();
+
   return (
     <SafeAreaView style={styles.container}>
       <View
@@ -57,12 +60,12 @@ const OtherInfo = () => {
             color="#19363C"
             style={{ fontWeight: "200" }}
           />
-          <Text style={{ color: "#19363C" }}>{"   "}Retour</Text>
+          <Text style={{ color: "#19363C" }}>{"   "}{t("back")}</Text>
         </TouchableOpacity>
 
         <View>
           <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            Reception des informations
+            {t("declaration.receiveInformation")}
           </Text>
         </View>
       </View>
@@ -71,9 +74,7 @@ const OtherInfo = () => {
         {/* QR feature removed — nothing to show here */}
 
         <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>
-            Saisir les informations manuellement
-          </Text>
+          <Text style={styles.sectionTitle}>{t("declaration.enterInformation")}</Text>
 
           <TouchableOpacity
             style={styles.infoBox}
@@ -84,10 +85,8 @@ const OtherInfo = () => {
             </View>
 
             <View style={{ flex: 9 }}>
-              <Text style={styles.infoTextPerso}>
-                Informations personnelles
-              </Text>
-              <Text style={styles.subInfoText}>Nom,âge,adresse...</Text>
+              <Text style={styles.infoTextPerso}>{t("declaration.personalInformation")}</Text>
+              <Text style={styles.subInfoText}>{t("declarationShorts.personalInfoShort")}</Text>
             </View>
 
             <View style={{ flex: 1 }}>
@@ -104,8 +103,8 @@ const OtherInfo = () => {
             </View>
 
             <View style={{ flex: 9 }}>
-              <Text style={styles.infoTextCar}>Informations du véhicule</Text>
-              <Text style={styles.subInfoText}>Modèle,numéro de plaque...</Text>
+              <Text style={styles.infoTextCar}>{t("declaration.vehicleInformation")}</Text>
+              <Text style={styles.subInfoText}>{t("declarationShorts.vehicleInfoShort")}</Text>
             </View>
 
             <View style={{ flex: 1 }}>
@@ -122,10 +121,8 @@ const OtherInfo = () => {
             </View>
 
             <View style={{ flex: 9 }}>
-              <Text style={styles.infoText}>Informations d'assurance</Text>
-              <Text style={styles.subInfoText}>
-                Numéro d'assurance, nom de société...
-              </Text>
+              <Text style={styles.infoText}>{t("declaration.insuranceInformation")}</Text>
+              <Text style={styles.subInfoText}>{t("declarationShorts.insuranceInfoShort")}</Text>
             </View>
 
             <View style={{ flex: 1 }}>

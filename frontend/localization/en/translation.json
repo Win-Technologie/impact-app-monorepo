@@ -118,6 +118,24 @@
     "declareIncident": "Declare an accident"
   },
 
+  "declaration": {
+    "singlePersonButton": "I am the only individual involved",
+    "multiplePeopleButton": "We are several individuals involved",
+    "dropdownPlaceholder": "Number of individuals involved",
+    "twoIndividuals": "2 individuals",
+    "threeIndividuals": "3 individuals",
+    "fourIndividuals": "4 individuals",
+    "fiveIndividuals": "5 individuals",
+    "personalInformation": "Personal information",
+    "vehicleInformation": "Vehicle information",
+    "insuranceInformation": "Insurance information"
+  },
+  "declarationShorts": {
+    "personalInfoShort": "Name, age, address...",
+    "vehicleInfoShort": "Model, plate number...",
+    "insuranceInfoShort": "Policy number, company name..."
+  },
+
   "forgottenPasswordScreen": {
     "back": "Back",
     "header": "Forgot your password?",
@@ -473,7 +491,8 @@
     "noToken": "No token found",
     "networkError": "Network error",
     "unknownError": "An unknown error occurred",
-    "success": "Success"
+    "success": "Success",
+    "informationSaved": "Information saved"
   },
 
   "vehicleList": {
@@ -504,6 +523,7 @@
     "ownerFirstName": "First Name",
     "ownerLastName": "Last Name",
     "ownerPhone": "Phone Number",
+    "ownerEmail": "Owner Email",
     "ownerAddress": "Street Address",
     "ownerCity": "City",
     "ownerPostalCode": "Postal Code",
@@ -572,6 +592,12 @@
     "answer10": "Yes, we offer a 7-day free trial."
   },
 
+  "subscription": {
+    "selectPlan": "Select a plan",
+    "paymentMethods": "Payment methods",
+    "start": "Start my subscription"
+  },
+
   "termsAndConditions": {
     "title": "Terms and Conditions",
     "serviceTermsTitle": "Service Terms",
@@ -583,6 +609,9 @@
 
   "declaration": {
     "whereDidAccidentOccur": "Where did the accident occur?",
+    "personalInformation": "Personal information",
+    "vehicleInformation": "Vehicle information",
+    "insuranceInformation": "Insurance information",
     "searchAddressPlaceholder": "Search address or place",
     "step": "Step {{current}} of {{total}}",
     "submissionCompleteTitle": "You have completed your declaration",
@@ -598,6 +627,10 @@
     "placeSelectedTitle": "Place selected",
     "addressNotFound": "Address not found",
     "selectPlaceError": "Please select a place on the map.",
+    "chooseCarBeforeContinue": "Please select a vehicle before continuing.",
+    "noInformationAvailable": "Information not available. Please select a vehicle.",
+    "fillFromAccountSuccess": "Information filled from your account",
+    "fillFromAccountError": "Unable to load information from your account",
     "unableToContinue": "Unable to continue. Please complete all required fields.",
     "chooseAccidentType": "Choose the type of accident",
     "hourOfAccidentTitle": "What time did the accident occur?",
@@ -608,6 +641,13 @@
     "otherSpecPlaceholder": "Write any additional information",
     "addPhotosTitle": "Do you have photos to add?",
     "uploadPhotoText": "Upload a photo of the accident or the vehicle at the time of the accident"
+    ,
+    "basicInformationTitle": "Basic information",
+    "provideMyInfoDescription": "Provide your personal information to other involved parties by entering your personal data manually.",
+    "accessMyInfo": "Access my information",
+    "receiveInformation": "Receive information",
+    "receiveInformationDescription": "Receive the information from other involved individuals by entering their personal data manually.",
+    "enterInformation": "Enter information"
   },
 
   "verified": {

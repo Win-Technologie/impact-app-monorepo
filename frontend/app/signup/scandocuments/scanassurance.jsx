@@ -1,20 +1,22 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
+import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import ImagePickerModal from "../../../components/ImagePickerModal";
 import DualOptionButtonStep from "../../../components/SignUp/dualBottomButtonsSteps";
 
 export default function ScanAssurance() {
+	const { t } = useTranslation();
 	const [insuranceImage, setInsuranceImage] = useState(null);
 	const [visible, setVisible] = useState(false);
 
 	const handlePressContinue = async () => {
 		try {
 			const token = await AsyncStorage.getItem('userToken');
-			if (!token) {
+				if (!token) {
 				await AsyncStorage.setItem('user_insurance', insuranceImage || '');
-				Alert.alert('Succès', 'Informations enregistrées localement');
+				Alert.alert(t("common.success", { defaultValue: 'Succès' }), t("common.informationSaved", { defaultValue: 'Information saved' }));
 				router.replace('/signup/signUpLanding');
 				return;
 			}
@@ -52,7 +54,7 @@ export default function ScanAssurance() {
 				await AsyncStorage.setItem('user_insurance', insuranceImage || '');
 			}
 
-			Alert.alert('Succès', 'Informations enregistrées');
+			Alert.alert(t("common.success", { defaultValue: 'Succès' }), t("common.informationSaved", { defaultValue: 'Information saved' }));
 			router.replace('/signup/signUpLanding');
 		} catch (e) {
 			console.log('Error saving insurance image', e);

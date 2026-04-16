@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
 import { fetchUserInfoAndVehicle, getMyVehicles } from "../../../../api/users/userApi";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import SelectDropdown from "react-native-select-dropdown";
 
 export default function PersonanalInformation() {
@@ -41,6 +42,8 @@ export default function PersonanalInformation() {
     loadMyVehicles();
   }, []);
 
+  const { t } = useTranslation();
+
   const loadMyVehicles = async () => {
     const userToken = await AsyncStorage.getItem("userToken");
     const vehiclesResponse = await getMyVehicles(userToken, "vehicles/");
@@ -51,7 +54,7 @@ export default function PersonanalInformation() {
 
   const handleFillFromAccount = () => {
     if (allVehicles.length === 0) {
-      Alert.alert("Erreur", "Aucun véhicule trouvé dans votre compte.");
+      Alert.alert(t("common.error"), t("declaration.noInformationAvailable"));
       return;
     }
     setShowVehicleSelector(true);
@@ -81,9 +84,9 @@ export default function PersonanalInformation() {
       setCountry(data.owner?.country || "");
       setProvince(data.owner?.province || "");
       setShowVehicleSelector(false);
-      Alert.alert("Succès", "Informations remplies depuis votre compte");
+      Alert.alert(t("common.success"), t("declaration.fillFromAccountSuccess"));
     } catch (error) {
-      Alert.alert("Erreur", "Impossible de charger les informations");
+      Alert.alert(t("common.error"), t("declaration.fillFromAccountError"));
     }
   };
 
@@ -135,7 +138,7 @@ export default function PersonanalInformation() {
     // set a display name for the person
     people[idx].name = `${name || ""} ${lastName || ""}`.trim() || `Personne ${idx + 1}`;
     setDeclaration((prev) => ({ ...prev, people }));
-    Alert.alert("Succès", "Informations enregistrées");
+    Alert.alert(t("common.success", { defaultValue: "Succès" }), t("common.informationSaved", { defaultValue: "Information saved" }));
   };
 
 
@@ -148,37 +151,22 @@ export default function PersonanalInformation() {
           paddingVertical: 20,
         }}
       >
-        <TouchableOpacity
-          style={{ flexDirection: "row" }}
-          onPress={() => {
-            router.back();
-          }}
-        >
-          <AntDesign
-            name="arrow-left"
-            size={20}
-            color="#19363C"
-            style={{ fontWeight: "200" }}
-          />
-          <Text style={{ color: "#19363C" }}>{"   "}Retour</Text>
+        <TouchableOpacity style={{ flexDirection: "row" }} onPress={() => router.back()}>
+          <AntDesign name="arrow-left" size={20} color="#19363C" style={{ fontWeight: "200" }} />
+          <Text style={{ color: "#19363C" }}>{"   "}{t("common.back")}</Text>
         </TouchableOpacity>
 
         <View>
-          <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            {" "}
-            Informations personnelles
-          </Text>
+          <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>{t("declaration.personalInformation")}</Text>
         </View>
       </View>
 
       {showVehicleSelector && (
         <View style={styles.fillFromAccountContainer}>
-          <Text style={styles.fillFromAccountTitle}>
-            Sélectionnez un véhicule de votre compte:
-          </Text>
+          <Text style={styles.fillFromAccountTitle}>{t("declaration.selectVehiclePrompt")}</Text>
           <SelectDropdown
             data={allVehicles}
-            defaultButtonText="Choisir un véhicule"
+            defaultButtonText={t("declaration.selectVehiclePrompt")}
             onSelect={handleVehicleSelect}
             buttonTextAfterSelection={(selectedItem) =>
               selectedItem?.car?.model
@@ -193,44 +181,41 @@ export default function PersonanalInformation() {
               <AntDesign name="down" size={14} color="gray" />
             )}
           />
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => setShowVehicleSelector(false)}
-          >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+          <TouchableOpacity style={styles.cancelButton} onPress={() => setShowVehicleSelector(false)}>
+            <Text style={styles.cancelButtonText}>{t("buttons.cancel")}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       <ScrollView keyboardShouldPersistTaps="handled">
         <View style={styles.contentContainer}>
-          <Text style={styles.fieldLabel}>Prénom</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerFirstName")}</Text>
           <TextInput style={styles.input} value={name} onChangeText={setName} />
-          <Text style={styles.fieldLabel}>Nom</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerLastName")}</Text>
           <TextInput style={styles.input} value={lastName} onChangeText={setLastName} />
-          <Text style={styles.fieldLabel}>Numéro du permis de conduire</Text>
+          <Text style={styles.fieldLabel}>{t("insuranceScreen.licenseNumberPlaceholder")}</Text>
           <TextInput style={styles.input} value={dlNumber} onChangeText={setDlNumber} />
-          <Text style={styles.fieldLabel}>Expiration (permis)</Text>
+          <Text style={styles.fieldLabel}>{t("licenseDetails.licenseCategoryPlaceholder") || t("driverLicense")}</Text>
           <TextInput style={styles.input} value={dlExpires} onChangeText={setDlExpires} />
-          <Text style={styles.fieldLabel}>Adresse courriel</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerEmail")}</Text>
           <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" />
-          <Text style={styles.fieldLabel}>Numéro de téléphone</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerPhone")}</Text>
           <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-          <Text style={styles.fieldLabel}>Numéro et rue de l'adresse</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerAddress")}</Text>
           <TextInput style={styles.input} value={address} onChangeText={setAddress} />
-          <Text style={styles.fieldLabel}>Ville</Text>
-          <TextInput style={styles.input} value={city} onChangeText={setCity} />
-          <Text style={styles.fieldLabel}>Code postal</Text>
-          <TextInput style={styles.input} value={postalCode} onChangeText={setPostalCode} />
-          <Text style={styles.fieldLabel}>Pays</Text>
-          <TextInput style={styles.input} value={country} onChangeText={setCountry} />
-          <Text style={styles.fieldLabel}>Province</Text>
-          <TextInput style={styles.input} value={province} onChangeText={setProvince} />
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerCity")}</Text>
+          <Text style={styles.input} value={city} onChangeText={setCity} />
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerPostalCode")}</Text>
+          <Text style={styles.input} value={postalCode} onChangeText={setPostalCode} />
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerCountry")}</Text>
+          <Text style={styles.input} value={country} onChangeText={setCountry} />
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerProvince")}</Text>
+          <Text style={styles.input} value={province} onChangeText={setProvince} />
         </View>
       </ScrollView>
 
       <View style={styles.footContainer}>
-        <SingleBottomButton onPress={handleSave}>Enregistrer</SingleBottomButton>
+        <SingleBottomButton onPress={handleSave}>{t("common.save")}</SingleBottomButton>
       </View>
     </SafeAreaView>
   );

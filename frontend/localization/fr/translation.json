@@ -96,6 +96,24 @@
     "declareIncident": "Déclarer un accident"
   },
 
+  "declaration": {
+    "singlePersonButton": "Je suis le seul individu impliqué",
+    "multiplePeopleButton": "Nous sommes plusieurs individus impliqués",
+    "dropdownPlaceholder": "Nombre d'individus impliqués",
+    "twoIndividuals": "2 individus",
+    "threeIndividuals": "3 individus",
+    "fourIndividuals": "4 individus",
+    "fiveIndividuals": "5 individus",
+    "personalInformation": "Informations personnelles",
+    "vehicleInformation": "Informations du véhicule",
+    "insuranceInformation": "Informations d'assurance"
+  },
+  "declarationShorts": {
+    "personalInfoShort": "Nom, âge, adresse...",
+    "vehicleInfoShort": "Modèle, numéro de plaque...",
+    "insuranceInfoShort": "Numéro d'assurance, nom de la compagnie..."
+  },
+
   "forgottenPasswordScreen": {
     "back": "Retour",
     "header": "Mot de passe oublié?",
@@ -428,7 +446,8 @@
     "noToken": "Aucun jeton trouvé",
     "networkError": "Erreur réseau",
     "unknownError": "Une erreur inconnue s'est produite",
-    "success": "Succès"
+    "success": "Succès",
+    "informationSaved": "Informations enregistrées"
   },
 
   "vehicleList": {
@@ -459,6 +478,7 @@
     "ownerFirstName": "Prénom",
     "ownerLastName": "Nom",
     "ownerPhone": "Numéro de téléphone",
+    "ownerEmail": "Adresse courriel",
     "ownerAddress": "Numéro et rue de l'adresse",
     "ownerCity": "Ville",
     "ownerPostalCode": "Code postal",
@@ -518,6 +538,12 @@
     "answer10": "Oui, nous offrons un essai gratuit de 7 jours."
   },
 
+  "subscription": {
+    "selectPlan": "Sélectionner un forfait",
+    "paymentMethods": "Modes de paiement",
+    "start": "Démarrer mon abonnement"
+  },
+
   "termsAndConditions": {
     "title": "Conditions et règlements",
     "serviceTermsTitle": "Conditions de services",
@@ -529,6 +555,9 @@
 
   "declaration": {
     "whereDidAccidentOccur": "Où l'accident a-t-il eu lieu ?",
+    "personalInformation": "Informations personnelles",
+    "vehicleInformation": "Informations du véhicule",
+    "insuranceInformation": "Informations d'assurance",
     "searchAddressPlaceholder": "Rechercher une adresse ou un lieu",
     "step": "Étape {{current}} sur {{total}}",
     "submissionCompleteTitle": "Vous avez complété votre déclaration",
@@ -544,6 +573,10 @@
     "placeSelectedTitle": "Lieu sélectionné",
     "addressNotFound": "Adresse introuvable",
     "selectPlaceError": "Veuillez sélectionner un lieu sur la carte.",
+    "chooseCarBeforeContinue": "Veuillez sélectionner un véhicule avant de continuer.",
+    "noInformationAvailable": "Informations non disponibles. Veuillez sélectionner un véhicule.",
+    "fillFromAccountSuccess": "Informations remplies depuis votre compte",
+    "fillFromAccountError": "Impossible de charger les informations depuis votre compte",
     "unableToContinue": "Impossible de continuer. Veuillez remplir tous les champs requis.",
     "chooseAccidentType": "Choisissez le type d'accident",
     "hourOfAccidentTitle": "À quelle heure l'accident s'est-il déroulé ?",
@@ -554,6 +587,13 @@
     "otherSpecPlaceholder": "Rédigez toute autre information",
     "addPhotosTitle": "Avez-vous des photos à ajouter ?",
     "uploadPhotoText": "Téléchargez une photo de l'accident ou du véhicule au moment de l'accident"
+    ,
+    "basicInformationTitle": "Informations de base",
+    "provideMyInfoDescription": "Fournissez vos informations aux autres individus impliqués en saisissant manuellement vos données personnelles.",
+    "accessMyInfo": "Accéder à mes informations",
+    "receiveInformation": "Recevoir des informations",
+    "receiveInformationDescription": "Recevez les informations des autres individus impliqués en entrant manuellement leurs données personnelles.",
+    "enterInformation": "Saisir des informations"
   },
 
   "addVehicle": {
