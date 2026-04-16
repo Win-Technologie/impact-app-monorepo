@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { router, useLocalSearchParams } from "expo-router";
 import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -20,6 +21,7 @@ import { DeclarationState } from "../../../../../GlobalState/DeclarationState";
 import SingleBottomButton from "../../../../../components/SignUp/SingleBottomButton";
 
 export default function VehicleInfo() {
+  const { t } = useTranslation();
   const ENDPOINT = "users/user/vehicle/info/";
   const [allVehicles, setAllVehicles] = useState([]);
   const [showVehicleSelector, setShowVehicleSelector] = useState(false);
@@ -83,7 +85,7 @@ export default function VehicleInfo() {
 
   const handleFillFromAccount = () => {
     if (allVehicles.length === 0) {
-      Alert.alert("Erreur", "Aucun véhicule trouvé dans votre compte.");
+      Alert.alert(t("common.error", { defaultValue: "Erreur" }), t("declaration.noInformationAvailable", { defaultValue: "Aucun véhicule trouvé dans votre compte." }));
       return;
     }
     setShowVehicleSelector(true);
@@ -116,9 +118,9 @@ export default function VehicleInfo() {
       setOwnerCountry(data.owner?.country || "");
       setOwnerProvince(data.owner?.province || "");
       setShowVehicleSelector(false);
-      Alert.alert("Succès", "Informations remplies depuis votre compte");
+      Alert.alert(t("common.success", { defaultValue: "Succès" }), t("declaration.fillFromAccountSuccess"));
     } catch (error) {
-      Alert.alert("Erreur", "Impossible de charger les informations");
+      Alert.alert(t("common.error", { defaultValue: "Erreur" }), t("declaration.fillFromAccountError"));
     }
   };
 
@@ -148,8 +150,8 @@ export default function VehicleInfo() {
       },
     };
     people[idx].name = `${ownerName || ""} ${ownerLastName || ""}`.trim() || (model ? model : `Personne ${idx + 1}`);
-    setDeclaration((prev) => ({ ...prev, people }));
-    Alert.alert("Succès", "Informations enregistrées");
+      setDeclaration((prev) => ({ ...prev, people }));
+    Alert.alert(t("common.success", { defaultValue: "Succès" }), t("common.informationSaved", { defaultValue: "Information saved" }));
   };
 
   return (
@@ -161,7 +163,7 @@ export default function VehicleInfo() {
           paddingBottom: 20,
         }}
       >
-        <TouchableOpacity
+          <TouchableOpacity
           style={{ flexDirection: "row" }}
           onPress={() => {
             router.back();
@@ -173,24 +175,24 @@ export default function VehicleInfo() {
             color="#19363C"
             style={{ fontWeight: "200" }}
           />
-          <Text style={{ color: "#19363C" }}>{"   "}Retour</Text>
+          <Text style={{ color: "#19363C" }}>{"   "}{t("common.back")}</Text>
         </TouchableOpacity>
 
         <View>
           <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            Informations du véhicule
+            {t("vehicleInfo.title")}
           </Text>
         </View>
       </View>
 
-      {showVehicleSelector && (
+          {showVehicleSelector && (
         <View style={styles.fillFromAccountContainer}>
           <Text style={styles.fillFromAccountTitle}>
-            Sélectionnez un véhicule de votre compte:
+            {t("declaration.selectVehiclePrompt")}
           </Text>
           <SelectDropdown
             data={allVehicles}
-            defaultButtonText="Choisir un véhicule"
+            defaultButtonText={t("vehicleList.vehicleInfo", { defaultValue: "Choisir un véhicule" })}
             onSelect={handleVehicleSelect}
             buttonTextAfterSelection={(selectedItem) =>
               selectedItem?.car?.model || selectedItem?.model
@@ -209,51 +211,51 @@ export default function VehicleInfo() {
             style={styles.cancelButton}
             onPress={() => setShowVehicleSelector(false)}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Text style={styles.cancelButtonText}>{t("buttons.cancel")}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       <ScrollView keyboardShouldPersistTaps="handled">
         <View style={styles.contentContainer}>
-          <Text style={styles.fieldLabel}>Numéro du certificat d'immatriculation</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.serialNumber")}</Text>
           <TextInput style={styles.input} value={serialNumber} onChangeText={setSerialNumber} />
-          <Text style={styles.fieldLabel}>Numéro de plaque</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.plate")}</Text>
           <TextInput style={styles.input} value={plate} onChangeText={setPlate} />
-          <Text style={styles.fieldLabel}>Modèle du véhicule</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.model")}</Text>
           <TextInput style={styles.input} value={model} onChangeText={setModel} />
-          <Text style={styles.fieldLabel}>Année</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.year")}</Text>
           <TextInput style={styles.input} value={year} onChangeText={setYear} keyboardType="numeric" />
-          <Text style={styles.fieldLabel}>Couleur du véhicule</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.color")}</Text>
           <TextInput style={styles.input} value={color} onChangeText={setColor} />
 
           <Text style={[styles.headerTitle, styles.marginSpace, styles.centerText]}>
-            Informations du propriétaire
+            {t("vehicleInfo.ownerInfo")}
           </Text>
 
-          <Text style={styles.fieldLabel}>Prénom</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerFirstName")}</Text>
           <TextInput style={styles.input} value={ownerName} onChangeText={setOwnerName} />
-          <Text style={styles.fieldLabel}>Nom</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerLastName")}</Text>
           <TextInput style={styles.input} value={ownerLastName} onChangeText={setOwnerLastName} />
-          <Text style={styles.fieldLabel}>Adresse courriel</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerEmail", { defaultValue: "Adresse courriel" })}</Text>
           <TextInput style={styles.input} value={ownerEmail} onChangeText={setOwnerEmail} keyboardType="email-address" />
-          <Text style={styles.fieldLabel}>Numéro de téléphone</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerPhone")}</Text>
           <TextInput style={styles.input} value={ownerPhone} onChangeText={setOwnerPhone} keyboardType="phone-pad" />
-          <Text style={styles.fieldLabel}>Numéro et rue de l'adresse</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerAddress", { defaultValue: "Numéro et rue de l'adresse" })}</Text>
           <TextInput style={styles.input} value={ownerAddress} onChangeText={setOwnerAddress} />
-          <Text style={styles.fieldLabel}>Ville</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerCity")}</Text>
           <TextInput style={styles.input} value={ownerCity} onChangeText={setOwnerCity} />
-          <Text style={styles.fieldLabel}>Code postal</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerPostalCode")}</Text>
           <TextInput style={styles.input} value={ownerPostalCode} onChangeText={setOwnerPostalCode} />
-          <Text style={styles.fieldLabel}>Pays</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerCountry")}</Text>
           <TextInput style={styles.input} value={ownerCountry} onChangeText={setOwnerCountry} />
-          <Text style={styles.fieldLabel}>Province</Text>
+          <Text style={styles.fieldLabel}>{t("vehicleInfo.ownerProvince")}</Text>
           <TextInput style={styles.input} value={ownerProvince} onChangeText={setOwnerProvince} />
         </View>
       </ScrollView>
 
       <View style={styles.footContainer}>
-        <SingleBottomButton onPress={handleSave}>Enregistrer</SingleBottomButton>
+        <SingleBottomButton onPress={handleSave}>{t("common.save")}</SingleBottomButton>
       </View>
     </SafeAreaView>
   );

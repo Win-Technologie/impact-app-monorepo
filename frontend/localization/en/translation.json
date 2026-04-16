@@ -66,8 +66,8 @@
   "account": {
     "modifyyourprofil": "Modidy your profil",
     "settings": "Settings",
-    "subscription": "subscription",
-    "vehicles": "vehicles",
+    "subscription": "Subscription",
+    "vehicles": "Vehicles",
     "language": "Language",
     "notification": "Notifications",
     "informationandother": "Informations and others",
@@ -75,7 +75,25 @@
     "about": "About",
     "conditionandregulation": "Conditions and regulations",
     "updateandreinstallation": "Update and reinstallation",
-    "Login": "Logout"
+    "Login": "Logout",
+    "logout": "Log out"
+  },
+
+  "notifications": {
+    "title": "Notifications",
+    "header": "Notification Settings",
+    "categories": "Categories",
+    "generalTitle": "General",
+    "generalSubtitle": "General information and confirmations",
+    "updatesTitle": "Updates",
+    "updatesSubtitle": "Release announcements and improvements",
+    "promotionsTitle": "Promotions",
+    "promotionsSubtitle": "One-time offers and promotions",
+    "securityTitle": "Security Alerts",
+    "securitySubtitle": "Important alerts regarding your account",
+    "helpText": "Choose the notification categories you want to receive. These preferences will be used to filter notifications on the server or locally.",
+    "disabledTitle": "Notifications disabled",
+    "disabledMessage": "You have disabled this notification category."
   },
 
   "mainScreen": {
@@ -98,7 +116,25 @@
     "contactInsurance": "Contact your insurance now",
     "towing": "Towing",
     "contactTowing": "Contact a tow truck near your location",
-    "declareIncident": "Declare an incident"
+    "declareIncident": "Declare an accident"
+  },
+
+  "declaration": {
+    "singlePersonButton": "I am the only individual involved",
+    "multiplePeopleButton": "We are several individuals involved",
+    "dropdownPlaceholder": "Number of individuals involved",
+    "twoIndividuals": "2 individuals",
+    "threeIndividuals": "3 individuals",
+    "fourIndividuals": "4 individuals",
+    "fiveIndividuals": "5 individuals",
+    "personalInformation": "Personal information",
+    "vehicleInformation": "Vehicle information",
+    "insuranceInformation": "Insurance information"
+  },
+  "declarationShorts": {
+    "personalInfoShort": "Name, age, address...",
+    "vehicleInfoShort": "Model, plate number...",
+    "insuranceInfoShort": "Policy number, company name..."
   },
 
   "forgottenPasswordScreen": {
@@ -356,7 +392,8 @@
   "buttons": {
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "continue": "Continue"
+    "continue": "Continue",
+    "ok": "Ok"
   },
 
   "home": {
@@ -370,7 +407,7 @@
     "insuranceDescription": "Contact your insurance company now",
     "towing": "Towing",
     "towingDescription": "Contact a tow truck near your location",
-    "declareIncident": "Declare an incident"
+    "declareIncident": "Declare an accident"
   },
 
   "tabs": {
@@ -387,15 +424,35 @@
     "multiple": "We are multiple individuals involved",
     "numberOfIndividuals": "Number of individuals involved",
     "numberofpersoninvoved": "You must choose the number of people involved before you can continue",
-    "onepeople": "One people",
-    "twopeoples": "Two peoplse",
-    "threepeoples": "Three peoples",
-    "fourpeoples": "four peoples"
+    "onepeople": "One person",
+    "twopeoples": "Two people",
+    "threepeoples": "Three people",
+    "fourpeoples": "Four people",
+    "fivepeoples": "Five people"
   },
 
   "historyPage": {
     "title": "History",
-    "accidents": "accidents"
+    "accidents": "accidents",
+    "searchPlaceholder": "Search by accident date",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this report?",
+    "time": "Time",
+    "summary": "Summary",
+    "mainInformation": "Main information",
+    "location": "Location",
+    "type": "Type",
+    "person": "Person",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "vehicle": "Vehicle",
+    "make": "Make",
+    "model": "Model",
+    "plate": "Plate",
+    "photos": "Photos",
+    "peopleInvolved": "People involved"
   },
 
   "addVehicle": {
@@ -454,7 +511,8 @@
     "noToken": "No token found",
     "networkError": "Network error",
     "unknownError": "An unknown error occurred",
-    "success": "Success"
+    "success": "Success",
+    "informationSaved": "Information saved"
   },
 
   "vehicleList": {
@@ -469,6 +527,11 @@
     "addVehicle": "Add a vehicle",
     "deleteAlertTitle": "Delete",
     "deleteAlertMessage": "Are you sure you want to delete this vehicle?",
+    "deleteAlertMessageWithName": "Are you sure you want to remove {{name}}?",
+    "noVehicles": "No vehicles",
+    "addFirstVehicle": "Add your first vehicle",
+    "sessionExpired": "Session expired",
+    "removeFailed": "Unable to remove the vehicle",
     "deleteAlertCancel": "Cancel",
     "deleteAlertConfirm": "Delete"
   },
@@ -485,11 +548,26 @@
     "ownerFirstName": "First Name",
     "ownerLastName": "Last Name",
     "ownerPhone": "Phone Number",
+    "ownerEmail": "Owner Email",
     "ownerAddress": "Street Address",
     "ownerCity": "City",
     "ownerPostalCode": "Postal Code",
     "ownerCountry": "Country",
     "ownerProvince": "Province"
+  },
+  "insuranceInfoMessages": {
+    "updateSuccess": "Insurance updated",
+    "addSuccess": "Insurance added",
+    "updateFailed": "Unable to update the insurance",
+    "addFailed": "Unable to add the insurance",
+    "invalidExpiration": "Invalid expiration date. Use DD/MM/YYYY or YYYY-MM-DD.",
+    "updateFallbackSuccess": "Insurance updated (via fallback)"
+  },
+
+  "vehicleInfoMessages": {
+    "notFound": "Vehicle not found",
+    "updateSuccess": "Vehicle updated",
+    "updateFailed": "Unable to update the vehicle"
   },
 
   "insuranceInfo": {
@@ -553,6 +631,39 @@
     "answer10": "Yes, we offer a 7-day free trial."
   },
 
+  "subscription": {
+    "selectPlan": "Select a plan",
+    "paymentMethods": "Payment methods",
+    "start": "Start my subscription",
+    "headerTitle": "Subscription",
+    "mainTitle": "Subscribe to Impact now!",
+    "impactName": "Impact",
+    "feature1": {
+      "title": "Sentinel feature",
+      "description": "Subscription gives you access to automatic video capture for evidence in case of an accident."
+    },
+    "feature2": {
+      "title": "No more ads",
+      "description": "Enjoy an ad-free experience throughout the app while using premium features."
+    },
+    "feature3": {
+      "title": "Cancel anytime",
+      "description": "Cancel your subscription anytime without penalties or extra fees."
+    },
+    "sectionTitle": "Choose the premium subscription duration that fits you.",
+    "plan": {
+      "monthly": "Monthly",
+      "monthlyPrice": "$2.98 / month",
+      "annual": "Annual",
+      "annualPrice": "$17.98 / year"
+    },
+    "terms": {
+      "line1": "* Benefits apply for the full duration of the selected subscription.",
+      "line2": "** This subscription is valid for 30 days and will expire after that period. Limited-time offer—please decide quickly to access the full value."
+    },
+    "subscribeButton": "Upgrade to premium"
+  },
+
   "termsAndConditions": {
     "title": "Terms and Conditions",
     "serviceTermsTitle": "Service Terms",
@@ -560,6 +671,49 @@
     "privacyPolicyTitle": "Privacy Policy",
     "privacyPolicySubtitle": "Information we receive and what we do with it.",
     "learnMoreButton": "Learn more about Impact"
+  },
+
+  "declaration": {
+    "whereDidAccidentOccur": "Where did the accident occur?",
+    "personalInformation": "Personal information",
+    "vehicleInformation": "Vehicle information",
+    "insuranceInformation": "Insurance information",
+    "searchAddressPlaceholder": "Search address or place",
+    "step": "Step {{current}} of {{total}}",
+    "submissionCompleteTitle": "You have completed your declaration",
+    "submissionCompleteDescription": "The only step left is to contact your insurance company. Once you confirm, you won't be able to go back.",
+    "provideMyInfo": "Provide my information",
+    "selectVehiclePrompt": "Please select the vehicle involved in the accident:",
+    "sessionExpired": "Session expired. Please log in again.",
+    "loadVehiclesFailed": "Unable to load vehicles. Please try again later.",
+    "selectVehicleInvalid": "Please select a vehicle to continue.",
+    "choosePlaceBeforeContinue": "Please choose the place of the accident before continuing.",
+    "enterAccidentType": "Please enter the type of accident.",
+    "enterPlateNumber": "Please enter the vehicle registration number.",
+    "placeSelectedTitle": "Place selected",
+    "addressNotFound": "Address not found",
+    "selectPlaceError": "Please select a place on the map.",
+    "chooseCarBeforeContinue": "Please select a vehicle before continuing.",
+    "noInformationAvailable": "Information not available. Please select a vehicle.",
+    "fillFromAccountSuccess": "Information filled from your account",
+    "fillFromAccountError": "Unable to load information from your account",
+    "unableToContinue": "Unable to continue. Please complete all required fields.",
+    "chooseAccidentType": "Choose the type of accident",
+    "hourOfAccidentTitle": "What time did the accident occur?",
+    "hourPlaceholder": "hour",
+    "minutePlaceholder": "minute",
+    "selectTimeRequired": "You must choose the accident time before continuing.",
+    "otherSpecificationTitle": "Do you have any additional specifications to add?",
+    "otherSpecPlaceholder": "Write any additional information",
+    "addPhotosTitle": "Do you have photos to add?",
+    "uploadPhotoText": "Upload a photo of the accident or the vehicle at the time of the accident"
+    ,
+    "basicInformationTitle": "Basic information",
+    "provideMyInfoDescription": "Provide your personal information to other involved parties by entering your personal data manually.",
+    "accessMyInfo": "Access my information",
+    "receiveInformation": "Receive information",
+    "receiveInformationDescription": "Receive the information from other involved individuals by entering their personal data manually.",
+    "enterInformation": "Enter information"
   },
 
   "verified": {

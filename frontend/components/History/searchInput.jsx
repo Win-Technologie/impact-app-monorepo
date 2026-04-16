@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 export default function SearchInput({ value = "", onChangeText = () => {} }) {
   const handleClear = () => {
     onChangeText("");
   };
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -19,7 +21,7 @@ export default function SearchInput({ value = "", onChangeText = () => {} }) {
         style={styles.input}
         onChangeText={onChangeText}
         value={value}
-        placeholder="Chercher une date d'accident"
+        placeholder={t("historyPage.searchPlaceholder", { defaultValue: "Search by accident date" })}
         placeholderTextColor="grey"
       />
       {value.length > 0 && (

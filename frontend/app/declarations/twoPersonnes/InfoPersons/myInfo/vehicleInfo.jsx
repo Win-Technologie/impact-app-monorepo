@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import InputsShowGroup from "../../../../../components/Utils/Inputs/InputsShowGroup";
 import { AntDesign } from "@expo/vector-icons";
@@ -20,6 +21,7 @@ import Loading from "../../../../../components/Utils/Notification/Loading";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VehicleInfo() {
+  const { t } = useTranslation();
   //obtenir la valeur de manière globale
   const personalInformation = useRecoilValue(globalPersonalInfo);
   const vehicle = personalInformation?.vehicle || {};
@@ -31,26 +33,25 @@ export default function VehicleInfo() {
   const infoVehicle = [
     {
       style: "column",
-      label: "Numéro du certificat d’immatriculation",
-      value: vehicle.serialNumber || "non disponible",
+      label: t("vehicleInfo.serialNumber"),
+      value: vehicle.serialNumber || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "column",
-      label: "Numéro de plaque",
-      value: vehicle.plate || "non disponible",
+      label: t("vehicleInfo.plate"),
+      value: vehicle.plate || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "row",
-      firstLabel: "Modèle du véhicule",
-      valueFirstLabel: vehicle.model || "non disponible",
-      secondLabel: "Année",
-      valueSecondLabel:
-        vehicle.year?.toString() || "non disponible",
+      firstLabel: t("vehicleInfo.model"),
+      valueFirstLabel: vehicle.model || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
+      secondLabel: t("vehicleInfo.year"),
+      valueSecondLabel: vehicle.year?.toString() || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "column",
-      label: "Couleur du véhicule",
-      value: vehicle.color || "non disponible",
+      label: t("vehicleInfo.color"),
+      value: vehicle.color || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
   ];
 
@@ -60,43 +61,42 @@ export default function VehicleInfo() {
   const vehicleOwner = [
     {
       style: "column",
-      label: "Prénom",
-      value: owner.name || "non disponible",
+      label: t("vehicleInfo.ownerFirstName"),
+      value: owner.name || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "column",
-      label: "Nom",
-      value: owner.lastName || "non disponible",
+      label: t("vehicleInfo.ownerLastName"),
+      value: owner.lastName || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "column",
-      label: "adresse courriel",
-      value: owner.email || "non disponible",
+      label: t("vehicleInfo.ownerEmail", { defaultValue: "adresse courriel" }),
+      value: owner.email || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "column",
-      label: "Numéro de téléphone",
-      value: owner.phone || "non disponible",
+      label: t("vehicleInfo.ownerPhone"),
+      value: owner.phone || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "column",
-      label: "Numéro et rue de l'adresse",
-      value: owner.address || "non disponible",
+      label: t("vehicleInfo.ownerAddress", { defaultValue: "Numéro et rue de l'adresse" }),
+      value: owner.address || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "row",
-      firstLabel: "Ville",
-      valueFirstLabel: owner.city || "non disponible",
-      secondLabel: "Code postale",
-      valueSecondLabel:
-        owner.postalCode || "non disponible",
+      firstLabel: t("vehicleInfo.ownerCity"),
+      valueFirstLabel: owner.city || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
+      secondLabel: t("vehicleInfo.ownerPostalCode"),
+      valueSecondLabel: owner.postalCode || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "row",
-      firstLabel: "Pays",
-      valueFirstLabel: owner.country || "non disponible",
-      secondLabel: "Province",
-      valueSecondLabel: owner.province || "non disponible",
+      firstLabel: t("vehicleInfo.ownerCountry"),
+      valueFirstLabel: owner.country || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
+      secondLabel: t("vehicleInfo.ownerProvince"),
+      valueSecondLabel: owner.province || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
   ];
 
@@ -110,7 +110,7 @@ export default function VehicleInfo() {
           paddingBottom: 20,
         }}
       >
-        <TouchableOpacity
+          <TouchableOpacity
           style={{ flexDirection: "row" }}
           onPress={() => {
             router.back();
@@ -122,12 +122,12 @@ export default function VehicleInfo() {
             color="#19363C"
             style={{ fontWeight: "200" }}
           />
-          <Text style={{ color: "#19363C" }}>{"   "}Retour</Text>
+          <Text style={{ color: "#19363C" }}>{"   "}{t("common.back")}</Text>
         </TouchableOpacity>
 
         <View>
           <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            Informations du véhicule
+            {t("vehicleInfo.title")}
           </Text>
         </View>
       </View>
@@ -135,7 +135,7 @@ export default function VehicleInfo() {
       <ScrollView keyboardShouldPersistTaps="handled">
         <View style={styles.contentContainer}>
           {infoVehicle.length === 0 ? (
-            <Loading text="Chargement..." />
+            <Loading text={t("common.loading", { defaultValue: "Chargement..." })} />
           ) : (
             <InputsShowGroup dataToShow={infoVehicle} editable={false} />
           )}
@@ -147,10 +147,10 @@ export default function VehicleInfo() {
                 styles.centerText,
               ]}
             >
-              Informations du propriétaire
+              {t("vehicleInfo.ownerInfo")}
             </Text>
             {vehicleOwner.length === 0 ? (
-              <Loading text="Chargement" />
+              <Loading text={t("common.loading", { defaultValue: "Chargement" })} />
             ) : (
               <InputsShowGroup dataToShow={vehicleOwner} editable={false} />
             )}

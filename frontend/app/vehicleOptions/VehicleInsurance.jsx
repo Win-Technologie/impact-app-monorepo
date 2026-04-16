@@ -121,7 +121,7 @@ const InsuranceInfo = () => {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Loading...</Text>
+        <Text>{t("pleasewait")}</Text>
       </SafeAreaView>
     );
   }
@@ -129,7 +129,7 @@ const InsuranceInfo = () => {
   if (!ownerDetails) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Loading owner details...</Text>
+        <Text>{t("pleasewait")}</Text>
       </SafeAreaView>
     );
   }
@@ -256,7 +256,7 @@ const InsuranceInfo = () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
       if (!token) {
-        Alert.alert("Erreur", "Session expirée");
+        Alert.alert(t("common.error", { defaultValue: "Erreur" }), t("vehicleList.sessionExpired", { defaultValue: "Session expired" }));
         setSaving(false);
         return;
       }
@@ -265,7 +265,7 @@ const InsuranceInfo = () => {
       const parsedExpirationIso = toIsoIfPossible(insuranceState?.expirationDate);
       const isIsoLike = typeof parsedExpirationIso === "string" && /^\d{4}-\d{2}-\d{2}T/.test(parsedExpirationIso);
       if (!insuranceState?.expirationDate || !isIsoLike) {
-        Alert.alert("Erreur", "Date d'expiration invalide. Utilisez JJ/MM/AAAA ou AAAA-MM-JJ.");
+        Alert.alert(t("common.error", { defaultValue: "Erreur" }), t("insuranceInfoMessages.invalidExpiration", { defaultValue: "Invalid expiration date. Use DD/MM/YYYY or YYYY-MM-DD." }));
         setSaving(false);
         return;
       }
@@ -285,7 +285,7 @@ const InsuranceInfo = () => {
         });
 
         if (response.ok) {
-          Alert.alert("Succès", "Assurance mise à jour");
+          Alert.alert(t("common.success", { defaultValue: 'Succès' }), t("insuranceInfoMessages.updateSuccess", { defaultValue: 'Insurance updated' }));
         } else {
           // Try to handle cases where the client _id is stale: attempt a fallback lookup by vehicle
           if (response.status === 404) {
@@ -315,7 +315,7 @@ const InsuranceInfo = () => {
                     body: JSON.stringify(retryPayload),
                   });
                   if (retryRes.ok) {
-                    Alert.alert('Succès', 'Assurance mise à jour (via fallback)');
+                    Alert.alert(t("common.success", { defaultValue: 'Succès' }), t("insuranceInfoMessages.updateFallbackSuccess", { defaultValue: 'Insurance updated (via fallback)' }));
                     setSaving(false);
                     return;
                   } else {
@@ -324,10 +324,10 @@ const InsuranceInfo = () => {
                       const parsed = JSON.parse(txt);
                       console.error('Retry update failed', parsed);
                       const detail = parsed.details ? JSON.stringify(parsed.details) : '';
-                      Alert.alert('Erreur', `${parsed.error || 'Impossible de mettre à jour l\'assurance'}\n${detail}`);
+                      Alert.alert(t("common.error", { defaultValue: 'Erreur' }), `${parsed.error || t("insuranceInfoMessages.updateFailed", { defaultValue: 'Unable to update the insurance' })}\n${detail}`);
                     } catch (ee) {
                       console.error('Retry update failed', txt);
-                      Alert.alert('Erreur', 'Impossible de mettre à jour l\'assurance');
+                      Alert.alert(t("common.error", { defaultValue: 'Erreur' }), t("insuranceInfoMessages.updateFailed", { defaultValue: 'Unable to update the insurance' }));
                     }
                     setSaving(false);
                     return;
@@ -344,10 +344,10 @@ const InsuranceInfo = () => {
             const parsed = JSON.parse(bodyText);
             console.error("Insurance update failed", parsed);
             const detail = parsed.details ? JSON.stringify(parsed.details) : "";
-            Alert.alert("Erreur", `${parsed.error || 'Impossible de mettre à jour l\'assurance'}\n${detail}`);
+            Alert.alert(t("common.error", { defaultValue: 'Erreur' }), `${parsed.error || t("insuranceInfoMessages.updateFailed", { defaultValue: 'Unable to update the insurance' })}\n${detail}`);
           } catch (e) {
             console.error("Insurance update failed", bodyText);
-            Alert.alert("Erreur", "Impossible de mettre à jour l'assurance");
+            Alert.alert(t("common.error", { defaultValue: 'Erreur' }), t("insuranceInfoMessages.updateFailed", { defaultValue: 'Unable to update the insurance' }));
           }
         }
       } else {
@@ -365,23 +365,23 @@ const InsuranceInfo = () => {
         });
 
         if (response.ok) {
-          Alert.alert("Succès", "Assurance ajoutée");
+          Alert.alert(t("common.success", { defaultValue: 'Succès' }), t("insuranceInfoMessages.addSuccess", { defaultValue: 'Insurance added' }));
         } else {
           let bodyText = await response.text();
           try {
             const parsed = JSON.parse(bodyText);
             console.error("Insurance add failed", parsed);
             const detail = parsed.details ? JSON.stringify(parsed.details) : "";
-            Alert.alert("Erreur", `${parsed.error || 'Impossible d\'ajouter l\'assurance'}\n${detail}`);
+            Alert.alert(t("common.error", { defaultValue: 'Erreur' }), `${parsed.error || t("insuranceInfoMessages.addFailed", { defaultValue: 'Unable to add the insurance' })}\n${detail}`);
           } catch (e) {
             console.error("Insurance add failed", bodyText);
-            Alert.alert("Erreur", "Impossible d'ajouter l'assurance");
+            Alert.alert(t("common.error", { defaultValue: 'Erreur' }), t("insuranceInfoMessages.addFailed", { defaultValue: 'Unable to add the insurance' }));
           }
         }
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Erreur", "Une erreur est survenue");
+      Alert.alert(t("common.error", { defaultValue: 'Erreur' }), t("common.unknownError", { defaultValue: 'An unknown error occurred' }));
     } finally {
       setSaving(false);
     }
@@ -409,7 +409,7 @@ const InsuranceInfo = () => {
             color="#19363C"
             style={{ fontWeight: "200" }}
           />
-          <Text style={{ color: "#19363C" }}>{"   "}Retour</Text>
+          <Text style={{ color: "#19363C" }}>{"   "}{t("common.back")}</Text>
         </TouchableOpacity>
 
         <View>
@@ -441,7 +441,7 @@ const InsuranceInfo = () => {
             onPress={saveInsurance}
             disabled={saving}
           >
-            {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "white", fontWeight: "600" }}>Enregistrer</Text>}
+            {saving ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "white", fontWeight: "600" }}>{t("common.save")}</Text>}
           </TouchableOpacity>
         </View>
       </ScrollView>

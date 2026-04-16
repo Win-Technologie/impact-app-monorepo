@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -31,6 +32,8 @@ const hourOfAccident = () => {
 
   console.log(declaration);
 
+  const { t } = useTranslation();
+
   const onDismiss = React.useCallback(() => {
     setVisible(false);
   }, [setVisible]);
@@ -57,17 +60,13 @@ const hourOfAccident = () => {
   const next = () => {
     try {
       if (minute == null || hour == null) {
-        Alert.alert(
-          "Erreur",
-          "Vous devez choisir l'heure  de l'accident avant de continuer",
-          [
-            {
-              text: "Ok",
-              onPress: () => null,
-              style: "cancel",
-            },
-          ],
-        );
+        Alert.alert(t("error"), t("declaration.selectTimeRequired"), [
+          {
+            text: t("buttons.ok") || "Ok",
+            onPress: () => null,
+            style: "cancel",
+          },
+        ]);
       } else {
         setDeclaration({ ...declaration, hour: hour, minute: minute, step: 3 });
         router.navigate("declarations/twoPersonnes/otherSpecification");
@@ -94,9 +93,7 @@ const hourOfAccident = () => {
       />
       <View style={styles.container}>
         <View>
-          <Text style={styles.title}>
-            À quelle heure s'est dérouler l'accident?
-          </Text>
+          <Text style={styles.title}>{t("declaration.hourOfAccidentTitle")}</Text>
         </View>
 
         <TouchableOpacity
@@ -117,7 +114,7 @@ const hourOfAccident = () => {
         >
           <View style={{ flex: 2, alignItems: "center" }}>
             <Text style={{ color: "#19363C" }}>
-              {hour == null ? "heure" : hour}
+              {hour == null ? t("declaration.hourPlaceholder") : hour}
             </Text>
           </View>
 
@@ -127,7 +124,7 @@ const hourOfAccident = () => {
 
           <View style={{ flex: 2, alignItems: "center" }}>
             <Text style={{ color: "#19363C" }}>
-              {minute == null ? "minute" : minute}
+              {minute == null ? t("declaration.minutePlaceholder") : minute}
             </Text>
           </View>
         </TouchableOpacity>
@@ -145,8 +142,8 @@ const hourOfAccident = () => {
 
       <View style={styles.footContainer}>
         <DualOptionButton
-          leftButtonTitle="Annuler"
-          rightButtonTitle="Confirmer"
+          leftButtonTitle={t("buttons.cancel")}
+          rightButtonTitle={t("buttons.confirm")}
           onPressBack={() => back()}
           onPressContinue={() => next()}
         />

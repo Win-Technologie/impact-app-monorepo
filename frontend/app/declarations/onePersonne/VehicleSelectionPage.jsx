@@ -8,6 +8,7 @@ import {
   Alert,
 } from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
+import { useTranslation } from "react-i18next";
 import { AntDesign } from "@expo/vector-icons";
 import { useRecoilState } from "recoil";
 import { VehicleChoiceState } from "../../../GlobalState/AccidentVehiculeState";
@@ -18,6 +19,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const VehicleSelectionPage = () => {
+  const { t } = useTranslation();
   const [allVehicles, setAllVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [vehicleState, setVehiculeState] = useRecoilState(VehicleChoiceState);
@@ -32,7 +34,7 @@ const VehicleSelectionPage = () => {
     try {
       const userToken = await AsyncStorage.getItem("userToken");
       if (!userToken) {
-        Alert.alert("Erreur", "Session expirée. Veuillez vous reconnecter.");
+        Alert.alert(t("common.error"), t("declaration.sessionExpired"));
         return;
       }
       
@@ -46,7 +48,7 @@ const VehicleSelectionPage = () => {
           setAllVehicles([]);
         }
       } else {
-        Alert.alert("Erreur", "Échec du chargement des véhicules.");
+        Alert.alert(t("common.error"), t("declaration.loadVehiclesFailed"));
       }
     } catch (error) {
       console.error("Error loading vehicles:", error);
@@ -68,11 +70,11 @@ const VehicleSelectionPage = () => {
         }
         router.push("./typeOfAccident");
       } else {
-        Alert.alert("Erreur", "Sélection de véhicule invalide. Veuillez réessayer.");
+        Alert.alert(t("common.error"), t("declaration.selectVehicleInvalid"));
       }
     } catch (error) {
       console.error("Error selecting vehicle:", error);
-      Alert.alert("Erreur", "Impossible de sélectionner ce véhicule.");
+      Alert.alert(t("common.error"), t("declaration.selectVehicleInvalid"));
     }
   };
 
@@ -84,16 +86,14 @@ const VehicleSelectionPage = () => {
           style={styles.backButton}
         >
           <AntDesign name="arrow-left" size={20} color="#19363C" />
-          <Text style={styles.backText}>{"   "}Retour</Text>
+          <Text style={styles.backText}>{"   "}{t("common.back")}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Sélectionner un véhicule</Text>
+        <Text style={styles.headerTitle}>{t("declaration.selectVehicleTitle")}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <View style={styles.selectContainer}>
-          <Text style={styles.titleSelect}>
-            Veuillez sélectionner un véhicule:
-          </Text>
+          <Text style={styles.titleSelect}>{t("declaration.selectVehiclePrompt")}</Text>
           
           {allVehicles.length <= 8 ? (
             // Show vehicle cards when 8 or fewer vehicles
@@ -124,7 +124,7 @@ const VehicleSelectionPage = () => {
             // Show dropdown when more than 6 vehicles
             <SelectDropdown
               data={allVehicles}
-              defaultButtonText="Choisir une voiture"
+              defaultButtonText={t("declaration.chooseCarDefault")}
               onSelect={handleVehicleSelect}
               buttonTextAfterSelection={(selectedItem) =>
                 selectedItem?.car?.model

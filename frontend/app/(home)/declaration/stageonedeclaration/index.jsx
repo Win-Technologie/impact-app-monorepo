@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { router } from "expo-router";
 
 const InfoPage = () => {
   const [numberOfPeople, setNumberOfPeople] = useState(3); // Adaptez ceci selon le nombre de personnes impliquées
+
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -21,23 +24,19 @@ const InfoPage = () => {
           style={styles.backButton}
         >
           <Icon name="arrow-back" size={24} color="#19363C" />
-          <Text style={styles.backButtonText}>Retour</Text>
+          <Text style={styles.backButtonText}>{t("back")}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Information de base</Text>
+        <Text style={styles.headerTitle}>{t("declaration.basicInformationTitle")}</Text>
       </View>
       <ScrollView style={styles.scrollView}>
         <View style={styles.box}>
-          <Text style={styles.boxTitle}>Mes informations</Text>
-          <Text style={styles.boxText}>
-            Voici quelques détails sur votre compte et vos informations.
-          </Text>
+          <Text style={styles.boxTitle}>{t("declaration.provideMyInfo")}</Text>
+          <Text style={styles.boxText}>{t("declaration.provideMyInfoDescription")}</Text>
           <TouchableOpacity
             style={styles.bottomLine}
             onPress={() => console.log("Accéder")}
           >
-            <Text style={styles.bottomLineText}>
-              Accéder à mes informations
-            </Text>
+            <Text style={styles.bottomLineText}>{t("declaration.accessMyInfo")}</Text>
             <Icon name="arrow-forward" size={20} color="#FFF" />
           </TouchableOpacity>
         </View>
@@ -45,17 +44,15 @@ const InfoPage = () => {
         {Array.from({ length: numberOfPeople }, (_, index) => (
           <View key={index} style={styles.box}>
             <View style={styles.titleContainer}>
-              <Text style={styles.boxTitle}>Recevoir des informations</Text>
+              <Text style={styles.boxTitle}>{t("declaration.receiveInformation")}</Text>
               <Text style={styles.boxNumber}>{index + 1}</Text>
             </View>
-            <Text style={styles.boxText}>
-              Information détaillée pour la personne {index + 1}.
-            </Text>
+            <Text style={styles.boxText}>{t("declaration.receiveInformationDescription", { index: index + 1 })}</Text>
             <TouchableOpacity
               style={styles.bottomLine}
               onPress={() => console.log("Saisir")}
             >
-              <Text style={styles.bottomLineText}>Saisir des informations</Text>
+              <Text style={styles.bottomLineText}>{t("declaration.enterInformation")}</Text>
               <Icon name="arrow-forward" size={20} color="#FFF" />
             </TouchableOpacity>
           </View>
@@ -65,7 +62,7 @@ const InfoPage = () => {
           style={styles.continueButton}
           onPress={() => router.push("../../../../signup/stagetwodeclaration")}
         >
-          <Text style={styles.continueButtonText}>Continuer</Text>
+          <Text style={styles.continueButtonText}>{t("buttons.continue")}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

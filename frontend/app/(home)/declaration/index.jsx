@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Text, TouchableOpacity, StyleSheet, View, Modal } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -19,6 +20,7 @@ export default function DeclarationPage() {
     { label: "4 individus", value: "4" },
     { label: "5 individus", value: "5" },
   ]);
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -33,9 +35,7 @@ export default function DeclarationPage() {
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.buttonStyle}>
           <Icon name="person" size={30} color="#FFFFFF" />
-          <Text style={styles.buttonText}>
-            Je suis le seul individu impliqué
-          </Text>
+          <Text style={styles.buttonText}>{t("declaration.singlePersonButton")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -46,9 +46,7 @@ export default function DeclarationPage() {
           }}
         >
           <Icon name="people" size={30} color="#FFFFFF" />
-          <Text style={styles.buttonText}>
-            Nous sommes plusieurs individus impliqués
-          </Text>
+          <Text style={styles.buttonText}>{t("declaration.multiplePeopleButton")}</Text>
         </TouchableOpacity>
         {dropdownVisible && (
           <DropDownPicker
@@ -60,7 +58,7 @@ export default function DeclarationPage() {
             setItems={setItems}
             zIndex={3000}
             zIndexInverse={1000}
-            placeholder="Nombre d'individus impliqués"
+            placeholder={t("declaration.dropdownPlaceholder")}
             dropDownDirection="BOTTOM"
             style={styles.dropdown}
             dropDownContainerStyle={styles.dropdownContainer}
@@ -98,7 +96,7 @@ export default function DeclarationPage() {
       </View>
 
       <TouchableOpacity style={styles.continueButton}>
-        <Text style={styles.continueButtonText}>Continuer</Text>
+        <Text style={styles.continueButtonText}>{t("buttons.continue")}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

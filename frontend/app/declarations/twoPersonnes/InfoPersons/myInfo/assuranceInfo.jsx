@@ -10,6 +10,7 @@
   TouchableOpacity,
 } from "react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import InputsShowGroup from "../../../../../components/Utils/Inputs/InputsShowGroup";
 import { AntDesign } from "@expo/vector-icons";
@@ -19,6 +20,7 @@ import Loading from "../../../../../components/Utils/Notification/Loading";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function assuranceInfo() {
+  const { t } = useTranslation();
   // obtenir la valeur de manière globale
   const personalInformation = useRecoilValue(globalPersonalInfo);
   // insurance is null or empty object when no insurance is linked to the selected vehicle
@@ -32,18 +34,17 @@ export default function assuranceInfo() {
   const infoInsurance = insurance ? [
     {
       style: "column",
-      label: "Nom de la société d'assurance",
-      value: insurance.insuranceCompany || "non disponible",
+      label: t("insuranceInfo.companyName"),
+      value: insurance.insuranceCompany || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "row",
-      firstLabel: "Numéro d'assurance ",
-      valueFirstLabel:
-        insurance.policyNumber || "non disponible",
-      secondLabel: "Expiration",
+      firstLabel: t("insuranceInfo.policyNumber"),
+      valueFirstLabel: insurance.policyNumber || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
+      secondLabel: t("insuranceInfo.expirationDate"),
       valueSecondLabel: insurance.expirationDate
         ? insurance.expirationDate.slice(0, 10)
-        : "non disponible",
+        : t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
   ] : [];
 
@@ -53,43 +54,43 @@ export default function assuranceInfo() {
   const userDataInsurance = [
     {
       style: "column",
-      label: "Prénom",
-      value: owner.name || "non disponible",
+      label: t("vehicleInfo.ownerFirstName"),
+      value: owner.name || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "column",
-      label: "Nom",
-      value: owner.lastName || "non disponible",
+      label: t("vehicleInfo.ownerLastName"),
+      value: owner.lastName || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "column",
-      label: "adresse courriel",
-      value: owner.email || "non disponible",
+      label: t("insuranceInfo.ownerEmail", { defaultValue: "adresse courriel" }),
+      value: owner.email || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "column",
-      label: "Numéro de téléphone",
-      value: owner.phone || "non disponible",
+      label: t("insuranceInfo.ownerPhone", { defaultValue: "Numéro de téléphone" }),
+      value: owner.phone || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "column",
-      label: "Numéro et rue de l'adresse",
-      value: owner.address || "non disponible",
+      label: t("vehicleInfo.ownerAddress", { defaultValue: "Numéro et rue de l'adresse" }),
+      value: owner.address || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "row",
-      firstLabel: "Ville",
-      valueFirstLabel: owner.city || "non disponible",
-      secondLabel: "Code postale",
+      firstLabel: t("vehicleInfo.ownerCity"),
+      valueFirstLabel: owner.city || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
+      secondLabel: t("vehicleInfo.ownerPostalCode"),
       valueSecondLabel:
-        owner.postalCode || "non disponible",
+        owner.postalCode || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
     {
       style: "row",
-      firstLabel: "Pays",
-      valueFirstLabel: owner.country || "non disponible",
-      secondLabel: "Province",
-      valueSecondLabel: owner.province || "non disponible",
+      firstLabel: t("vehicleInfo.ownerCountry"),
+      valueFirstLabel: owner.country || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
+      secondLabel: t("vehicleInfo.ownerProvince"),
+      valueSecondLabel: owner.province || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
     },
   ];
 
@@ -103,7 +104,7 @@ export default function assuranceInfo() {
           paddingVertical: 20,
         }}
       >
-        <TouchableOpacity
+          <TouchableOpacity
           style={{ flexDirection: "row" }}
           onPress={() => {
             router.back();
@@ -115,12 +116,12 @@ export default function assuranceInfo() {
             color="#19363C"
             style={{ fontWeight: "200" }}
           />
-          <Text style={{ color: "#19363C" }}>{"   "}Retour</Text>
+          <Text style={{ color: "#19363C" }}>{"   "}{t("common.back")}</Text>
         </TouchableOpacity>
 
         <View>
           <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            Informations d’assurance
+            {t("insuranceInfo.title")}
           </Text>
         </View>
       </View>
@@ -129,8 +130,8 @@ export default function assuranceInfo() {
         <View style={styles.contentContainer}>
           {insurance === null ? (
             <View style={styles.noInsuranceBox}>
-              <Text style={styles.noInsuranceText}>Aucune assurance associée au véhicule sélectionné.</Text>
-              <Text style={styles.noInsuranceSubText}>Veuillez ajouter une assurance dans votre profil.</Text>
+              <Text style={styles.noInsuranceText}>{t("vehicleList.noInsuranceFound", { defaultValue: "Aucune assurance associée au véhicule sélectionné." })}</Text>
+              <Text style={styles.noInsuranceSubText}>{t("vehicleList.addInsurancePrompt", { defaultValue: "Veuillez ajouter une assurance dans votre profil." })}</Text>
             </View>
           ) : (
             <InputsShowGroup dataToShow={infoInsurance} editable={false} />
@@ -143,7 +144,7 @@ export default function assuranceInfo() {
                 styles.centerText,
               ]}
             >
-              Informations de l’assuré
+              {t("insuranceInfo.ownerInfo")}
             </Text>
             <InputsShowGroup dataToShow={userDataInsurance} editable={false} />
           </View>

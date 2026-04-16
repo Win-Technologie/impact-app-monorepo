@@ -22,6 +22,7 @@ import { accidentVehicleState } from "../../../../../GlobalState/AccidentVehicul
 import { globalPersonalInfo } from "../../../../../GlobalState/PersonalInfoState";
 import Loading from "../../../../../components/Utils/Notification/Loading";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 export default function PersonanalInformation() {
   const VEHICLE_ID = useRecoilValue(accidentVehicleState);
@@ -40,6 +41,8 @@ export default function PersonanalInformation() {
     }
   }, [userInfo]);
 
+  const { t } = useTranslation();
+
   const fetchProfileFromApi = async () => {
     try {
       const token = await AsyncStorage.getItem("userToken");
@@ -52,14 +55,15 @@ export default function PersonanalInformation() {
       if (response.ok && data.user) {
         const u = data.user;
         setUserData([
-          { style: "column", label: "Prénom", value: u.name || "non disponible" },
-          { style: "column", label: "Nom", value: u.lastName || "non disponible" },
-          { style: "row", firstLabel: "Numéro du permis de conduire", valueFirstLabel: u.driverLicense?.number || "non disponible", secondLabel: "Expiration", valueSecondLabel: u.driverLicense?.expires || "non disponible" },
-          { style: "column", label: "adresse courriel", value: u.email || "non disponible" },
-          { style: "column", label: "Numéro de téléphone", value: u.phone || "non disponible" },
-          { style: "column", label: "Numéro et rue de l'adresse", value: u.address || "non disponible" },
-          { style: "row", firstLabel: "Ville", valueFirstLabel: u.city || "non disponible", secondLabel: "Code postale", valueSecondLabel: u.postalCode || "non disponible" },
-          { style: "row", firstLabel: "Pays", valueFirstLabel: u.country || "non disponible", secondLabel: "Province", valueSecondLabel: u.province || "non disponible" },
+          { style: "column", label: t("vehicleInfo.ownerFirstName"), value: u.name || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }) },
+          { style: "column", label: t("vehicleInfo.ownerLastName"), value: u.lastName || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }) },
+          { style: "row", firstLabel: t("insuranceScreen.licenseNumberPlaceholder"), valueFirstLabel: u.driverLicense?.number || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }), secondLabel: t("driverLicense"), valueSecondLabel: u.driverLicense?.expires || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }) },
+          { style: "column", label: t("licenseDetails.licenseCategoryPlaceholder"), value: u.driverLicense?.category || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }) },
+          { style: "column", label: t("insuranceInfo.ownerEmail", { defaultValue: "adresse courriel" }), value: u.email || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }) },
+          { style: "column", label: t("vehicleInfo.ownerPhone"), value: u.phone || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }) },
+          { style: "column", label: t("vehicleInfo.ownerAddress", { defaultValue: "Numéro et rue de l'adresse" }), value: u.address || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }) },
+          { style: "row", firstLabel: t("vehicleInfo.ownerCity"), valueFirstLabel: u.city || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }), secondLabel: t("vehicleInfo.ownerPostalCode"), valueSecondLabel: u.postalCode || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }) },
+          { style: "row", firstLabel: t("vehicleInfo.ownerCountry"), valueFirstLabel: u.country || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }), secondLabel: t("vehicleInfo.ownerProvince"), valueSecondLabel: u.province || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }) },
         ]);
       } else {
         setUserData([]);
@@ -79,52 +83,57 @@ export default function PersonanalInformation() {
       // console.error("Data does not contain owner information.");
       return; // Prevent further execution if owner is undefined
     }
-    const dataToShow = [
+      const dataToShow = [
       {
         style: "column",
-        label: "Prénom",
-        value: data.owner?.name || "non disponible",
+        label: t("vehicleInfo.ownerFirstName"),
+        value: data.owner?.name || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
       },
       {
         style: "column",
-        label: "Nom",
-        value: data.owner.lastName || "non disponible",
+        label: t("vehicleInfo.ownerLastName"),
+        value: data.owner.lastName || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
       },
       {
         style: "row",
-        firstLabel: "Numéro du permis de conduire",
-        valueFirstLabel: data.driverLicense?.number || "non disponible",
-        secondLabel: "Expiration",
-        valueSecondLabel: data.driverLicense?.expires || "non disponible",
+        firstLabel: t("insuranceScreen.licenseNumberPlaceholder"),
+        valueFirstLabel: data.driverLicense?.number || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
+        secondLabel: t("driverLicense"),
+        valueSecondLabel: data.driverLicense?.expires || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
       },
       {
         style: "column",
-        label: "adresse courriel",
-        value: data.owner.email || "non disponible",
+        label: t("licenseDetails.licenseCategoryPlaceholder"),
+        value: data.driverLicense?.category || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
       },
       {
         style: "column",
-        label: "Numéro de téléphone",
-        value: data.owner.phone || "non disponible",
+        label: t("insuranceInfo.ownerEmail", { defaultValue: "adresse courriel" }),
+        value: data.owner.email || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
       },
       {
         style: "column",
-        label: "Numéro et rue de l'adresse",
-        value: data.owner.address || "non disponible",
+        label: t("vehicleInfo.ownerPhone"),
+        value: data.owner.phone || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
+      },
+      {
+        style: "column",
+        label: t("vehicleInfo.ownerAddress", { defaultValue: "Numéro et rue de l'adresse" }),
+        value: data.owner.address || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
       },
       {
         style: "row",
-        firstLabel: "Ville",
-        valueFirstLabel: data.owner.city || "non disponible",
-        secondLabel: "Code postale",
-        valueSecondLabel: data.owner.postalCode || "non disponible",
+        firstLabel: t("vehicleInfo.ownerCity"),
+        valueFirstLabel: data.owner.city || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
+        secondLabel: t("vehicleInfo.ownerPostalCode"),
+        valueSecondLabel: data.owner.postalCode || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
       },
       {
         style: "row",
-        firstLabel: "Pays",
-        valueFirstLabel: data.owner.country || "non disponible",
-        secondLabel: "Province",
-        valueSecondLabel: data.owner.province || "non disponible",
+        firstLabel: t("vehicleInfo.ownerCountry"),
+        valueFirstLabel: data.owner.country || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
+        secondLabel: t("vehicleInfo.ownerProvince"),
+        valueSecondLabel: data.owner.province || t("declaration.noInformationAvailable", { defaultValue: "non disponible" }),
       },
     ];
     setUserData(dataToShow);
@@ -140,38 +149,23 @@ export default function PersonanalInformation() {
           paddingBottom: 20,
         }}
       >
-        <TouchableOpacity
-          style={{ flexDirection: "row" }}
-          onPress={() => {
-            router.back();
-          }}
-        >
-          <AntDesign
-            name="arrow-left"
-            size={20}
-            color="#19363C"
-            style={{ fontWeight: "200" }}
-          />
-          <Text style={{ color: "#19363C" }}>{"   "}Retour</Text>
+        <TouchableOpacity style={{ flexDirection: "row" }} onPress={() => router.back()}>
+          <AntDesign name="arrow-left" size={20} color="#19363C" style={{ fontWeight: "200" }} />
+          <Text style={{ color: "#19363C" }}>{"   "}{t("common.back")}</Text>
         </TouchableOpacity>
 
         <View>
-          <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>
-            {" "}
-            Informations personnelles
-          </Text>
+          <Text style={{ fontSize: 18, color: "#19363C", fontWeight: "bold" }}>{t("declaration.personalInformation")}</Text>
         </View>
       </View>
 
       <ScrollView keyboardShouldPersistTaps="handled">
         <View style={styles.contentContainer}>
           {userData === null ? (
-            <Loading text="Loading.." />
+            <Loading text={t("pleasewait")} />
           ) : userData.length === 0 ? (
             <>
-              <Text style={{ textAlign: "center", color: "gray", marginTop: 20 }}>
-                Informations non disponibles. Veuillez sélectionner un véhicule.
-              </Text>
+              <Text style={{ textAlign: "center", color: "gray", marginTop: 20 }}>{t("declaration.noInformationAvailable")}</Text>
             </>
           ) : (
             <InputsShowGroup dataToShow={userData} editable={false} />

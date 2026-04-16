@@ -53,7 +53,25 @@
     "about": "À propos",
     "conditionandregulation": "Conditions and règlements",
     "updateandreinstallation": "Mise à jour et installations",
-    "Login": "Me déconnecter"
+    "Login": "Me déconnecter",
+    "logout": "Me déconnecter"
+  },
+
+  "notifications": {
+    "title": "Notifications",
+    "header": "Paramètres de notifications",
+    "categories": "Catégories",
+    "generalTitle": "Général",
+    "generalSubtitle": "Informations générales et confirmations",
+    "updatesTitle": "Mises à jour",
+    "updatesSubtitle": "Annonces de nouvelles versions et améliorations",
+    "promotionsTitle": "Promotions",
+    "promotionsSubtitle": "Offres et promotions ponctuelles",
+    "securityTitle": "Alertes de sécurité",
+    "securitySubtitle": "Alertes importantes concernant votre compte",
+    "helpText": "Choisissez les catégories de notifications que vous souhaitez recevoir. Ces préférences seront utilisées pour filtrer les notifications côté serveur ou localement.",
+    "disabledTitle": "Notifications désactivées",
+    "disabledMessage": "Vous avez désactivé cette catégorie de notifications."
   },
 
   "mainScreen": {
@@ -76,7 +94,25 @@
     "contactInsurance": "Contactez votre assurance dès maintenant",
     "towing": "Remorquage",
     "contactTowing": "Contactez un remorqueur près de votre position",
-    "declareIncident": "Déclarer un incident"
+    "declareIncident": "Déclarer un accident"
+  },
+
+  "declaration": {
+    "singlePersonButton": "Je suis le seul individu impliqué",
+    "multiplePeopleButton": "Nous sommes plusieurs individus impliqués",
+    "dropdownPlaceholder": "Nombre d'individus impliqués",
+    "twoIndividuals": "2 individus",
+    "threeIndividuals": "3 individus",
+    "fourIndividuals": "4 individus",
+    "fiveIndividuals": "5 individus",
+    "personalInformation": "Informations personnelles",
+    "vehicleInformation": "Informations du véhicule",
+    "insuranceInformation": "Informations d'assurance"
+  },
+  "declarationShorts": {
+    "personalInfoShort": "Nom, âge, adresse...",
+    "vehicleInfoShort": "Modèle, numéro de plaque...",
+    "insuranceInfoShort": "Numéro d'assurance, nom de la compagnie..."
   },
 
   "forgottenPasswordScreen": {
@@ -360,7 +396,8 @@
   "buttons": {
     "cancel": "Annuler",
     "confirm": "Confirmer",
-    "continue": "Continuer"
+    "continue": "Continuer",
+    "ok": "Ok"
   },
 
   "home": {
@@ -374,7 +411,7 @@
     "insuranceDescription": "Contactez votre assurance dès maintenant",
     "towing": "Remorquage",
     "towingDescription": "Contactez un remorqueur près de votre position",
-    "declareIncident": "Déclarer un incident"
+    "declareIncident": "Déclarer un accident"
   },
 
   "tabs": {
@@ -391,16 +428,35 @@
     "multiple": "Nous sommes plusieurs individus impliqués",
     "numberOfIndividuals": "Nombre d'individus impliqués",
     "numberofpersoninvoved": "Vous devez choisir le nombre de personnes impliqués avant de pouvoir continuer",
-    "onepeople": "Un individus",
-    "twopeoples": "Deux individus",
-    "threepeoples": "Trois individus",
-    "fourpeoples": "Quatre individus",
-    "fivepeoples": "Cinq individus"
+    "onepeople": "1 personne",
+    "twopeoples": "2 personnes",
+    "threepeoples": "3 personnes",
+    "fourpeoples": "4 personnes",
+    "fivepeoples": "5 personnes"
   },
 
   "historyPage": {
     "title": "Historique",
-    "accidents": "accidents"
+    "accidents": "accidents",
+    "searchPlaceholder": "Chercher une date d'accident",
+    "delete": "Supprimer",
+    "deleteConfirm": "Voulez-vous vraiment supprimer cette déclaration ?",
+    "time": "Heure",
+    "summary": "Résumé",
+    "mainInformation": "Informations principales",
+    "location": "Lieu",
+    "type": "Type",
+    "person": "Personne",
+    "name": "Nom",
+    "phone": "Téléphone",
+    "email": "Email",
+    "address": "Adresse",
+    "vehicle": "Véhicule",
+    "make": "Marque",
+    "model": "Modèle",
+    "plate": "Plaque",
+    "photos": "Photos",
+    "peopleInvolved": "Personnes impliquées"
   },
 
   "common": {
@@ -410,7 +466,8 @@
     "noToken": "Aucun jeton trouvé",
     "networkError": "Erreur réseau",
     "unknownError": "Une erreur inconnue s'est produite",
-    "success": "Succès"
+    "success": "Succès",
+    "informationSaved": "Informations enregistrées"
   },
 
   "vehicleList": {
@@ -425,6 +482,11 @@
     "addVehicle": "Ajouter un véhicule",
     "deleteAlertTitle": "Supprimer",
     "deleteAlertMessage": "Êtes-vous sûr de vouloir supprimer ce véhicule?",
+    "deleteAlertMessageWithName": "Voulez-vous vraiment retirer {{name}}?",
+    "noVehicles": "Aucun véhicule",
+    "addFirstVehicle": "Ajoutez votre premier véhicule",
+    "sessionExpired": "Session expirée",
+    "removeFailed": "Impossible de retirer le véhicule",
     "deleteAlertCancel": "Annuler",
     "deleteAlertConfirm": "Supprimer"
   },
@@ -441,11 +503,18 @@
     "ownerFirstName": "Prénom",
     "ownerLastName": "Nom",
     "ownerPhone": "Numéro de téléphone",
+    "ownerEmail": "Adresse courriel",
     "ownerAddress": "Numéro et rue de l'adresse",
     "ownerCity": "Ville",
     "ownerPostalCode": "Code postal",
     "ownerCountry": "Pays",
     "ownerProvince": "Province"
+  },
+
+  "vehicleInfoMessages": {
+    "notFound": "Véhicule non trouvé",
+    "updateSuccess": "Véhicule mis à jour",
+    "updateFailed": "Impossible de mettre à jour le véhicule"
   },
 
   "insuranceInfo": {
@@ -463,6 +532,14 @@
     "ownerPostalCode": "Code postal ",
     "ownerCountry": "Pays du propriétaire",
     "ownerProvince": "Province du propriétaire"
+  },
+  "insuranceInfoMessages": {
+    "updateSuccess": "Assurance mise à jour",
+    "addSuccess": "Assurance ajoutée",
+    "updateFailed": "Impossible de mettre à jour l'assurance",
+    "addFailed": "Impossible d'ajouter l'assurance",
+    "invalidExpiration": "Date d'expiration invalide. Utilisez JJ/MM/AAAA ou AAAA-MM-JJ.",
+    "updateFallbackSuccess": "Assurance mise à jour (via fallback)"
   },
 
   "about": {
@@ -500,6 +577,39 @@
     "answer10": "Oui, nous offrons un essai gratuit de 7 jours."
   },
 
+  "subscription": {
+    "selectPlan": "Sélectionner un forfait",
+    "paymentMethods": "Modes de paiement",
+    "start": "Démarrer mon abonnement",
+    "headerTitle": "Abonnement",
+    "mainTitle": "Abonnez-vous à Impact dès maintenant !",
+    "impactName": "Impact",
+    "feature1": {
+      "title": "Fonction sentinelle",
+      "description": "L'abonnement vous donne accès à la capture vidéo automatique comme preuve en cas d'accident."
+    },
+    "feature2": {
+      "title": "Plus aucune publicité",
+      "description": "Profitez d'une expérience sans publicité dans l'application lorsque vous utilisez les fonctionnalités premium."
+    },
+    "feature3": {
+      "title": "Annulation à tout moment",
+      "description": "Annulez votre abonnement à tout moment sans frais ni pénalités."
+    },
+    "sectionTitle": "Choisissez la durée d'abonnement premium qui vous convient.",
+    "plan": {
+      "monthly": "Mensuel",
+      "monthlyPrice": "2,98$ / mois",
+      "annual": "Annuel",
+      "annualPrice": "17,98$ / an"
+    },
+    "terms": {
+      "line1": "* Avantages applicables pour la durée entière de la sélection de l'abonnement.",
+      "line2": "** Ce forfait d'abonnement est valable pour une période de 30 jours et expirera après ce délai. Offre limitée dans le temps — décidez rapidement pour profiter de la valeur complète."
+    },
+    "subscribeButton": "Passer à un abonnement premium"
+  },
+
   "termsAndConditions": {
     "title": "Conditions et règlements",
     "serviceTermsTitle": "Conditions de services",
@@ -507,6 +617,49 @@
     "privacyPolicyTitle": "Politique de confidentialité",
     "privacyPolicySubtitle": "Informations que nous recevons et ce que nous en faisons.",
     "learnMoreButton": "En savoir plus sur Impact"
+  },
+
+  "declaration": {
+    "whereDidAccidentOccur": "Où l'accident a-t-il eu lieu ?",
+    "personalInformation": "Informations personnelles",
+    "vehicleInformation": "Informations du véhicule",
+    "insuranceInformation": "Informations d'assurance",
+    "searchAddressPlaceholder": "Rechercher une adresse ou un lieu",
+    "step": "Étape {{current}} sur {{total}}",
+    "submissionCompleteTitle": "Vous avez complété votre déclaration",
+    "submissionCompleteDescription": "Il ne vous reste plus qu’à communiquer avec votre compagnie d’assurance. Une fois confirmé, vous ne pourrez plus revenir en arrière.",
+    "provideMyInfo": "Fournir mes informations",
+    "selectVehiclePrompt": "Veuillez sélectionner le véhicule impliqué dans l'accident:",
+    "sessionExpired": "Session expirée. Veuillez vous reconnecter.",
+    "loadVehiclesFailed": "Impossible de charger les véhicules. Veuillez réessayer plus tard.",
+    "selectVehicleInvalid": "Veuillez sélectionner un véhicule pour continuer.",
+    "choosePlaceBeforeContinue": "Veuillez choisir le lieu de l'accident avant de continuer.",
+    "enterAccidentType": "Veuillez indiquer le type d'accident.",
+    "enterPlateNumber": "Veuillez entrer le numéro d'immatriculation du véhicule.",
+    "placeSelectedTitle": "Lieu sélectionné",
+    "addressNotFound": "Adresse introuvable",
+    "selectPlaceError": "Veuillez sélectionner un lieu sur la carte.",
+    "chooseCarBeforeContinue": "Veuillez sélectionner un véhicule avant de continuer.",
+    "noInformationAvailable": "Informations non disponibles. Veuillez sélectionner un véhicule.",
+    "fillFromAccountSuccess": "Informations remplies depuis votre compte",
+    "fillFromAccountError": "Impossible de charger les informations depuis votre compte",
+    "unableToContinue": "Impossible de continuer. Veuillez remplir tous les champs requis.",
+    "chooseAccidentType": "Choisissez le type d'accident",
+    "hourOfAccidentTitle": "À quelle heure l'accident s'est-il déroulé ?",
+    "hourPlaceholder": "heure",
+    "minutePlaceholder": "minute",
+    "selectTimeRequired": "Vous devez choisir l'heure de l'accident avant de continuer.",
+    "otherSpecificationTitle": "Avez-vous d'autres spécifications à ajouter ?",
+    "otherSpecPlaceholder": "Rédigez toute autre information",
+    "addPhotosTitle": "Avez-vous des photos à ajouter ?",
+    "uploadPhotoText": "Téléchargez une photo de l'accident ou du véhicule au moment de l'accident"
+    ,
+    "basicInformationTitle": "Informations de base",
+    "provideMyInfoDescription": "Fournissez vos informations aux autres individus impliqués en saisissant manuellement vos données personnelles.",
+    "accessMyInfo": "Accéder à mes informations",
+    "receiveInformation": "Recevoir des informations",
+    "receiveInformationDescription": "Recevez les informations des autres individus impliqués en entrant manuellement leurs données personnelles.",
+    "enterInformation": "Saisir des informations"
   },
 
   "addVehicle": {

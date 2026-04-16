@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Alert } from "react-native";
+import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -9,6 +9,7 @@ export default function HistoryDetailPage() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [item, setItem] = useState(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const load = async () => {
@@ -47,12 +48,12 @@ export default function HistoryDetailPage() {
 
   const handleDelete = () => {
     Alert.alert(
-      "Supprimer",
-      "Voulez-vous vraiment supprimer cette déclaration ?",
+      t("historyPage.delete", { defaultValue: "Delete" }),
+      t("historyPage.deleteConfirm", { defaultValue: "Are you sure you want to delete this report?" }),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: t("buttons.cancel", { defaultValue: "Cancel" }), style: "cancel" },
         {
-          text: "Supprimer",
+          text: t("historyPage.delete", { defaultValue: "Delete" }),
           style: "destructive",
           onPress: async () => {
             try {
@@ -127,51 +128,51 @@ export default function HistoryDetailPage() {
           <Text style={styles.headerBackText}>Retour</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleDelete} style={styles.headerDelete}>
-          <Text style={styles.headerDeleteText}>🗑 Supprimer</Text>
+          <Text style={styles.headerDeleteText}>{t("historyPage.delete")}</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.card}>
           <Text style={styles.title}>{new Date(item.date).toLocaleDateString()}</Text>
-          <Text style={styles.subtle}>Heure: {formatTime()}</Text>
+          <Text style={styles.subtle}>{t("historyPage.time")}: {formatTime()}</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Résumé</Text>
+          <Text style={styles.sectionTitle}>{t("historyPage.summary")}</Text>
           <Text style={styles.summaryText}>{data.otherSpecification || data.vehicleDamageDescription || data.summary || "-"}</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Informations principales</Text>
-          <Row label="Lieu" value={data.accidentLocation || data.location || data.place || "-"} />
-          <Row label="Type" value={data.type || data.accidentType || data.accitendType} />
+          <Text style={styles.sectionTitle}>{t("historyPage.mainInformation")}</Text>
+          <Row label={t("historyPage.location")} value={data.accidentLocation || data.location || data.place || "-"} />
+          <Row label={t("historyPage.type")} value={data.type || data.accidentType || data.accitendType} />
         </View>
 
         {data.owner && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Personne</Text>
-            <Row label="Nom" value={`${data.owner.name || ""} ${data.owner.lastName || ""}`.trim()} />
-            <Row label="Téléphone" value={data.owner.phone} />
-            <Row label="Email" value={data.owner.email} />
-            <Row label="Adresse" value={data.owner.address} />
+            <Text style={styles.sectionTitle}>{t("historyPage.person")}</Text>
+              <Row label={t("historyPage.name")} value={`${data.owner.name || ""} ${data.owner.lastName || ""}`.trim()} />
+              <Row label={t("historyPage.phone")} value={data.owner.phone} />
+              <Row label={t("historyPage.email")} value={data.owner.email} />
+              <Row label={t("historyPage.address")} value={data.owner.address} />
           </View>
         )}
 
         {(data.vehicle || (data.vehicles && data.vehicles.length)) && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Véhicule</Text>
-            {data.vehicle ? (
+            <Text style={styles.sectionTitle}>{t("historyPage.vehicle")}</Text>
+              {data.vehicle ? (
               <>
-                <Row label="Marque" value={data.vehicle.brand} />
-                <Row label="Modèle" value={data.vehicle.model} />
-                <Row label="Plaque" value={data.vehicle.plate || data.vehicle.license_plate} />
+                  <Row label={t("historyPage.make")} value={data.vehicle.brand} />
+                  <Row label={t("historyPage.model")} value={data.vehicle.model} />
+                  <Row label={t("historyPage.plate")} value={data.vehicle.plate || data.vehicle.license_plate} />
               </>
             ) : (
               data.vehicles.map((v, i) => (
                 <View key={i} style={{ marginBottom: 8 }}>
-                  <Row label={`Véhicule ${i + 1}`} value={v.car?.model || v.vehicleDetails?.model || v.car?.registration || "-"} />
-                  <Row label={`Plaque`} value={v.car?.license_plate || v.vehicleDetails?.registrationCertificate?.licensePlateNumber || "-"} />
+                  <Row label={`${t("historyPage.vehicle")} ${i + 1}`} value={v.car?.model || v.vehicleDetails?.model || v.car?.registration || "-"} />
+                  <Row label={t("historyPage.plate")} value={v.car?.license_plate || v.vehicleDetails?.registrationCertificate?.licensePlateNumber || "-"} />
                 </View>
               ))
             )}
@@ -180,7 +181,7 @@ export default function HistoryDetailPage() {
 
         {photos.length > 0 && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Photos</Text>
+            <Text style={styles.sectionTitle}>{t("historyPage.photos")}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
               {photos.map((uri, i) => (
                 <Image key={i} source={{ uri }} style={styles.photoThumb} />
@@ -191,7 +192,7 @@ export default function HistoryDetailPage() {
 
         {item.people && item.people.length > 0 && (
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Personnes impliquées</Text>
+            <Text style={styles.sectionTitle}>{t("historyPage.peopleInvolved")}</Text>
             {item.people.map((p, i) => (
               <View key={i} style={styles.personRow}>
                 <View style={styles.personInfo}>

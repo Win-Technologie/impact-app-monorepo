@@ -9,8 +9,10 @@ import {
 } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function SubscriptionPage() {
+  const { t } = useTranslation();
   const [selectedPlan, setSelectedPlan] = useState("monthly");
 
   const handleSubscribe = () => {
@@ -28,13 +30,13 @@ export default function SubscriptionPage() {
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialIcons name="arrow-back" size={24} color="#19363C" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Écran d'abonnement</Text>
+          <Text style={styles.headerTitle}>{t("subscription.headerTitle")}</Text>
           <View style={{ width: 24 }} />
         </View>
 
         {/* Main Title */}
         <Text style={styles.mainTitle}>
-          Abonnez vous à <Text style={styles.impactText}>Impact</Text> dès maintenant !
+          {t("subscription.mainTitle")} <Text style={styles.impactText}>{t("subscription.impactName")}</Text>
         </Text>
 
         {/* Feature Boxes */}
@@ -45,9 +47,9 @@ export default function SubscriptionPage() {
               <MaterialIcons name="videocam" size={32} color="#19363C" />
             </View>
             <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Fonction sentinelle</Text>
+              <Text style={styles.featureTitle}>{t("subscription.feature1.title")}</Text>
               <Text style={styles.featureDescription}>
-                L'abonnement vous donne accès à la fonctionnalité avancée de capture automatique de preuve vidéo en case d'accident dans votre véhicule.
+                {t("subscription.feature1.description")}
               </Text>
             </View>
           </View>
@@ -58,9 +60,9 @@ export default function SubscriptionPage() {
               <MaterialCommunityIcons name="card-text-outline" size={32} color="#19363C" />
             </View>
             <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Plus aucune publicités !</Text>
+              <Text style={styles.featureTitle}>{t("subscription.feature2.title")}</Text>
               <Text style={styles.featureDescription}>
-                Vous n'aurez plus aucune publicités ni navigation dans l'application lors de la fonctionnalité.
+                {t("subscription.feature2.description")}
               </Text>
             </View>
           </View>
@@ -71,18 +73,16 @@ export default function SubscriptionPage() {
               <MaterialIcons name="block" size={32} color="#19363C" />
             </View>
             <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Annulation sans pénalité</Text>
+              <Text style={styles.featureTitle}>{t("subscription.feature3.title")}</Text>
               <Text style={styles.featureDescription}>
-                Venez-ici à votre abonnement à n'importe quel moment sans aucun frais d'annulation et aucune pénalité au moment convenu initialement.
+                {t("subscription.feature3.description")}
               </Text>
             </View>
           </View>
         </View>
 
         {/* Plan Selection */}
-        <Text style={styles.sectionTitle}>
-          Choisissez la durée d'abonnement premium qui vous convient.
-        </Text>
+        <Text style={styles.sectionTitle}>{t("subscription.sectionTitle")}</Text>
 
         <View style={styles.plansContainer}>
           <TouchableOpacity
@@ -99,8 +99,8 @@ export default function SubscriptionPage() {
                 )}
               </View>
               <View style={styles.planInfo}>
-                <Text style={styles.planTitle}>Mensuel</Text>
-                <Text style={styles.planPrice}>2,98$ / mois</Text>
+                <Text style={styles.planTitle}>{t("subscription.plan.monthly")}</Text>
+                <Text style={styles.planPrice}>{t("subscription.plan.monthlyPrice")}</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -119,8 +119,8 @@ export default function SubscriptionPage() {
                 )}
               </View>
               <View style={styles.planInfo}>
-                <Text style={styles.planTitle}>Annuel</Text>
-                <Text style={styles.planPrice}>17,98$ / an</Text>
+                <Text style={styles.planTitle}>{t("subscription.plan.annual")}</Text>
+                <Text style={styles.planPrice}>{t("subscription.plan.annualPrice")}</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -128,12 +128,8 @@ export default function SubscriptionPage() {
 
         {/* Terms and Conditions */}
         <View style={styles.termsContainer}>
-          <Text style={styles.termsText}>
-            * Avantages applicables pour la durée entière de la sélection de l'abonnement.
-          </Text>
-          <Text style={styles.termsText}>
-            ** Ce forfait d'abonnement est accepté pour un temps de 30 jours et ne sera plus applicable dès ce temps écoulé. Étant un futur majoré, décidez rapidement pour obtenir accès à sa valeur limitée dans le temps. Cela comprend toutes les applications mobiles et est plus. Maecenas quis fringilla eros, et imperdiet. Nunc egestas tellus sapien. Praesent faucibus, nisl a varius fermentum tellus sit sed. Aliquam mauris, velit varius tellus sit sed. Aliquam Vestibulum eu massa accumsan at mauris pulvinar tellus sit sed. Aliquam mauris, Nulla varius accumsan tortor quis vestibulum. Morbi a molestiet magna. Nam mollis venenatis nulla accumsan eu neque venenatis dignissim. Nulla varius accumsan tortor quis vestibulum. Praesent at blandit mauris. Fusce volutpat tellus sit sed. Aliquam mauris, magna leo, tincidunt blandit augue porta gravida. Proin vitae facilisis prat, ac elementum sem. Quisque augue tortor.
-          </Text>
+          <Text style={styles.termsText}>{t("subscription.terms.line1")}</Text>
+          <Text style={styles.termsText}>{t("subscription.terms.line2")}</Text>
         </View>
       </ScrollView>
 

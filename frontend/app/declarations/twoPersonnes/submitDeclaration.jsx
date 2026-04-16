@@ -1,4 +1,5 @@
 ﻿import React, { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -42,10 +43,11 @@ const submitDeclaration = () => {
   const [minute, setMinute] = React.useState(null);
   const [hour, setHour] = React.useState(null);
 
+  const { t } = useTranslation();
+
   const info = {
-    title: "Vous avez completez l'ensemble de toute votre déclaration",
-    description:
-      "Il ne vous reste plus qu’a communiquer avec votre société d’assurance. Une fois que vous aurez appuyé sur le bouton confirmer, vous ne pourrez plus revenir en arrière.",
+    title: t("declaration.submissionCompleteTitle"),
+    description: t("declaration.submissionCompleteDescription"),
   };
 
   const slideUpAnim = useRef(new Animated.Value(400)).current;
@@ -143,8 +145,8 @@ const submitDeclaration = () => {
         </View>
         <View style={styles.footContainer}>
           <DualOptionButton
-            leftButtonTitle="Retour"
-            rightButtonTitle="Confirmer"
+            leftButtonTitle={t("back")}
+            rightButtonTitle={t("buttons.confirm")}
             onPressBack={() => back()}
             onPressContinue={() => submitAndNavigate()}
           />

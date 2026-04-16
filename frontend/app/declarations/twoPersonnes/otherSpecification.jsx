@@ -1,9 +1,9 @@
 ﻿import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TextInput,
   ScrollView,
   TouchableOpacity,
@@ -18,8 +18,10 @@ import { router } from "expo-router";
 import ImagePickerModal from "../../../components/ImagePickerModal";
 import { DeclarationState } from "../../../GlobalState/DeclarationState";
 import { useRecoilState } from "recoil";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const otherspecification = () => {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(3); // Example step state
   const totalSteps = 4; // Example total steps
   const [visible, setVisible] = React.useState(false);
@@ -107,24 +109,20 @@ const otherspecification = () => {
       />
 
       <ScrollView style={styles.container}>
-        <Text style={styles.title}>
-          Avez-vous d'autre spécifications à ajouter ?
-        </Text>
-
-        
+        <Text style={styles.title}>{t("declaration.otherSpecificationTitle")}</Text>
 
         <View style={styles.inputSection}>
           <TextInput
             multiline={true}
             numberOfLines={10}
             style={styles.textInput}
-            placeholder="Redigez toute autres information"
+            placeholder={t("declaration.otherSpecPlaceholder")}
             value={otherSpec}
             onChangeText={setOtherSpec}
           />
         </View>
 
-        <Text style={styles.title}>Avez-vous des photos à ajouter ?</Text>
+        <Text style={styles.title}>{t("declaration.addPhotosTitle")}</Text>
         <View style={styles.inputSection}>
           <View
             style={{
@@ -142,12 +140,7 @@ const otherspecification = () => {
             >
               <SimpleLineIcons name="cloud-upload" size={24} color="#1B6878" />
 
-              <Text style={{ textAlign: "center" }}>
-                Telecharger une photo de{" "}
-                <Text style={{ color: "#0B7BA8" }}>l'accident </Text> ou du
-                <Text style={{ color: "#0B7BA8" }}> véhicule </Text> au moment
-                de l'accident'
-              </Text>
+              <Text style={{ textAlign: "center" }}>{t("declaration.uploadPhotoText")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -196,8 +189,8 @@ const otherspecification = () => {
 
       <View style={styles.footContainer}>
         <DualOptionButton
-          leftButtonTitle="Annuler"
-          rightButtonTitle="Confirmer"
+          leftButtonTitle={t("buttons.cancel")}
+          rightButtonTitle={t("buttons.confirm")}
           onPressBack={() => back()}
           onPressContinue={() => next()}
         />
@@ -210,12 +203,11 @@ const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
     backgroundColor: "white",
-    padding: 20,
   },
 
   container: {
-    // justifyContent: 'center',
     marginBottom: 40,
+    padding: 20,
   },
 
   textInput: {
@@ -232,7 +224,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    marginTop: 20, // Added top margin for better spacing
+    marginTop: 20,
     marginBottom: 30,
     textAlign: "left",
   },

@@ -5,6 +5,7 @@ import { useRecoilState } from "recoil";
 import { notificationsPrefState } from "../../../GlobalState/NotificationsPrefState";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 const STORAGE_KEY = "notificationsPrefs";
 
@@ -26,6 +27,7 @@ function NotificationRow({ icon, title, subtitle, value, onToggle }) {
 }
 
 export default function NotificationSettings() {
+  const { t } = useTranslation();
   const [prefs, setPrefs] = useRecoilState(notificationsPrefState);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -52,7 +54,7 @@ export default function NotificationSettings() {
       setPrefs(next);
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       if (!next[key]) {
-        Alert.alert("Notifications désactivées", "Vous avez désactivé cette catégorie de notifications.");
+        Alert.alert(t("notifications.disabledTitle"), t("notifications.disabledMessage"));
       }
     } catch (e) {
       console.warn("Failed to save notification preference", e);
@@ -72,51 +74,47 @@ export default function NotificationSettings() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color="#19363C" />
         </TouchableOpacity>
-        <Text style={styles.navTitle}>Notifications</Text>
+        <Text style={styles.navTitle}>{t("notifications.title")}</Text>
       </View>
 
       <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingTop: 8 }}>
-        <Text style={styles.header}>Paramètres de notifications</Text>
+        <Text style={styles.header}>{t("notifications.header")}</Text>
 
-        <Text style={styles.sectionTitle}>Catégories</Text>
+        <Text style={styles.sectionTitle}>{t("notifications.categories")}</Text>
 
         <NotificationRow
           icon="notifications-outline"
-          title="Général"
-          subtitle="Informations générales et confirmations"
+          title={t("notifications.generalTitle")}
+          subtitle={t("notifications.generalSubtitle")}
           value={!!prefs.general}
           onToggle={() => toggleKey("general")}
         />
 
         <NotificationRow
           icon="cloud-download-outline"
-          title="Mises à jour"
-          subtitle="Annonces de nouvelles versions et améliorations"
+          title={t("notifications.updatesTitle")}
+          subtitle={t("notifications.updatesSubtitle")}
           value={!!prefs.updates}
           onToggle={() => toggleKey("updates")}
         />
 
         <NotificationRow
           icon="pricetag-outline"
-          title="Promotions"
-          subtitle="Offres et promotions ponctuelles"
+          title={t("notifications.promotionsTitle")}
+          subtitle={t("notifications.promotionsSubtitle")}
           value={!!prefs.promotions}
           onToggle={() => toggleKey("promotions")}
         />
 
         <NotificationRow
           icon="shield-checkmark-outline"
-          title="Alertes de sécurité"
-          subtitle="Alertes importantes concernant votre compte"
+          title={t("notifications.securityTitle")}
+          subtitle={t("notifications.securitySubtitle")}
           value={!!prefs.security}
           onToggle={() => toggleKey("security")}
         />
 
-        <Text style={styles.help}>
-          Choisissez les catégories de notifications que vous souhaitez recevoir. Ces
-          préférences seront utilisées pour filtrer les notifications côté serveur
-          ou localement.
-        </Text>
+        <Text style={styles.help}>{t("notifications.helpText")}</Text>
       </ScrollView>
     </SafeAreaView>
   );

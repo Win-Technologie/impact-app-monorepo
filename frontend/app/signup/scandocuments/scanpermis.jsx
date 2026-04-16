@@ -35,12 +35,12 @@ export default function ScanPermis() {
     // Upload images to backend (if present) then save URIs locally
     try {
       const token = await AsyncStorage.getItem("userToken");
-      if (!token) {
+        if (!token) {
         // still save locally and continue
         await AsyncStorage.setItem('user_selfie', selfie || '');
         await AsyncStorage.setItem('user_recto', rectoImage || '');
         await AsyncStorage.setItem('user_verso', versoImage || '');
-        Alert.alert('Succès', 'Informations enregistrées localement');
+        Alert.alert(t("common.success", { defaultValue: 'Succès' }), t("common.informationSaved", { defaultValue: 'Information saved' }));
         router.replace('/signup/signUpLanding');
         return;
       }
@@ -86,7 +86,7 @@ export default function ScanPermis() {
         await AsyncStorage.setItem('user_verso', versoImage || '');
       }
 
-      Alert.alert('Succès', 'Informations enregistrées');
+      Alert.alert(t("common.success", { defaultValue: 'Succès' }), t("common.informationSaved", { defaultValue: 'Information saved' }));
       router.replace('/signup/signUpLanding');
     } catch (e) {
       console.log('Error uploading driving licence images', e);

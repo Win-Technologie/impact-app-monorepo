@@ -146,7 +146,7 @@ export default function TabsHomeScreen() {
     <SafeAreaView style={styles.screen}>
       <ScrollView>
         <HomeHeader clientName={name} selfie={selfie}>
-          <Text style={{ marginBottom: 10, color: "gray" }}>Bienvenue</Text>
+          <Text style={{ marginBottom: 10, color: "gray" }}>{t("home.welcome")}</Text>
         </HomeHeader>
 
         <TouchableOpacity onPress={() => router.push("subscription")}>

@@ -12,6 +12,7 @@ import {
 import QRCode from "react-native-qrcode-svg";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -19,7 +20,8 @@ import SelectDropdown from "react-native-select-dropdown";
 import { AntDesign } from "@expo/vector-icons";
 import { getMyVehicles } from "../../../api/users/userApi";
 
-const QRCodePage = () => {
+  const QRCodePage = () => {
+  const { t } = useTranslation();
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
   const [qrValue, setQrValue] = useState(""); // Initial QR code value
   const [qrImageUri, setQrImageUri] = useState(null); // URI of the QR code image
@@ -110,15 +112,13 @@ const QRCodePage = () => {
         <TouchableOpacity onPress={() => router.back()}>
           <View style={styles.headerIcon}>
             <AntDesign name="arrow-left" size={24} color="black" />
-            <Text>Retour</Text>
+            <Text>{t("back")}</Text>
           </View>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Fournir mes informations</Text>
+        <Text style={styles.headerTitle}>{t("declaration.provideMyInfo")}</Text>
       </View>
       <View style={styles.selectContainer}>
-        <Text style={styles.titleSelect}>
-          Veuillez sélectionner le véhicule impliqué dans l'accident:
-        </Text>
+        <Text style={styles.titleSelect}>{t("declaration.selectVehiclePrompt")}</Text>
         <SelectDropdown
           data={allVehicles}
           onSelect={(selectedItem) => handleVehicleSelect(selectedItem)} // Pass the full selected item
@@ -156,8 +156,8 @@ const QRCodePage = () => {
           </View>
         </View>
 
-        <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>Consulter mes informations</Text>
+          <View style={styles.infoSection}>
+            <Text style={styles.sectionTitle}>{t("declaration.basicInformationTitle")}</Text>
 
           <TouchableOpacity
             style={styles.infoBox}
@@ -165,10 +165,8 @@ const QRCodePage = () => {
           >
             <Icon name="person" size={34} color="#19363C" />
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoTextPerso}>
-                Informations personnelles
-              </Text>
-              <Text style={styles.subInfoTextPerso}>Nom,âge,adresse...</Text>
+              <Text style={styles.infoTextPerso}>{t("declaration.personalInformation")}</Text>
+              <Text style={styles.subInfoTextPerso}>{t("declaration.personalInfoShort", { defaultValue: 'Name, age, address...' })}</Text>
             </View>
             <Icon name="chevron-right" size={30} color="#000" />
           </TouchableOpacity>
@@ -179,10 +177,8 @@ const QRCodePage = () => {
           >
             <FontAwesome5 name="car" size={30} color="#19363C" />
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoTextCar}>Informations du véhicule</Text>
-              <Text style={styles.subInfoTextCar}>
-                Modèle,numéro de plaque...
-              </Text>
+              <Text style={styles.infoTextCar}>{t("declaration.vehicleInformation")}</Text>
+              <Text style={styles.subInfoTextCar}>{t("declaration.vehicleInfoShort", { defaultValue: 'Model, plate number...' })}</Text>
             </View>
             <Icon name="chevron-right" size={30} color="#000" />
           </TouchableOpacity>
@@ -196,10 +192,8 @@ const QRCodePage = () => {
             </View>
 
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoText}>Informations d'assurance</Text>
-              <Text style={styles.subInfoText}>
-                Numéro d'assurance, nom de société...
-              </Text>
+              <Text style={styles.infoText}>{t("declaration.insuranceInformation")}</Text>
+              <Text style={styles.subInfoText}>{t("declaration.insuranceInfoShort", { defaultValue: "Policy number, company name..." })}</Text>
             </View>
             <Icon name="chevron-right" size={30} color="#000" />
           </TouchableOpacity>

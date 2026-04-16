@@ -10,6 +10,7 @@ import * as Location from "expo-location";
 import { DeclarationState } from "../../../GlobalState/DeclarationState";
 import { useRecoilState } from "recoil";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 const placeOfAccident = () => {
   const [selectedType, setSelectedType] = useState("");
@@ -33,27 +34,19 @@ const placeOfAccident = () => {
       router.back();
     } catch (error) {
       console.error("Navigation error:", error);
-      Alert.alert("Erreur", "Impossible de revenir en arrière");
+      Alert.alert(t("common.error"), t("declaration.unableToGoBack"));
     }
   };
 
+  const { t } = useTranslation();
+
   const next = () => {
     try {
-      if (place) {
+        if (place) {
         setDeclaration({ ...declaration, place: place, step: 2 });
         router.navigate("declarations/onePersonne/hourOfAccident");
       } else {
-        Alert.alert(
-          "Erreur",
-          "Vous devez choisir le lieux de l'accident avant de continuer",
-          [
-            {
-              text: "Ok",
-              onPress: () => null,
-              style: "cancel",
-            },
-          ],
-        );
+        Alert.alert(t("common.error"), t("declaration.choosePlaceBeforeContinue"));
       }
     } catch (error) {
       console.error("Navigation error:", error);
@@ -63,14 +56,14 @@ const placeOfAccident = () => {
 
   const selectPlace = (data, details) => {
     try {
-      if (data && data.description) {
+        if (data && data.description) {
         setPlace(data.description);
       } else {
         console.warn("Invalid place data:", data);
       }
     } catch (error) {
       console.error("Error selecting place:", error);
-      Alert.alert("Erreur", "Impossible de sélectionner cet endroit");
+      Alert.alert(t("common.error"), t("declaration.selectPlaceError"));
     }
   };
 
@@ -86,16 +79,16 @@ const placeOfAccident = () => {
       
       const data = await response.json();
       
-      if (data.results && data.results.length > 0) {
+        if (data.results && data.results.length > 0) {
         const address = data.results[0].formatted_address;
         setPlace(address);
         // Set the text in the Google Places input field
         if (googlePlacesRef.current) {
           googlePlacesRef.current.setAddressText(address);
         }
-        Alert.alert("Emplacement sélectionné", address);
+        Alert.alert(t("declaration.placeSelectedTitle"), address);
       } else {
-        Alert.alert("Erreur", "Impossible de trouver l'adresse pour cet emplacement");
+        Alert.alert(t("common.error"), t("declaration.addressNotFound"));
       }
     } catch (error) {
       console.error("Error handling map long press:", error);
@@ -146,11 +139,11 @@ const placeOfAccident = () => {
       />
 
       <View style={styles.container}>
-        <Text style={styles.title}> Ou l'accident a t-il eu lieu ? </Text>
+        <Text style={styles.title}>{t("declaration.whereDidAccidentOccur")}</Text>
 
         <View style={{ zIndex: 9999, marginTop: 20 }}>
-          <TextInput
-            placeholder="chercher une adresse"
+            <TextInput
+            placeholder={t("declaration.searchAddressPlaceholder")}
             value={place}
             onChangeText={(text) => {
               setPlace(text);

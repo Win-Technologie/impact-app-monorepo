@@ -15,10 +15,12 @@ import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialIcons } from "@expo/vector-icons";
 import DropDownPicker from "react-native-dropdown-picker";
+import { useTranslation } from "react-i18next";
 
 const AddVehicle = () => {
   const [isOwner, setIsOwner] = useState(true);
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  const { t } = useTranslation();
 
   // Vehicle fields
   const [vehicleBrand, setVehicleBrand] = useState("");
@@ -159,10 +161,10 @@ const AddVehicle = () => {
               onPress={() => router.back()}
             >
               <MaterialIcons name="arrow-back" size={20} color="#19363C" />
-              <Text style={{ color: "#19363C", marginLeft: 8 }}>Retour</Text>
+              <Text style={{ color: "#19363C", marginLeft: 8 }}>{t("common.back")}</Text>
             </TouchableOpacity>
             <View>
-              <Text style={styles.headerTitle}>Ajout d'un véhicule</Text>
+              <Text style={styles.headerTitle}>{t("vehicleList.addVehicle")}</Text>
             </View>
           </View>
 
@@ -170,27 +172,27 @@ const AddVehicle = () => {
 
           {/* Vehicle Information Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Informations sur le véhicule</Text>
+            <Text style={styles.sectionTitle}>{t("vehicleInfo.title")}</Text>
 
             {/* Brand and Model Row */}
             <View style={styles.rowFields}>
               <View style={styles.halfField}>
-                <Text style={styles.label}>Marque</Text>
+                <Text style={styles.label}>{t("vehicleInfo.brand")}</Text>
                 <TextInput
                   style={styles.input}
                   value={vehicleBrand}
                   onChangeText={setVehicleBrand}
-                  placeholder="Honda"
+                  placeholder={t("vehicleInfo.brand")}
                   placeholderTextColor="#B0B0B0"
                 />
               </View>
               <View style={styles.halfField}>
-                <Text style={styles.label}>Modèle</Text>
+                <Text style={styles.label}>{t("vehicleInfo.model")}</Text>
                 <TextInput
                   style={styles.input}
                   value={vehicleModel}
                   onChangeText={setVehicleModel}
-                  placeholder="Civic"
+                  placeholder={t("vehicleInfo.model")}
                   placeholderTextColor="#B0B0B0"
                 />
               </View>
@@ -199,7 +201,7 @@ const AddVehicle = () => {
             {/* Year and Color Row */}
             <View style={styles.rowFields}>
               <View style={styles.halfField}>
-                <Text style={styles.label}>Année</Text>
+                <Text style={styles.label}>{t("vehicleInfo.year")}</Text>
                 <TextInput
                   style={styles.input}
                   value={vehicleYear}
@@ -211,7 +213,7 @@ const AddVehicle = () => {
                 />
               </View>
               <View style={styles.halfField}>
-                <Text style={styles.label}>Couleur</Text>
+                <Text style={styles.label}>{t("vehicleInfo.color")}</Text>
                 <TextInput
                   style={styles.input}
                   value={vehicleColor}
@@ -224,7 +226,7 @@ const AddVehicle = () => {
 
             {/* Plate Number */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Numéro de plaque</Text>
+              <Text style={styles.label}>{t("vehicleInfo.plate")}</Text>
               <View style={styles.inputWithCounter}>
                 <TextInput
                   style={styles.inputFlex}
@@ -238,7 +240,7 @@ const AddVehicle = () => {
                       setPlateNumber(cleaned);
                     }
                   }}
-                  placeholder="J7Y 8T8"
+                  placeholder={t("vehicleInfo.plate")}
                   placeholderTextColor="#B0B0B0"
                   maxLength={7}
                   autoCapitalize="characters"
@@ -249,7 +251,7 @@ const AddVehicle = () => {
 
             {/* Registration Number */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.label}>Numéro ou certificat d'immatriculation</Text>
+              <Text style={styles.label}>{t("vehicleInfo.serialNumber")}</Text>
               <View style={styles.inputWithCounter}>
                 <TextInput
                   style={styles.inputFlex}
@@ -257,7 +259,7 @@ const AddVehicle = () => {
                   onChangeText={(text) => {
                     if (text.length <= 13) setRegistrationNumber(text);
                   }}
-                  placeholder="123123123123"
+                  placeholder={t("vehicleInfo.serialNumber")}
                   placeholderTextColor="#B0B0B0"
                   keyboardType="numeric"
                   maxLength={13}
@@ -269,14 +271,14 @@ const AddVehicle = () => {
 
           {/* Owner Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Propriétaire du véhicule</Text>
+            <Text style={styles.sectionTitle}>{t("vehicleInfo.ownerInfo")}</Text>
 
             <TouchableOpacity
               style={isOwner ? styles.ownerButtonSelected : styles.ownerButton}
               onPress={() => setIsOwner(true)}
             >
-              <Text style={isOwner ? styles.ownerButtonTextSelected : styles.ownerButtonText}>
-                Je suis le propriétaire du véhicule.
+                <Text style={isOwner ? styles.ownerButtonTextSelected : styles.ownerButtonText}>
+                {t("vehicleInfo.ownerYes")}
               </Text>
             </TouchableOpacity>
 
@@ -285,7 +287,7 @@ const AddVehicle = () => {
               onPress={() => setIsOwner(false)}
             >
               <Text style={!isOwner ? styles.ownerButtonTextSelected : styles.ownerButtonText}>
-                Je ne suis pas le propriétaire du véhicule.
+                {t("vehicleInfo.ownerNo")}
               </Text>
             </TouchableOpacity>
 
@@ -293,7 +295,7 @@ const AddVehicle = () => {
             {!isOwner && (
               <View style={styles.ownerFields}>
                 <View style={styles.fieldContainer}>
-                  <Text style={styles.label}>Prénom</Text>
+                  <Text style={styles.label}>{t("vehicleInfo.ownerFirstName")}</Text>
                   <TextInput
                     style={styles.input}
                     value={ownerFirstName}
@@ -304,7 +306,7 @@ const AddVehicle = () => {
                 </View>
 
                 <View style={styles.fieldContainer}>
-                  <Text style={styles.label}>Nom</Text>
+                  <Text style={styles.label}>{t("vehicleInfo.ownerLastName")}</Text>
                   <TextInput
                     style={styles.input}
                     value={ownerLastName}
@@ -315,7 +317,7 @@ const AddVehicle = () => {
                 </View>
 
                 <View style={styles.fieldContainer}>
-                  <Text style={styles.label}>Numéro de téléphone</Text>
+                  <Text style={styles.label}>{t("vehicleInfo.ownerPhone")}</Text>
                   <TextInput
                     style={styles.input}
                     value={ownerPhone}
@@ -327,7 +329,7 @@ const AddVehicle = () => {
                 </View>
 
                 <View style={styles.fieldContainer}>
-                  <Text style={styles.label}>Numéro et rue de l'adresse</Text>
+                  <Text style={styles.label}>{t("vehicleInfo.ownerAddress")}</Text>
                   <TextInput
                     style={styles.input}
                     value={ownerAddress}
@@ -339,7 +341,7 @@ const AddVehicle = () => {
 
                 <View style={styles.rowFields}>
                   <View style={styles.halfField}>
-                    <Text style={styles.label}>Ville</Text>
+                    <Text style={styles.label}>{t("vehicleInfo.ownerCity")}</Text>
                     <TextInput
                       style={styles.input}
                       value={ownerCity}
@@ -349,7 +351,7 @@ const AddVehicle = () => {
                     />
                   </View>
                   <View style={styles.halfField}>
-                    <Text style={styles.label}>Code postale</Text>
+                    <Text style={styles.label}>{t("vehicleInfo.ownerPostalCode")}</Text>
                     <TextInput
                       style={styles.input}
                       value={ownerPostalCode}
@@ -400,7 +402,7 @@ const AddVehicle = () => {
         {/* Bottom Button */}
         <View style={styles.footer}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Enregistrer</Text>
+            <Text style={styles.saveButtonText}>{t("common.save")}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

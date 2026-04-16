@@ -166,7 +166,7 @@ export default function Payment() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.sectionTitle}>Modes de paiement</Text>
+          <Text style={styles.sectionTitle}>{t("subscription.paymentMethods")}</Text>
 
           {savedMethods.map((method, index) => (
             <View
@@ -231,12 +231,12 @@ export default function Payment() {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+        <View style={styles.footer}>
         <TouchableOpacity
           style={styles.confirmButton}
           onPress={handleStartSubscription}
         >
-          <Text style={styles.confirmButtonText}>Démarrer mon abonnement</Text>
+          <Text style={styles.confirmButtonText}>{t("subscription.start")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -301,14 +301,14 @@ export default function Payment() {
                   setPaymentTypeSelection(null);
                 }}
               >
-                <Text style={styles.cancelButtonText}>Annuler</Text>
+                <Text style={styles.cancelButtonText}>{t("buttons.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.continueButton]}
                 onPress={handlePaymentTypeConfirm}
                 disabled={!paymentTypeSelection}
               >
-                <Text style={styles.continueButtonText}>Continuer</Text>
+                <Text style={styles.continueButtonText}>{t("buttons.continue")}</Text>
               </TouchableOpacity>
             </View>
           </View>

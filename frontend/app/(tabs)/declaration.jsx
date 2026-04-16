@@ -143,7 +143,7 @@ export default function DeclarationPage() {
           next();
         }}
       >
-        <Text style={styles.continueButtonText}>Continuer</Text>
+        <Text style={styles.continueButtonText}>{t("buttons.continue")}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
