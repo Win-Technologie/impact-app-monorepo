@@ -433,7 +433,26 @@
 
   "historyPage": {
     "title": "History",
-    "accidents": "accidents"
+    "accidents": "accidents",
+    "searchPlaceholder": "Search by accident date",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this report?",
+    "time": "Time",
+    "summary": "Summary",
+    "mainInformation": "Main information",
+    "location": "Location",
+    "type": "Type",
+    "person": "Person",
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "vehicle": "Vehicle",
+    "make": "Make",
+    "model": "Model",
+    "plate": "Plate",
+    "photos": "Photos",
+    "peopleInvolved": "People involved"
   },
 
   "addVehicle": {

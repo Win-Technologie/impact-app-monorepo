@@ -437,7 +437,26 @@
 
   "historyPage": {
     "title": "Historique",
-    "accidents": "accidents"
+    "accidents": "accidents",
+    "searchPlaceholder": "Chercher une date d'accident",
+    "delete": "Supprimer",
+    "deleteConfirm": "Voulez-vous vraiment supprimer cette déclaration ?",
+    "time": "Heure",
+    "summary": "Résumé",
+    "mainInformation": "Informations principales",
+    "location": "Lieu",
+    "type": "Type",
+    "person": "Personne",
+    "name": "Nom",
+    "phone": "Téléphone",
+    "email": "Email",
+    "address": "Adresse",
+    "vehicle": "Véhicule",
+    "make": "Marque",
+    "model": "Modèle",
+    "plate": "Plaque",
+    "photos": "Photos",
+    "peopleInvolved": "Personnes impliquées"
   },
 
   "common": {
