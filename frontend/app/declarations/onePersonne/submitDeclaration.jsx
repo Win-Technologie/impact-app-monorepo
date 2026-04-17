@@ -74,7 +74,13 @@ const submitDeclaration = () => {
 
   const submitAndNavigate = async () => {
     try {
-      const stored = await AsyncStorage.getItem("local_accidents");
+      let historyKey = "local_accidents";
+      try {
+        const userData = JSON.parse(await AsyncStorage.getItem("user"));
+        const userId = userData?.user?._id || userData?.user?.id || userData?._id;
+        if (userId) historyKey = `local_accidents_${userId}`;
+      } catch (e) {}
+      const stored = await AsyncStorage.getItem(historyKey);
       const arr = stored ? JSON.parse(stored) : [];
       const newEntry = {
         key: Date.now().toString(),
@@ -95,7 +101,7 @@ const submitDeclaration = () => {
         },
       };
       arr.unshift(newEntry);
-      await AsyncStorage.setItem("local_accidents", JSON.stringify(arr));
+      await AsyncStorage.setItem(historyKey, JSON.stringify(arr));
     } catch (e) {
       console.error("submitAndNavigate error", e);
     } finally {

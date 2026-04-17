@@ -11,10 +11,21 @@ export default function HistoryDetailPage() {
   const [item, setItem] = useState(null);
   const { t } = useTranslation();
 
+  const getHistoryKey = async () => {
+    try {
+      const userData = JSON.parse(await AsyncStorage.getItem("user"));
+      const userId = userData?.user?._id || userData?.user?.id || userData?._id;
+      return userId ? `local_accidents_${userId}` : "local_accidents";
+    } catch (e) {
+      return "local_accidents";
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
-        const stored = await AsyncStorage.getItem("local_accidents");
+        const key = await getHistoryKey();
+        const stored = await AsyncStorage.getItem(key);
         const arr = stored ? JSON.parse(stored) : [];
         const found = arr.find((x) => x.key === id);
         if (found) setItem(found);
@@ -57,10 +68,11 @@ export default function HistoryDetailPage() {
           style: "destructive",
           onPress: async () => {
             try {
-              const stored = await AsyncStorage.getItem("local_accidents");
+              const key = await getHistoryKey();
+              const stored = await AsyncStorage.getItem(key);
               const arr = stored ? JSON.parse(stored) : [];
               const filtered = arr.filter((x) => x.key !== id);
-              await AsyncStorage.setItem("local_accidents", JSON.stringify(filtered));
+              await AsyncStorage.setItem(key, JSON.stringify(filtered));
               router.back();
             } catch (e) {
               console.error("delete error", e);

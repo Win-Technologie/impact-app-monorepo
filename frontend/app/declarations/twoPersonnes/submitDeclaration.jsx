@@ -79,7 +79,13 @@ const submitDeclaration = () => {
 
   const submitAndNavigate = async () => {
     try {
-      const stored = await AsyncStorage.getItem("local_accidents");
+      let historyKey = "local_accidents";
+      try {
+        const userData = JSON.parse(await AsyncStorage.getItem("user"));
+        const userId = userData?.user?._id || userData?.user?.id || userData?._id;
+        if (userId) historyKey = `local_accidents_${userId}`;
+      } catch (e) {}
+      const stored = await AsyncStorage.getItem(historyKey);
       const arr = stored ? JSON.parse(stored) : [];
       // Ensure people array reflects declared number of individuals when explicit people data is missing
       let peopleArray = [];
@@ -115,7 +121,7 @@ const submitDeclaration = () => {
         },
       };
       arr.unshift(newEntry);
-      await AsyncStorage.setItem("local_accidents", JSON.stringify(arr));
+      await AsyncStorage.setItem(historyKey, JSON.stringify(arr));
       // clear transient declaration data (manual inputs) after successful save
       try {
         setDeclaration({ step: 1, individus: null, people: [] });

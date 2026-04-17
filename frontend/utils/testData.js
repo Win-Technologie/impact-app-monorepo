@@ -75,7 +75,7 @@ export function randomVehicleDetails() {
     vehicleYear: String(2015 + Math.floor(Math.random() * 10)),
     vehicleColor: rand(colors),
     vehicleSerialNumber: `${randDigits(3)}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${randDigits(4)}`,
-    vehiclePlateNumber: `${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${randDigits(4)}`,
+    vehiclePlateNumber: `${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${randDigits(3)}`,
     vehicleNumeroCertificat: randDigits(13),
     vehicleDossierNumber: randDigits(8),
     vehicleCerticateDeliveryDate: deliveryDate.toISOString().split("T")[0],

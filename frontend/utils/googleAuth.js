@@ -106,7 +106,13 @@ export async function signInWithGoogle() {
         await AsyncStorage.setItem("selfie", payload);
       }
 
-      router.push("/(tabs)");
+      // Check if profile is complete — if not, redirect to signup flow
+      const user = loginData.user?.user || loginData.user;
+      if (!user?.allFieldsComplete) {
+        router.push("/signup/signUpLanding");
+      } else {
+        router.push("/(tabs)");
+      }
       return { success: true };
     } else if (loginResponse.status === 201) {
       // Brand new account — send to signup to complete profile

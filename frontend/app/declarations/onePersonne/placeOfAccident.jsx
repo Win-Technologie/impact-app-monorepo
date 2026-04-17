@@ -30,6 +30,18 @@ const placeOfAccident = () => {
   const [suggestions, setSuggestions] = useState([]);
   const debounceRef = useRef(null);
 
+  // Fix UTF-8 double-encoding (mojibake) for French characters
+  const fixEncoding = (str) => {
+    if (!str) return str;
+    return str
+      .replace(/Ã©/g, 'é').replace(/Ã¨/g, 'è').replace(/Ãª/g, 'ê').replace(/Ã«/g, 'ë')
+      .replace(/Ã /g, 'à').replace(/Ã¢/g, 'â').replace(/Ã¤/g, 'ä')
+      .replace(/Ã´/g, 'ô').replace(/Ã¶/g, 'ö')
+      .replace(/Ã¹/g, 'ù').replace(/Ã»/g, 'û').replace(/Ã¼/g, 'ü')
+      .replace(/Ã®/g, 'î').replace(/Ã¯/g, 'ï')
+      .replace(/Ã§/g, 'ç').replace(/Ã‰/g, 'É').replace(/Ã€/g, 'À');
+  };
+
   const back = () => {
     try {
       router.back();
@@ -78,10 +90,11 @@ const placeOfAccident = () => {
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.latitude},${coords.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY}&language=fr`
       );
       
-      const data = await response.json();
+      const text = await response.text();
+      const data = JSON.parse(text);
       
         if (data.results && data.results.length > 0) {
-        const address = data.results[0].formatted_address;
+        const address = fixEncoding(data.results[0].formatted_address);
         setPlace(address);
         // Set the text in the Google Places input field
         if (googlePlacesRef.current) {
@@ -162,7 +175,13 @@ const placeOfAccident = () => {
                   )}&key=${key}&language=fr&components=country:ca`;
                   const res = await fetch(url);
                   const json = await res.json();
-                  if (json && json.predictions) setSuggestions(json.predictions);
+                  if (json && json.predictions) {
+                    const fixed = json.predictions.map(p => ({
+                      ...p,
+                      description: fixEncoding(p.description),
+                    }));
+                    setSuggestions(fixed);
+                  }
                   else setSuggestions([]);
                 } catch (e) {
                   console.error("Places autocomplete error", e);
@@ -230,7 +249,7 @@ const placeOfAccident = () => {
               Alert.alert(t("common.error"), t("declaration.locationPermissionDenied"));
               return;
             }
-            const loc = await Location.getCurrentPositionAsync({});
+            const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
             const { latitude, longitude } = loc.coords;
             setSelectedCoords({ latitude, longitude });
             setLocation({
@@ -243,9 +262,10 @@ const placeOfAccident = () => {
             const response = await fetch(
               `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY}&language=fr`
             );
-            const data = await response.json();
+            const text = await response.text();
+            const data = JSON.parse(text);
             if (data.results && data.results.length > 0) {
-              const address = data.results[0].formatted_address;
+              const address = fixEncoding(data.results[0].formatted_address);
               setPlace(address);
             }
           } catch (error) {
