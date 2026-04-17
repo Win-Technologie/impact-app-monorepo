@@ -188,54 +188,58 @@ export default function EditProfile() {
           userData.user = user;
           await AsyncStorage.setItem("user", JSON.stringify(userData));
           
+          // Helper: treat "pending" as empty
+          const clean = (v) => (!v || v === "pending") ? "" : v;
+          
           // Update state with fresh data from MongoDB
-          setName(user.name || "");
-          setLastName(user.lastName || "");
+          setName(clean(user.name));
+          setLastName(clean(user.lastName));
           // initialize form fields separately so edits don't reflect immediately
-          setFormName(user.name || "");
-          setFormLastName(user.lastName || "");
+          setFormName(clean(user.name));
+          setFormLastName(clean(user.lastName));
           setEmail(user.email || "");
-          setPhone(user.phone || "");
-          setLicenseNumber(user.licenseNumber || "");
-          setExpirationDate(user.expirationDate || "");
+          setPhone(clean(user.phone));
+          setLicenseNumber(clean(user.licenseNumber));
+          setExpirationDate(clean(user.expirationDate));
           // parse existing expirationDate (MM/YYYY) into month/year selectors
-          if (user.expirationDate) {
-            const parts = (user.expirationDate || "").split('/');
+          if (user.expirationDate && user.expirationDate !== "pending") {
+            const parts = user.expirationDate.split('/');
             if (parts.length === 2) {
               setMonthValue(parts[0]);
               setYearValue(parts[1]);
             }
           }
-          setAddress(user.address || "");
-          setCity(user.city || "");
-          setPostalCode(user.postalCode || "");
-          setCountry(user.country || "Canada");
-          setCountryCode(user.countryCode || "CA");
-          setProvince(user.province || "Québec");
+          setAddress(clean(user.address));
+          setCity(clean(user.city));
+          setPostalCode(clean(user.postalCode));
+          setCountry(user.country && user.country !== "pending" ? user.country : "Canada");
+          setCountryCode(user.countryCode && user.countryCode !== "pending" ? user.countryCode : "CA");
+          setProvince(user.province && user.province !== "pending" ? user.province : "Québec");
         } else {
           // Fallback to AsyncStorage data if API fails
-          setName(userData.user.name || "");
-          setLastName(userData.user.lastName || "");
-          setFormName(userData.user.name || "");
-          setFormLastName(userData.user.lastName || "");
+          const clean = (v) => (!v || v === "pending") ? "" : v;
+          setName(clean(userData.user.name));
+          setLastName(clean(userData.user.lastName));
+          setFormName(clean(userData.user.name));
+          setFormLastName(clean(userData.user.lastName));
           setEmail(userData.user.email || "");
-          setPhone(userData.user.phone || "");
-          setLicenseNumber(userData.user.licenseNumber || "");
-          setExpirationDate(userData.user.expirationDate || "");
+          setPhone(clean(userData.user.phone));
+          setLicenseNumber(clean(userData.user.licenseNumber));
+          setExpirationDate(clean(userData.user.expirationDate));
           // parse existing expirationDate from AsyncStorage if present
-          if (userData.user.expirationDate) {
-            const parts = (userData.user.expirationDate || "").split('/');
+          if (userData.user.expirationDate && userData.user.expirationDate !== "pending") {
+            const parts = userData.user.expirationDate.split('/');
             if (parts.length === 2) {
               setMonthValue(parts[0]);
               setYearValue(parts[1]);
             }
           }
-          setAddress(userData.user.address || "");
-          setCity(userData.user.city || "");
-          setPostalCode(userData.user.postalCode || "");
-          setCountry(userData.user.country || "Canada");
-          setCountryCode(userData.user.countryCode || "CA");
-          setProvince(userData.user.province || "Québec");
+          setAddress(clean(userData.user.address));
+          setCity(clean(userData.user.city));
+          setPostalCode(clean(userData.user.postalCode));
+          setCountry(userData.user.country && userData.user.country !== "pending" ? userData.user.country : "Canada");
+          setCountryCode(userData.user.countryCode && userData.user.countryCode !== "pending" ? userData.user.countryCode : "CA");
+          setProvince(userData.user.province && userData.user.province !== "pending" ? userData.user.province : "Québec");
         }
       }
       
@@ -560,7 +564,7 @@ export default function EditProfile() {
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         <ScrollView 
           contentContainerStyle={styles.scrollView}

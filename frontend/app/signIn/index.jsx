@@ -8,7 +8,8 @@ import {
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
-  ToastAndroid,
+  Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -48,13 +49,7 @@ export default function SignIn() {
   });
 
   const showToastErrorToast = () => {
-    ToastAndroid.showWithGravityAndOffset(
-      t("signInPage.invalidemailorpassword"),
-      ToastAndroid.LONG,
-      ToastAndroid.BOTTOM,
-      25,
-      50,
-    );
+    Alert.alert("Erreur", t("signInPage.invalidemailorpassword"));
   };
 
   useEffect(() => {
@@ -69,41 +64,56 @@ export default function SignIn() {
   const onSubmit = async (data) => {
     const { email, password } = data;
     setModalVisible(true);
-    const response = await authenticateUser({ email, password }, endPoint);
+    try {
+      const response = await authenticateUser({ email, password }, endPoint);
 
-    if (response.data && response.status === 200) {
-      setTimeout(() => {
-        setModalVisible(false);
-      }, 1000);
-
-      try {
+      if (response.data && response.status === 200) {
         await AsyncStorage.setItem("userToken", response.data.A7);
         await AsyncStorage.setItem("user", JSON.stringify(response.data.user));
 
-        if (response.data.user.user.profileImagePath) {
+        if (response.data.user?.user?.profileImagePath) {
           const selfieUrl = `${HOST_URL}Backend/${response.data.user.user.profileImagePath}`;
           const payload = JSON.stringify({ url: selfieUrl, ts: Date.now() });
           await AsyncStorage.setItem("selfie", payload);
         }
 
-        if (response.data.A7) {
-          router.push("/(tabs)");
+        setModalVisible(false);
+        router.push("/(tabs)");
+      } else if (response.status === 403) {
+        // User not found — email doesn't exist
+        setModalVisible(false);
+        Alert.alert(
+          t("common.error") || "Erreur",
+          t("signInPage.userNotFound") || "Aucun compte trouvé avec cet email."
+        );
+      } else if (response.status === 401) {
+        setModalVisible(false);
+        const msg = response.data?.msg || "";
+        if (msg.includes("bloqué") || msg.includes("blocked")) {
+          Alert.alert(
+            t("common.error") || "Erreur",
+            t("signInPage.accountLocked") || "Compte bloqué suite à plusieurs tentatives. Contactez l'administrateur."
+          );
+        } else if (msg.includes("inactif") || msg.includes("inactive")) {
+          Alert.alert(
+            t("common.error") || "Erreur",
+            t("signInPage.accountInactive") || "Compte inactif. Contactez l'administrateur."
+          );
+        } else {
+          Alert.alert(
+            t("common.error") || "Erreur",
+            t("signInPage.wrongPassword") || "Mot de passe incorrect."
+          );
         }
-      } catch (error) {
-        console.error("Erreur lors de la sauvegarde du token :", error);
-      }
-    } else {
-      if (response.status == 403) {
-        router.push("/signup/signUpLanding");
       } else {
-        console.log("Erreur d'authentification");
-        setTimeout(() => {
-          setModalVisible(false);
-          showToastErrorToast();
-        }, 1000);
+        console.log("Erreur d'authentification", response.message || "");
+        setModalVisible(false);
+        showToastErrorToast();
       }
-
+    } catch (error) {
+      console.error("Erreur lors du login :", error);
       setModalVisible(false);
+      showToastErrorToast();
     }
   };
 

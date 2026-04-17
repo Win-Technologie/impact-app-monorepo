@@ -24,6 +24,7 @@ const AddInsurance = () => {
   const selectedVehicleId = useRecoilValue(SelectedVehicleState);
   const [insuranceData, setInsuranceData] = useState({
     insuranceCompany: "",
+    insuranceCompanyPhone: "",
     policyNumber: "",
     expirationDate: null,
   });
@@ -117,6 +118,18 @@ const AddInsurance = () => {
             onChangeText={(value) =>
               handleInputChange("insuranceCompany", value)
             }
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>{t("addInsurance.companyPhone", { defaultValue: "T\u00e9l\u00e9phone de la compagnie" })}</Text>
+          <TextInput
+            style={styles.input}
+            value={insuranceData.insuranceCompanyPhone}
+            onChangeText={(value) =>
+              handleInputChange("insuranceCompanyPhone", value.replace(/[^0-9]/g, ""))
+            }
+            keyboardType="phone-pad"
+            maxLength={15}
           />
         </View>
         <View style={styles.inputContainer}>

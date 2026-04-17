@@ -132,6 +132,7 @@ export default function InsuranceStageThree() {
       policyNumber: insuranceDetails.insuranceNumber,
       expirationDate: insuranceDetails.insuranceExpirationDate,
       insuranceCompany: insuranceDetails.insuranceFirmName,
+      insuranceCompanyPhone: insuranceDetails.insuranceFirmPhone || "",
     };
 
     const userToken = await AsyncStorage.getItem("userToken");
@@ -190,7 +191,7 @@ export default function InsuranceStageThree() {
         style={{ flex: 1 }}
         keyboardVerticalOffset={80}
       >
-        <ScrollView style={styles.content}>
+        <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 80 }}>
           <View style={styles.inputSection}>
             <TouchableOpacity
               onPress={() => {

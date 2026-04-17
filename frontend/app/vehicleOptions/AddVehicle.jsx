@@ -245,7 +245,7 @@ const AddVehicle = () => {
                   maxLength={7}
                   autoCapitalize="characters"
                 />
-                <Text style={styles.counter}>{plateNumber.length}/7</Text>
+                <Text style={styles.counter}>{plateNumber.replace(/\s/g, "").length}/6</Text>
               </View>
             </View>
 

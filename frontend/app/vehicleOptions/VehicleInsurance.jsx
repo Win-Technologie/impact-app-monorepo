@@ -49,7 +49,7 @@ const InsuranceInfo = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [vehicleData, setVehicleData] = useState(null);
 
-  const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.2.21:8000/api/";
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
   useEffect(() => {
     // Fetch logged-in user's profile data

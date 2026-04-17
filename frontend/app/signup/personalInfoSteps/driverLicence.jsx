@@ -25,6 +25,8 @@ import { Controller, useForm } from "react-hook-form";
 import { DatePickerInput } from "react-native-paper-dates";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { TouchableOpacity } from "react-native";
+import { randomDriverLicense } from "../../../utils/testData";
 
 export default function Insurance() {
   // console.log(userDetails);
@@ -60,6 +62,7 @@ export default function Insurance() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -76,6 +79,82 @@ export default function Insurance() {
     const nextUserDetails = { ...userDetails, ...overrides };
 
     try {
+      const token = await AsyncStorage.getItem("userToken");
+      const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+      if (!token) {
+        console.error("No token found for saving personal info");
+        Alert.alert("Erreur", "Session expirée. Veuillez vous reconnecter.");
+        return;
+      }
+
+      // 1. PATCH user personal info to backend
+      const userDetailsPayload = {
+        name: nextUserDetails.name,
+        lastName: nextUserDetails.lastName,
+        phone: nextUserDetails.phone,
+        address: nextUserDetails.address,
+        postalCode: nextUserDetails.postalCode,
+        city: nextUserDetails.city,
+        province: nextUserDetails.province,
+        country: nextUserDetails.country,
+        gender: nextUserDetails.gender,
+        birthdate: nextUserDetails.birthDay,
+        typeAccount: "free",
+      };
+
+      console.log("[driverLicence] PATCH user payload:", userDetailsPayload);
+
+      const userResponse = await fetch(`${API_URL}users/user`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(userDetailsPayload),
+      });
+
+      if (!userResponse.ok) {
+        const errText = await userResponse.text();
+        console.error("[driverLicence] Failed to PATCH user:", errText);
+      } else {
+        console.log("[driverLicence] User details saved to backend");
+      }
+
+      // 2. POST driver license info to backend
+      const licenseDetailsPayload = {
+        number: nextUserDetails.licenseNumber,
+        birthdate: nextUserDetails.birthDay,
+        address: differentAddress ? nextUserDetails.alternateAddress : nextUserDetails.address,
+        country: differentAddress ? nextUserDetails.alternateCountry : nextUserDetails.country,
+        province: differentAddress ? nextUserDetails.alternateProvince : nextUserDetails.province,
+        postalCode: differentAddress ? nextUserDetails.alternatePostalCode : nextUserDetails.postalCode,
+        licenseClass: nextUserDetails.licenseCategory,
+        expires: nextUserDetails.licenseExpiration,
+        mention: nextUserDetails.licenseMention,
+        sex: nextUserDetails.gender,
+        city: differentAddress ? nextUserDetails.alternateCity : nextUserDetails.city,
+      };
+
+      console.log("[driverLicence] POST license payload:", licenseDetailsPayload);
+
+      const licenseResponse = await fetch(`${API_URL}dl/user/license`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(licenseDetailsPayload),
+      });
+
+      if (!licenseResponse.ok) {
+        const errText = await licenseResponse.text();
+        console.error("[driverLicence] Failed to POST license:", errText);
+      } else {
+        console.log("[driverLicence] License details saved to backend");
+      }
+
+      // 3. Also update AsyncStorage for immediate UI display
       await AsyncStorage.setItem(
         "signupUserDetailsDraft",
         JSON.stringify(nextUserDetails),
@@ -134,7 +213,7 @@ export default function Insurance() {
       console.error("Error saving personal information:", error);
       Alert.alert(
         "Erreur",
-        "Une erreur est survenue lors de l'enregistrement local des données. Veuillez réessayer.",
+        "Une erreur est survenue lors de l'enregistrement des données. Veuillez réessayer.",
       );
     }
   };
@@ -272,11 +351,27 @@ export default function Insurance() {
       <Stepper currentStep={4} totalSteps={totalSteps} displayStep={4} />
 
       <ScrollView
-        //  contentContainerStyle={styles.scrollviewContainer}
-        //  keyboardShouldPersistTaps='handled'
+        contentContainerStyle={{ paddingBottom: 80 }}
+        keyboardShouldPersistTaps='handled'
         style={styles.content}
       >
         <View style={styles.contentContainer}>
+          <TouchableOpacity
+            onPress={() => {
+              const d = randomDriverLicense();
+              setValue("licenseNumber", d.licenseNumber, { shouldValidate: true });
+              setValue("dateDe", d.issueDate, { shouldValidate: true });
+              setValue("dateEx", d.expiryDate, { shouldValidate: true });
+              setValue("category", d.category, { shouldValidate: true });
+              setValue("mention", d.mention, { shouldValidate: true });
+              setInputDateDe(d.issueDate);
+              setInputDateEx(d.expiryDate);
+              setUserDetails((prev) => ({ ...prev, licenseNumber: d.licenseNumber, licenseCategory: d.category, licenseMention: d.mention }));
+            }}
+            style={{ backgroundColor: "#f0ad4e", padding: 8, borderRadius: 5, marginBottom: 10, alignSelf: "flex-start" }}
+          >
+            <Text style={{ fontSize: 12, color: "#333" }}>🧪 Fill test data</Text>
+          </TouchableOpacity>
           <Text style={styles.titleText}>{t("insuranceScreen.pageTitle")}</Text>
 
           <View style={styles.inputSection}>

@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { DatePickerInput } from "react-native-paper-dates";
 
 import { SafeAreaView } from "react-native-safe-area-context";
+import { randomVehicleDetails } from "../../../utils/testData";
 
 function LicencePlate() {
 
@@ -33,6 +34,7 @@ function LicencePlate() {
     control,
     handleSubmit,
     watch,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -84,6 +86,22 @@ function LicencePlate() {
     setVehicleDetails((prev) => ({ ...prev, [field]: value }));
   };
 
+  const fillTestData = () => {
+    const d = randomVehicleDetails();
+    setVehicleDetails((prev) => ({ ...prev, ...d }));
+    reset({
+      plaque: d.vehiclePlateNumber,
+      certificat: d.vehicleNumeroCertificat,
+      numeroDossier: d.vehicleDossierNumber,
+      masseNette: d.vehicleNetWeight,
+      cylindre: d.vehicleCylinder,
+      dateDelivrance: d.vehicleCerticateDeliveryDate,
+      dateExpiration: d.vehicleCerticateExpirationDate,
+      categorieUsage: d.vehiclecategorieUsage,
+      numeroEssieux: d.vehicleEssieux,
+    });
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -95,7 +113,12 @@ function LicencePlate() {
           currentStep={(progressData[1]?.actualstep ?? 0) + 1}
           totalSteps={totalSteps}
         />
-        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 80 }}>
+          {__DEV__ && (
+            <TouchableOpacity onPress={fillTestData} style={{ backgroundColor: "#f0ad4e", padding: 8, borderRadius: 5, marginBottom: 10, alignItems: "center" }}>
+              <Text style={{ fontWeight: "bold" }}>🧪 Fill test data</Text>
+            </TouchableOpacity>
+          )}
           <Text style={styles.title}>
             {t("vehicleRegistration.plateNumberTitle")}
           </Text>
@@ -105,17 +128,11 @@ function LicencePlate() {
             name="plaque"
             rules={{
               required: t("vehicleRegistration.plateNumberRequired"),
-              maxLength: {
-                value: 7,
-                message: t("vehicleRegistration.plateNumberMaxLength"),
+              validate: (value) => {
+                const raw = (value || "").replace(/\s/g, "");
+                if (raw.length !== 6) return t("vehicleRegistration.plateNumberExactLength");
+                return true;
               },
-              minLength: {
-                value: 7,
-                message: t("vehicleRegistration.plateNumberExactLength"),
-              },
-              validate: (value) =>
-                value.length === 7 ||
-                t("vehicleRegistration.plateNumberExactLength"),
             }}
             render={({ field: { onChange, onBlur, value } }) => (
               <View>
@@ -126,15 +143,20 @@ function LicencePlate() {
                     )}
                     style={[styles.textInputOfDual]}
                     onBlur={onBlur}
-                    value={value} // Utiliser 'value' du contrôleur ici
+                    value={value}
+                    autoCapitalize="characters"
                     onChangeText={(text) => {
-                      if (text.length <= 7) {
-                        handleInputChange("vehiclePlateNumber", text);
-                        onChange(text); // Mettre à jour la valeur dans 'react-hook-form'
+                      const cleaned = text.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+                      if (cleaned.length <= 6) {
+                        const formatted = cleaned.length > 3
+                          ? cleaned.substring(0, 3) + " " + cleaned.substring(3)
+                          : cleaned;
+                        handleInputChange("vehiclePlateNumber", formatted);
+                        onChange(formatted);
                       }
                     }}
                   />
-                  <Text style={{ padding: 10 }}>{`${value?.length}/7`}</Text>
+                  <Text style={{ padding: 10 }}>{`${(value || "").replace(/\s/g, "").length}/6`}</Text>
                 </View>
               </View>
             )}

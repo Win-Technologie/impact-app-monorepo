@@ -461,19 +461,19 @@ async function RegisterUser(req, res) {
 
     const newUser = new User({
       active: true,
-      driverLicense: "pending",
+      driverLicense: "",
       email: emailLowerCase,
-      name: name || "pending",
-      lastName: lastName || "pending",
+      name: name || "",
+      lastName: lastName || "",
       password: hashedPassword,
-      phone: phone || "pending",
-      address: address || "pending",
-      postalCode: postalCode || "pending",
-      province: province || "pending",
-      city: city || "pending",
-      country: country || "pending",
-      gender: gender || "pending",
-      birthdate: birthdate || "pending",
+      phone: phone || "",
+      address: address || "",
+      postalCode: postalCode || "",
+      province: province || "",
+      city: city || "",
+      country: country || "",
+      gender: gender || "",
+      birthdate: birthdate || "",
       typeAccount: "free",
     });
 
@@ -564,20 +564,20 @@ async function RegisterUserSendCode(req, res) {
 
       const newUser = new User({
         active: true,
-        driverLicense: "pending",
+        driverLicense: "",
         email: emailLowerCase,
         emailVerified: true,
-        name: "pending",
-        lastName: "pending",
+        name: "",
+        lastName: "",
         password: hashedPassword,
-        phone: "pending",
-        address: "pending",
-        postalCode: "pending",
-        province: "pending",
-        city: "pending",
-        country: "pending",
-        gender: "pending",
-        birthdate: "pending",
+        phone: "",
+        address: "",
+        postalCode: "",
+        province: "",
+        city: "",
+        country: "",
+        gender: "",
+        birthdate: "",
         typeAccount: "free",
       });
 
@@ -2163,13 +2163,14 @@ function findMissingFields(entity, fieldsToCheck) {
 
 async function getUserSystemInfo(user) {
   try {
+    const userVehicles = Array.isArray(user.vehicles) ? user.vehicles : [];
     // Obtenir les véhicules de l'utilisateur et leurs champs à vérifier
-    const vehiclesPromise = await vehicleCollection
-      .find({ _id: { $in: user.vehicles } })
-      .toArray();
-    const insurancesPromise = insuranceCollection
-      .find({ vehicle: { $in: user.vehicles } })
-      .toArray();
+    const vehiclesPromise = userVehicles.length > 0
+      ? vehicleCollection.find({ _id: { $in: userVehicles } }).toArray()
+      : Promise.resolve([]);
+    const insurancesPromise = userVehicles.length > 0
+      ? insuranceCollection.find({ vehicle: { $in: userVehicles } }).toArray()
+      : Promise.resolve([]);
     const drivingLicensePromise = drivingLicensesCollection.findOne({
       user: user._id,
     });
@@ -2628,19 +2629,21 @@ async function GoogleAuth(req, res) {
       });
     }
 
-    // Always sync Google profile data on login
-    const nameParts = (name || "").split(" ");
+    // Update Google fields if not already set by user
     const updates = {};
     if (!user.googleId) {
+      updates.googleId = googleId;
       updates.verified = true;
     }
-    updates.googleId = googleId;
-    if (picture) {
+    if ((!user.profileImage || user.profileImage === "") && picture) {
       updates.profileImage = picture;
     }
-    if (name) {
+    if ((!user.name || user.name === "" || user.name === "pending") && name) {
+      const nameParts = (name || "").split(" ");
       updates.name = nameParts[0] || "";
-      updates.lastName = nameParts.slice(1).join(" ") || "";
+      if (!user.lastName || user.lastName === "" || user.lastName === "pending") {
+        updates.lastName = nameParts.slice(1).join(" ") || "";
+      }
     }
     if (Object.keys(updates).length > 0) {
       await userCollection.updateOne(

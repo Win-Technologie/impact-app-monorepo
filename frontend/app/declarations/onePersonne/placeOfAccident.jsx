@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, FlatList } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import AnimatedButton from "../../../components/SignUp/animatedButton";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
@@ -74,7 +75,7 @@ const placeOfAccident = () => {
       
       // Reverse geocode the coordinates
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.latitude},${coords.longitude}&key=AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY&language=fr`
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.latitude},${coords.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY}&language=fr`
       );
       
       const data = await response.json();
@@ -140,6 +141,7 @@ const placeOfAccident = () => {
 
       <View style={styles.container}>
         <Text style={styles.title}>{t("declaration.whereDidAccidentOccur")}</Text>
+        <Text style={styles.hintText}>{t("declaration.holdToSelectHint")}</Text>
 
         <View style={{ zIndex: 9999, marginTop: 20 }}>
             <TextInput
@@ -154,7 +156,7 @@ const placeOfAccident = () => {
                   return;
                 }
                 try {
-                  const key = 'AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY';
+                  const key = process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY;
                   const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
                     text,
                   )}&key=${key}&language=fr&components=country:ca`;
@@ -220,6 +222,40 @@ const placeOfAccident = () => {
             )}
           </MapView>
         </View>
+
+        <TouchableOpacity style={styles.locationButton} onPress={async () => {
+          try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+              Alert.alert(t("common.error"), t("declaration.locationPermissionDenied"));
+              return;
+            }
+            const loc = await Location.getCurrentPositionAsync({});
+            const { latitude, longitude } = loc.coords;
+            setSelectedCoords({ latitude, longitude });
+            setLocation({
+              latitude,
+              longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            });
+            // Reverse geocode
+            const response = await fetch(
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY}&language=fr`
+            );
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+              const address = data.results[0].formatted_address;
+              setPlace(address);
+            }
+          } catch (error) {
+            console.error("Error getting current location:", error);
+            Alert.alert(t("common.error"), t("declaration.locationError"));
+          }
+        }}>
+          <Ionicons name="locate" size={20} color="#fff" />
+          <Text style={styles.locationButtonText}>{t("declaration.takeMyLocation")}</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.footContainer}>
@@ -274,6 +310,31 @@ const styles = StyleSheet.create({
   map: {
     width: '100%',
     height: '100%',
+  },
+
+  hintText: {
+    fontSize: 13,
+    color: '#888',
+    marginBottom: 5,
+    fontStyle: 'italic',
+  },
+
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0B8BA8',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    marginBottom: 20,
+  },
+
+  locationButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 
   buttonContainer: {

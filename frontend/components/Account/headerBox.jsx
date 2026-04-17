@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Platform,
+  Alert,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -160,17 +161,19 @@ export default function HeaderBox({ name, email, selfie, setSelfie }) {
 
   return (
     <View style={styles.headerBox}>
-      <Image
-        source={
-          // Prefer the uploaded filePath URL, then the local selfie URI, then fallback avatar
-          filePath
-            ? { uri: filePath }
-            : selfie
-            ? { uri: selfie }
-            : require("../../assets/avatar.jpg")
-        }
-        style={styles.profileImage}
-      />
+      <View>
+        <Image
+          source={
+            // Prefer the uploaded filePath URL, then the local selfie URI, then fallback avatar
+            filePath
+              ? { uri: filePath }
+              : selfie
+              ? { uri: selfie }
+              : require("../../assets/avatar.jpg")
+          }
+          style={styles.profileImage}
+        />
+      </View>
 
       <TouchableOpacity
         onPress={() => {

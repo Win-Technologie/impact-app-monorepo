@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
+import React from "react";
 //import _layout from '../(home)/_layout'
 import HomeHeader from "../../components/Home/homeHeader";
 import BoxComponent from "../../components/Home/boxComponent";
@@ -12,6 +13,7 @@ import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import BottomButton from "../../components/Home/bottomButton";
 import { router } from "expo-router";
 import * as Linking from "expo-linking";
+import * as Location from "expo-location";
 
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,14 +25,31 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function HomeScreen() {
   const insurance = useRecoilValue(insuranceState);
   const setInsurance = useSetRecoilState(insuranceState);
-  const insurancePhone = insurance?.insuranceNumber || "";
+  const insurancePhone = insurance?.insuranceFirmPhone || "";
+  const [name, setName] = React.useState("");
+
+  React.useEffect(() => {
+    const getUser = async () => {
+      try {
+        const userData = JSON.parse(await AsyncStorage.getItem("user"));
+        if (userData?.user) {
+          const n = userData.user.name === "pending" ? "" : (userData.user.name || "");
+          const ln = userData.user.lastName === "pending" ? "" : (userData.user.lastName || "");
+          setName((n + " " + ln).trim());
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getUser();
+  }, []);
 
   // Fetch insurance info on mount and set in Recoil
   React.useEffect(() => {
     const fetchInsurance = async () => {
       try {
         const token = await AsyncStorage.getItem("userToken");
-        const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.2.21:8000/api/";
+        const API_URL = process.env.EXPO_PUBLIC_API_URL;
         const response = await fetch(`${API_URL}vehicles`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -39,7 +58,12 @@ export default function HomeScreen() {
           // Use the first insurance found (or improve logic as needed)
           const insuranceData = data.carsWithInsurances?.[0]?.insurance;
           if (insuranceData) {
-            setInsurance((prev) => ({ ...prev, ...insuranceData, insuranceNumber: insuranceData.policyNumber || insuranceData.insuranceNumber }));
+            setInsurance((prev) => ({
+              ...prev,
+              ...insuranceData,
+              insuranceNumber: insuranceData.policyNumber || insuranceData.insuranceNumber,
+              insuranceFirmPhone: insuranceData.insuranceCompanyPhone || prev.insuranceFirmPhone,
+            }));
           }
         }
       } catch (e) {
@@ -50,7 +74,17 @@ export default function HomeScreen() {
   }, [setInsurance]);
 
   const callUrgence = () => {
-    Linking.openURL("tel:+123456789");
+    Alert.alert(
+      "Appeler les urgences",
+      "Voulez-vous appeler le num\u00e9ro d'urgence ?\n911",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Appeler",
+          onPress: () => Linking.openURL("tel:911"),
+        },
+      ]
+    );
   };
 
   const callAssurance = () => {
@@ -74,8 +108,20 @@ export default function HomeScreen() {
     );
   };
 
-  const callRemorcage = () => {
-    Linking.openURL("tel:+123456789");
+  const callRemorcage = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Linking.openURL("https://www.google.com/maps/search/remorqueur+pr%C3%A8s+de+moi");
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = loc.coords;
+      Linking.openURL(`https://www.google.com/maps/search/remorqueur/@${latitude},${longitude},14z`);
+    } catch (error) {
+      console.error("Error getting location for towing:", error);
+      Linking.openURL("https://www.google.com/maps/search/remorqueur+pr%C3%A8s+de+moi");
+    }
   };
 
   const { t } = useTranslation();
@@ -83,7 +129,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView>
-        <HomeHeader clientName="Michael Lessard">
+        <HomeHeader clientName={name}>
           <Text style={{ marginBottom: 10, color: "gray" }}>
             {t("welcome")}
           </Text>
@@ -187,7 +233,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={{ flex: 1, marginLeft: 5 }}
             onPress={() => {
-              callAssurance();
+              callRemorcage();
             }}
           >
             <BoxComponent height={157} style={styles.innerBox2}>

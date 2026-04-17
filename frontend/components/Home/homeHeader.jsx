@@ -4,6 +4,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useRecoilValue } from "recoil";
 import { notificationsPrefState } from "../../GlobalState/NotificationsPrefState";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 
 export default function HomeHeader({
   children,
@@ -14,18 +16,25 @@ export default function HomeHeader({
   const [filePath, setFilePath] = React.useState(null);
   const router = useRouter();
   const prefs = useRecoilValue(notificationsPrefState);
+  const { t } = useTranslation();
+
+  const handleProfilePress = () => {
+    router.push("(tabs)/account");
+  };
 
   return (
     <View style={styles.headerContainer}>
       <View style={styles.leftContainer}>
-        <Image
-          source={
-            selfie != null
-              ? { uri: `${selfie}` }
-              : require("../../assets/avatar.jpg")
-          }
-          style={styles.clientImage}
-        />
+        <TouchableOpacity onPress={handleProfilePress}>
+          <Image
+            source={
+              selfie != null
+                ? { uri: `${selfie}` }
+                : require("../../assets/avatar.jpg")
+            }
+            style={styles.clientImage}
+          />
+        </TouchableOpacity>
         <View style={styles.textContainer}>
           <Text style={styles.welcomeText}>{children}</Text>
           <Text style={styles.clientName}>{clientName}</Text>

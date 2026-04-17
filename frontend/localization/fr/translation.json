@@ -38,6 +38,10 @@
     "emailplaceholder": "Entrez votre courriel",
     "signin": "Me connecter",
     "invalidemailorpassword": "Mot de passe ou email invalide",
+    "wrongPassword": "Mot de passe incorrect.",
+    "userNotFound": "Aucun compte trouvé avec cet email.",
+    "accountLocked": "Compte bloqué suite à plusieurs tentatives. Contactez l'administrateur.",
+    "accountInactive": "Compte inactif. Contactez l'administrateur.",
     "alreadyuseEmail": "Adresse email dejà utilisée"
   },
 
@@ -54,7 +58,8 @@
     "conditionandregulation": "Conditions and règlements",
     "updateandreinstallation": "Mise à jour et installations",
     "Login": "Me déconnecter",
-    "logout": "Me déconnecter"
+    "logout": "Me déconnecter",
+    "logoutConfirm": "Voulez-vous vous déconnecter ?"
   },
 
   "notifications": {
@@ -296,11 +301,11 @@
   },
 
   "vehicleRegistration": {
-    "plateNumberTitle": "Quel est le numéro de plaque du véhicule ?",
-    "plateNumberRequired": "Le champ plaque est requis",
-    "plateNumberMaxLength": "Le numéro de plaque doit contenir au maximum 7 caractères",
-    "plateNumberExactLength": "Le numéro de plaque doit contenir 7 caractères exactement",
-    "plateNumberPlaceholder": "Numéro de plaque",
+    "plateNumberTitle": "Quelle est la plaque d'immatriculation du véhicule ?",
+    "plateNumberRequired": "La plaque d'immatriculation est requise",
+    "plateNumberMaxLength": "La plaque d'immatriculation doit contenir au maximum 6 caractères",
+    "plateNumberExactLength": "La plaque d'immatriculation doit contenir exactement 6 caractères",
+    "plateNumberPlaceholder": "Plaque d'immatriculation",
     "certificateInfoTitle": "Les informations de votre certificat d'immatriculation",
     "certificateRequired": "Le champ certificat est requis",
     "certificateMaxLength": "Le numéro du certificat doit contenir au maximum 13 caractères",
@@ -341,8 +346,8 @@
     "expirationDatePlaceholder": "Date d'expiration",
     "next": "Suivant",
     "ownerTitle": "Qui est le souscripteur de l’assurance ?",
-    "ownerOption": "Je suis le propriétaire du véhicule",
-    "notOwnerOption": "Je ne suis pas le propriétaire du véhicule",
+    "ownerOption": "Je suis le souscripteur de l'assurance",
+    "notOwnerOption": "Je ne suis pas le souscripteur de l'assurance",
     "subscriberInfo": "Les informations du souscripteur de l'assurance",
     "firstNameRequired": "Le prénom est requis",
     "firstNamePlaceholder": "Prénom",
@@ -461,6 +466,7 @@
 
   "common": {
     "save": "Enregistrer",
+    "cancel": "Annuler",
     "back": "Retour",
     "error": "Erreur",
     "noToken": "Aucun jeton trouvé",
@@ -659,7 +665,12 @@
     "accessMyInfo": "Accéder à mes informations",
     "receiveInformation": "Recevoir des informations",
     "receiveInformationDescription": "Recevez les informations des autres individus impliqués en entrant manuellement leurs données personnelles.",
-    "enterInformation": "Saisir des informations"
+    "enterInformation": "Saisir des informations",
+    "takeMyLocation": "Prendre ma localisation",
+    "holdToSelectHint": "(Vous pouvez maintenir appuyé sur la carte pour sélectionner un emplacement)",
+    "locationPermissionDenied": "L'accès à la localisation a été refusé. Veuillez l'activer dans les réglages.",
+    "locationError": "Impossible d'obtenir votre position actuelle.",
+    "takeCurrentTime": "Prendre l'heure actuelle"
   },
 
   "addVehicle": {

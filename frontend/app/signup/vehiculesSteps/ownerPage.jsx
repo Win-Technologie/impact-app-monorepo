@@ -202,6 +202,22 @@ export default function VehicleOwnership() {
       // Save to Recoil state (redundant if handleInputChange is always used, but ensures persistence)
       setVehicleDetails((prev) => ({ ...prev, ...formattedDetails }));
 
+      // If user already created a vehicle during this signup, delete it first
+      if (lastVehicle) {
+        try {
+          const delResponse = await fetch(`${API_URL}vehicles/delete/${lastVehicle}`, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          console.log("[ownerPage] Deleted previous vehicle:", lastVehicle, delResponse.status);
+        } catch (delErr) {
+          console.error("[ownerPage] Failed to delete previous vehicle:", delErr);
+        }
+      }
+
       // Send to backend as before
       const response = await fetch(`${API_URL}vehicles/add`, {
         method: "POST",
@@ -216,7 +232,12 @@ export default function VehicleOwnership() {
       const data = await response.json();
 
       console.log(data);
-      if (response.status != 201) {
+      if (response.status === 201) {
+        // Store the new vehicle ID so we can delete it if user goes back and re-registers
+        if (data.car?._id) {
+          setLastVehicle(data.car._id);
+        }
+      } else if (response.status != 201) {
         if (
           data.message ==
           "Une voiture avec cette plaque d'immatriculation existe déjà."
@@ -317,7 +338,7 @@ export default function VehicleOwnership() {
           currentStep={(progressData[1]?.actualstep ?? 0) + 1}
           totalSteps={totalSteps}
         />
-        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 80 }}>
           <Text style={styles.title}>{t("vehicleOwnership.ownerTitle")}</Text>
           <View style={styles.inputSection}>
             <TouchableOpacity

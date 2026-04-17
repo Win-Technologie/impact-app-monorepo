@@ -11,6 +11,8 @@ import { userDetailsState } from "../../../GlobalState/userDetailState";
 import { userInfoGatherState } from "../../../GlobalState/userDetailState";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { TouchableOpacity } from "react-native";
+import { randomNameGender } from "../../../utils/testData";
 
 const nameAndGender = ({ onNext }) => {
   const [name, setName] = useState("");
@@ -26,6 +28,7 @@ const nameAndGender = ({ onNext }) => {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -116,7 +119,19 @@ const nameAndGender = ({ onNext }) => {
     <SafeAreaView style={styles.container}>
       <Stepper currentStep={1} totalSteps={totalSteps} displayStep={1} />
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 80 }}>
+        <TouchableOpacity
+          onPress={() => {
+            const d = randomNameGender();
+            setValue("name", d.name, { shouldValidate: true });
+            setValue("lastName", d.lastName, { shouldValidate: true });
+            setValue("gender", d.gender, { shouldValidate: true });
+            setUserDetails((prev) => ({ ...prev, name: d.name, lastName: d.lastName, gender: d.gender }));
+          }}
+          style={{ backgroundColor: "#f0ad4e", padding: 8, borderRadius: 5, marginBottom: 10, alignSelf: "flex-start" }}
+        >
+          <Text style={{ fontSize: 12, color: "#333" }}>🧪 Fill test data</Text>
+        </TouchableOpacity>
         <Text style={styles.title}>{t("nameAndGenderScreen.pageTitle")}</Text>
 
         <View style={styles.inputSection}>

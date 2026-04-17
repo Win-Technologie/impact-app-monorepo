@@ -10,7 +10,6 @@ import HeaderBox from "../../components/Account/headerBox";
 import SettingsOptions from "../../components/Account/settingsOptions";
 import Button from "../../components/History/button";
 import { router } from "expo-router";
-import clientPic from "../../assets/splashscreen.png";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "expo-router";
@@ -30,20 +29,17 @@ export default function Index() {
   const [email, setEmail] = React.useState("");
   const [language, setLanguage] = React.useState("");
 
-  const userProfile = {
-    name: "Michael Lessard",
-    email: "Michael.lessard@example.com",
-    profileImageUrl: { clientPic },
-    currentLanguage: (i18n.language = "en" ? "English" : "Français"),
-    appVersion: "1.0.0",
-  };
+  const appVersion = "1.0.0";
 
   const getUser = async () => {
     try {
       const userData = JSON.parse(await AsyncStorage.getItem("user"));
-      setEmail(userData.user.email);
-      const token = await AsyncStorage.getItem("userToken");
-      setName(userData.user.name + " " + userData.user.lastName);
+      if (userData?.user) {
+        const n = userData.user.name === "pending" ? "" : (userData.user.name || "");
+        const ln = userData.user.lastName === "pending" ? "" : (userData.user.lastName || "");
+        setName((n + " " + ln).trim());
+        setEmail(userData.user.email || "");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -63,11 +59,9 @@ export default function Index() {
   React.useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       getSelfie();
-      // The screen is focused
-      // Call any action
+      getUser();
     });
 
-    // Return the function to unsubscribe from the event so it gets removed on unmount
     return unsubscribe;
   }, [navigation]);
 
@@ -129,7 +123,7 @@ export default function Index() {
 
         <SettingsOptions
           currentLanguage={language}
-          appVersion={userProfile.appVersion}
+          appVersion={appVersion}
         />
 
         <Button style={styles.button} onPress={signout}>

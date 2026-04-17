@@ -121,7 +121,7 @@ async function addInsurance(req, res) {
     const vehicleYear = year;
 
     // Vérifier l'existence préalable d'une assurance avec le même numéro de police
-    const { policyNumber, insuranceCompany, expirationDate } = req.body;
+    const { policyNumber, insuranceCompany, expirationDate, insuranceCompanyPhone } = req.body;
     const existingInsurance = await insuranceCollection.findOne({
       policyNumber,
     });
@@ -134,6 +134,7 @@ async function addInsurance(req, res) {
     // Créer une nouvelle instance de l'assurance
     const newInsurance = new Insurance({
       insuranceCompany,
+      insuranceCompanyPhone: insuranceCompanyPhone || "",
       subscriber,
       vehicle: vehicleId,
       vehicleRegistrationNumber,

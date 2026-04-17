@@ -1,5 +1,5 @@
 ﻿import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from "react-native";
 import SelectDropdown from "react-native-select-dropdown";
 import { router } from "expo-router";
 import Stepper from "../../../components/SignUp/stepper";
@@ -10,6 +10,7 @@ import { userInfoGatherState } from "../../../GlobalState/userDetailState";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { randomPhoneAddress } from "../../../utils/testData";
 
 const phoneAndAddress = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -65,6 +66,7 @@ const phoneAndAddress = () => {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -130,7 +132,24 @@ const phoneAndAddress = () => {
     <SafeAreaView style={styles.container}>
       <Stepper currentStep={3} totalSteps={totalSteps} displayStep={3} />
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 80 }}>
+        <TouchableOpacity
+          onPress={() => {
+            const d = randomPhoneAddress();
+            setValue("phone", d.phone, { shouldValidate: true });
+            setValue("address", d.address, { shouldValidate: true });
+            setValue("city", d.city, { shouldValidate: true });
+            setValue("postalCode", d.postalCode, { shouldValidate: true });
+            setValue("country", d.country, { shouldValidate: true });
+            setValue("province", d.province, { shouldValidate: true });
+            setCountry(d.country);
+            setProvince(d.province);
+            setUserDetails((prev) => ({ ...prev, ...d }));
+          }}
+          style={{ backgroundColor: "#f0ad4e", padding: 8, borderRadius: 5, marginBottom: 10, alignSelf: "flex-start" }}
+        >
+          <Text style={{ fontSize: 12, color: "#333" }}>🧪 Fill test data</Text>
+        </TouchableOpacity>
         <Text style={styles.title}>{t("phoneAndAddress.phoneTitle")}</Text>
         <View style={styles.inputSection}>
           <Controller

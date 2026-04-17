@@ -159,7 +159,7 @@ export default function PersonanalInformation() {
         </View>
       </View>
 
-      <ScrollView keyboardShouldPersistTaps="handled">
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 80 }}>
         <View style={styles.contentContainer}>
           {userData === null ? (
             <Loading text={t("pleasewait")} />

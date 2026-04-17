@@ -118,33 +118,7 @@ export default function ScanPermis() {
   const [loadingModalVisible, setLoadingModalVisible] = React.useState(false);
   const [, setLicenceScan] = useRecoilState(licenceScanState);
 
-  // const [userDetails, setUserDetails] = useRecoilState(userDetailsState);
-
-  const userDetails = {
-    address: "32 rue desmarchais",
-    alternateAddress: "",
-    alternateCity: "",
-    alternateCountry: "",
-    alternatePostalCode: "",
-    alternateProvince: "",
-    birthDay: "1998-06-11",
-    city: "Longueil",
-    companyName: "",
-    country: "CA",
-    email: "",
-    gender: "M",
-    lastName: "Onana onana",
-    licenseCategory: "5",
-    licenseDelivery: "2022-05-08",
-    licenseExpiration: "2027-04-09",
-    licenseMention: "Rien",
-    licenseNumber: "1365889t86",
-    name: "Joe",
-    phone: "4388833759",
-    postalCode: "J4j2x9",
-    province: "Qu�bec",
-    typeAccount: "free",
-  };
+  const [userDetails, setUserDetails] = useRecoilState(userDetailsState);
 
   return (
     <View style={styles.container}>

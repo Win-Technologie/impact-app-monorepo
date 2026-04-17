@@ -21,6 +21,7 @@ import { userInfoGatherState } from "../../../GlobalState/userDetailState";
 import { insuranceState } from "../../../GlobalState/InsuranceState";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { randomInsuranceDetails } from "../../../utils/testData";
 
 export default function InsuranceStageTwo() {
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
@@ -50,10 +51,12 @@ export default function InsuranceStageTwo() {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
       insuranceName: insuranceDetails.insuranceFirmName,
+      insurancePhone: insuranceDetails.insuranceFirmPhone,
       address: insuranceDetails.insuranceFirmAddress,
       city: insuranceDetails.insuranceFirmCity,
       postalCode: insuranceDetails.insuranceFirmPostalCode,
@@ -148,7 +151,24 @@ export default function InsuranceStageTwo() {
         style={{ flex: 1 }}
         keyboardVerticalOffset={80}
       >
-        <ScrollView style={styles.content}>
+        <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 80 }}>
+        {__DEV__ && (
+          <TouchableOpacity onPress={() => {
+            const d = randomInsuranceDetails();
+            setInsuranceDetail((prev) => ({ ...prev, ...d }));
+            reset({
+              insuranceName: d.insuranceFirmName,
+              insurancePhone: d.insuranceFirmPhone || "",
+              address: d.insuranceFirmAddress,
+              city: d.insuranceFirmCity,
+              postalCode: d.insuranceFirmPostalCode,
+              country: d.insuranceFirmCountry,
+              province: d.insuranceFirmProvince,
+            });
+          }} style={{ backgroundColor: "#f0ad4e", padding: 8, borderRadius: 5, marginBottom: 10, alignItems: "center" }}>
+            <Text style={{ fontWeight: "bold" }}>🧪 Fill test data</Text>
+          </TouchableOpacity>
+        )}
         <Text style={styles.title}>{t("insuranceFirm.firmTitle")}</Text>
         <View style={styles.inputSection}>
           <Controller
@@ -173,6 +193,28 @@ export default function InsuranceStageTwo() {
           {errors.insuranceName && (
             <Text style={styles.errorText}>{errors.insuranceName.message}</Text>
           )}
+        </View>
+
+        <View style={styles.inputSection}>
+          <Controller
+            name="insurancePhone"
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={[styles.textInput]}
+                onBlur={onBlur}
+                onChangeText={(text) => {
+                  const numeric = text.replace(/[^0-9]/g, "");
+                  handleInputChange("insuranceFirmPhone", numeric);
+                  onChange(numeric);
+                }}
+                value={value}
+                keyboardType="phone-pad"
+                maxLength={15}
+                placeholder={t("insuranceFirm.firmPhonePlaceholder", { defaultValue: "Numéro de téléphone" })}
+              />
+            )}
+          />
         </View>
 
         <Text style={styles.title}>{t("insuranceFirm.firmAddressTitle")}</Text>
