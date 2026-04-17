@@ -27,6 +27,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   userInfoGatherState,
   lastVehicleState,
+  lastInsuranceState,
 } from "../../../GlobalState/userDetailState";
 import { useForm, Controller } from "react-hook-form";
 import { insuranceState } from "../../../GlobalState/InsuranceState";
@@ -37,6 +38,7 @@ export default function InsuranceStageThree() {
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
   const [insuranceDetails, setInsuranceDetail] = useRecoilState(insuranceState);
   const [lastVehicle, setlastVehicle] = useRecoilState(lastVehicleState);
+  const [lastInsurance, setLastInsurance] = useRecoilState(lastInsuranceState);
     const totalSteps = 3;
     const [currentStep, setCurrentStep] = useState(3);
     const ENDPOINT = "insurances/add/";
@@ -137,18 +139,38 @@ export default function InsuranceStageThree() {
 
     const userToken = await AsyncStorage.getItem("userToken");
     const vehiculeUser = insuranceDetails.idCar;
+    const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
     try {
-      const result = await addNewInsurances(
-        insuranceInfo,
-        vehiculeUser,
-        ENDPOINT,
-        userToken,
-      );
+      let result;
+
+      if (lastInsurance) {
+        // Update existing insurance via PATCH
+        const response = await fetch(`${API_URL}insurances/${lastInsurance}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: JSON.stringify({ ...insuranceInfo, vehicleId: vehiculeUser }),
+        });
+        const data = await response.json();
+        result = { data, status: response.status };
+      } else {
+        // Create new insurance
+        result = await addNewInsurances(
+          insuranceInfo,
+          vehiculeUser,
+          ENDPOINT,
+          userToken,
+        );
+      }
       console.log(result);
 
-      if (result.status === 201) {
-        // setInfoInsurance(result.data.insurance)
+      if (result.status === 200 || result.status === 201) {
+        // Store insurance ID for future updates
+        const insId = result.data?.insurance?._id || result.data?._id;
+        if (insId) setLastInsurance(insId);
 
         if (progressData[2].actualstep == 2) {
           const array = progressData.map((item) => {
@@ -192,6 +214,22 @@ export default function InsuranceStageThree() {
         keyboardVerticalOffset={80}
       >
         <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 80 }}>
+          {/* Insurance company phone — editable, prefilled from step 2 */}
+          <Text style={styles.title}>{t("insurance.companyPhoneTitle", { defaultValue: "Téléphone de l'assurance" })}</Text>
+          <View style={styles.inputSection}>
+            <TextInput
+              style={styles.textInput}
+              keyboardType="phone-pad"
+              maxLength={15}
+              value={insuranceDetails.insuranceFirmPhone || ""}
+              onChangeText={(text) => {
+                const numeric = text.replace(/[^0-9]/g, "");
+                handleInputChange("insuranceFirmPhone", numeric);
+              }}
+              placeholder={t("insurance.companyPhonePlaceholder", { defaultValue: "Numéro de téléphone de l'assurance" })}
+            />
+          </View>
+
           <View style={styles.inputSection}>
             <TouchableOpacity
               onPress={() => {

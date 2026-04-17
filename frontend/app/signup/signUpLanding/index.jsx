@@ -15,6 +15,7 @@ import { useRecoilState } from "recoil";
 import {
   userInfoGatherState,
   lastVehicleState,
+  lastInsuranceState,
   licenceScanState,
   userDetailsState,
 } from "../../../GlobalState/userDetailState";
@@ -25,6 +26,7 @@ export default function SignUpLandingPage() {
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
   const [licenceScan, setLicenceScan] = useRecoilState(licenceScanState);
   const [lastVehicle, setlastVehicle] = useRecoilState(lastVehicleState);
+  const [lastInsurance, setLastInsurance] = useRecoilState(lastInsuranceState);
   const [userDetails, setUserDetails] = useRecoilState(userDetailsState);
   const { t } = useTranslation();
   const loginUrl = "user/login/token";
@@ -38,6 +40,7 @@ export default function SignUpLandingPage() {
 
     setLicenceScan(false);
     setlastVehicle(null);
+    setLastInsurance(null);
     setProgressData([
       {
         id: 0,
@@ -158,6 +161,7 @@ export default function SignUpLandingPage() {
 
       setLicenceScan(false);
       setlastVehicle(null);
+      setLastInsurance(null);
       setProgressData([
         {
           id: 0,

@@ -64,6 +64,11 @@ export const lastVehicleState = atom({
   default: null,
 });
 
+export const lastInsuranceState = atom({
+  key: "lastInsuranceState",
+  default: null,
+});
+
 export const licenceScanState = atom({
   key: "licenceScanState",
   default: false,
