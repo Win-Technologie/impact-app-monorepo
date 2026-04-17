@@ -14,9 +14,20 @@ export default function HistoryPage() {
   const [historyData, setHistoryData] = useState([]);
   const [query, setQuery] = useState("");
 
+  const getHistoryKey = async () => {
+    try {
+      const userData = JSON.parse(await AsyncStorage.getItem("user"));
+      const userId = userData?.user?._id || userData?.user?.id || userData?._id;
+      return userId ? `local_accidents_${userId}` : "local_accidents";
+    } catch (e) {
+      return "local_accidents";
+    }
+  };
+
   const loadLocalHistory = async () => {
     try {
-      const stored = await AsyncStorage.getItem("local_accidents");
+      const key = await getHistoryKey();
+      const stored = await AsyncStorage.getItem(key);
       const arr = stored ? JSON.parse(stored) : [];
       setHistoryData(arr);
     } catch (e) {

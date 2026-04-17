@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import { useNavigation } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Linking from "expo-linking";
+import * as Location from "expo-location";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRecoilValue, useSetRecoilState } from "recoil";
@@ -27,14 +28,14 @@ export default function TabsHomeScreen() {
   const [selfie, setSelfie] = useState(null);
   const insurance = useRecoilValue(insuranceState);
   const setInsurance = useSetRecoilState(insuranceState);
-  const insurancePhone = insurance?.insuranceNumber || "";
+  const insurancePhone = insurance?.insuranceFirmPhone || "";
 
   // Fetch insurance info on mount and set in Recoil
   useEffect(() => {
     const fetchInsurance = async () => {
       try {
         const token = await AsyncStorage.getItem("userToken");
-        const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://192.168.2.21:8000/api/";
+        const API_URL = process.env.EXPO_PUBLIC_API_URL;
         const response = await fetch(`${API_URL}vehicles`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -43,7 +44,12 @@ export default function TabsHomeScreen() {
           // Use the first insurance found (or improve logic as needed)
           const insuranceData = data.carsWithInsurances?.[0]?.insurance;
           if (insuranceData) {
-            setInsurance((prev) => ({ ...prev, ...insuranceData, insuranceNumber: insuranceData.policyNumber || insuranceData.insuranceNumber }));
+            setInsurance((prev) => ({
+              ...prev,
+              ...insuranceData,
+              insuranceNumber: insuranceData.policyNumber || insuranceData.insuranceNumber,
+              insuranceFirmPhone: insuranceData.insuranceCompanyPhone || prev.insuranceFirmPhone,
+            }));
           }
         }
       } catch (e) {
@@ -88,10 +94,20 @@ export default function TabsHomeScreen() {
     );
   };
 
-  const callRemorcage = () => {
-    Linking.openURL(
-      "https://www.google.com/search?q=remorqueur&oq=remorqueur+&gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBCDY1MjNqMGoxqAIAsAIA&sourceid=chrome&ie=UTF-8",
-    );
+  const callRemorcage = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Linking.openURL("https://www.google.com/maps/search/remorqueur+pr%C3%A8s+de+moi");
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = loc.coords;
+      Linking.openURL(`https://www.google.com/maps/search/remorqueur/@${latitude},${longitude},14z`);
+    } catch (error) {
+      console.error("Error getting location for towing:", error);
+      Linking.openURL("https://www.google.com/maps/search/remorqueur+pr%C3%A8s+de+moi");
+    }
   };
 
   const getUser = async () => {
@@ -99,7 +115,9 @@ export default function TabsHomeScreen() {
       const userData = JSON.parse(await AsyncStorage.getItem("user"));
       const token = await AsyncStorage.getItem("userToken");
       if (userData?.user) {
-        setName(userData.user.name + " " + userData.user.lastName);
+        const n = userData.user.name === "pending" ? "" : (userData.user.name || "");
+        const ln = userData.user.lastName === "pending" ? "" : (userData.user.lastName || "");
+        setName((n + " " + ln).trim());
       }
     } catch (error) {
       console.log(error);
@@ -123,11 +141,9 @@ export default function TabsHomeScreen() {
   React.useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       getSelfie();
-      // The screen is focused
-      // Call any action
+      getUser();
     });
 
-    // Return the function to unsubscribe from the event so it gets removed on unmount
     return unsubscribe;
   }, [navigation]);
 

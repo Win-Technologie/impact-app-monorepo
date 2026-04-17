@@ -132,7 +132,7 @@ export default function VehicleInfo() {
         </View>
       </View>
 
-      <ScrollView keyboardShouldPersistTaps="handled">
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 80 }}>
         <View style={styles.contentContainer}>
           {infoVehicle.length === 0 ? (
             <Loading text={t("common.loading", { defaultValue: "Chargement..." })} />

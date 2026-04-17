@@ -120,7 +120,7 @@ export default function assuranceInfo() {
         </View>
       </View>
 
-      <ScrollView keyboardShouldPersistTaps="handled">
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 80 }}>
         <View style={styles.contentContainer}>
           <Text style={styles.fieldLabel}>{t("insuranceInfo.companyName")}</Text>
           <TextInput style={styles.input} value={insuranceCompany} onChangeText={setInsuranceCompany} />

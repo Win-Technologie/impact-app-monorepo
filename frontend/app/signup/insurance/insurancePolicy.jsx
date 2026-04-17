@@ -25,6 +25,7 @@ import { insuranceState } from "../../../GlobalState/InsuranceState";
 import { useTranslation } from "react-i18next";
 import { DatePickerInput } from "react-native-paper-dates";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { randomInsuranceDetails } from "../../../utils/testData";
 
 export default function Insurance() {
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
@@ -39,6 +40,7 @@ export default function Insurance() {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -88,11 +90,7 @@ export default function Insurance() {
     try {
       const response = await getMyVehicles(userToken, ENDPOINT);
 
-      console.log(response.data.carsWithInsurances[0].car);
-
-      //console.log(response.data);
-
-      if (response.status === 200) {
+      if (response.status === 200 && response.data?.carsWithInsurances?.length > 0) {
         const vehicles = response.data.carsWithInsurances.map((asset) => ({
           id: asset.car._id,
           model: asset.car.model,
@@ -100,7 +98,7 @@ export default function Insurance() {
         setAllVehicles(vehicles);
       }
     } catch (error) {
-      console.log(error);
+      console.log("Error fetching vehicles:", error);
     }
   }
 
@@ -124,7 +122,16 @@ export default function Insurance() {
         totalSteps={totalSteps}
       />
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 80 }}>
+        {__DEV__ && (
+          <TouchableOpacity onPress={() => {
+            const d = randomInsuranceDetails();
+            setInsuranceDetail((prev) => ({ ...prev, ...d }));
+            reset({ number: d.insuranceNumber, dateExpiration: d.insuranceExpirationDate });
+          }} style={{ backgroundColor: "#f0ad4e", padding: 8, borderRadius: 5, marginBottom: 10, alignItems: "center" }}>
+            <Text style={{ fontWeight: "bold" }}>🧪 Fill test data</Text>
+          </TouchableOpacity>
+        )}
         <View style={styles.inputSection}>
           <Text style={styles.title}>{t("insurance.selectVehicle")}</Text>
           <SelectDropdown

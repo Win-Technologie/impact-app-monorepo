@@ -20,6 +20,7 @@ import { userInfoGatherState } from "../../../GlobalState/userDetailState";
 import { DatePickerInput } from "react-native-paper-dates";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { randomVehicleDetails } from "../../../utils/testData";
 
 function VehicleDetails() {
   // KeyboardAvoidingView will handle keyboard avoidance
@@ -32,6 +33,7 @@ function VehicleDetails() {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -84,6 +86,18 @@ function VehicleDetails() {
     router.push("/signup/vehiculesSteps/licensePlate");
   });
 
+  const fillTestData = () => {
+    const d = randomVehicleDetails();
+    setVehicleDetails((prev) => ({ ...prev, ...d }));
+    reset({
+      marque: d.vehicleBrand,
+      modele: d.vehicleModel,
+      annee: d.vehicleYear,
+      couleur: d.vehicleColor,
+      serialNumber: d.vehicleSerialNumber,
+    });
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -95,7 +109,12 @@ function VehicleDetails() {
           currentStep={(progressData[1]?.actualstep ?? 0) + 1}
           totalSteps={totalSteps}
         />
-        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 80 }}>
+          {__DEV__ && (
+            <TouchableOpacity onPress={fillTestData} style={{ backgroundColor: "#f0ad4e", padding: 8, borderRadius: 5, marginBottom: 10, alignItems: "center" }}>
+              <Text style={{ fontWeight: "bold" }}>🧪 Fill test data</Text>
+            </TouchableOpacity>
+          )}
           <Text style={styles.title}>{t("vehicleDetails.modelTitle")}</Text>
           <View style={styles.inputSection}>
             <Controller

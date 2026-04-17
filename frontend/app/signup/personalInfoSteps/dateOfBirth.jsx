@@ -8,8 +8,10 @@ import DualOptionButtonStep from "../../../components/SignUp/dualBottomButtonsSt
 import { userInfoGatherState } from "../../../GlobalState/userDetailState";
 import { DatePickerInput } from "react-native-paper-dates";
 import { Controller, useForm } from "react-hook-form";
+import { TouchableOpacity } from "react-native";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { randomDateOfBirth } from "../../../utils/testData";
 
 export default function Dob() {
   const totalSteps = 4;
@@ -29,6 +31,7 @@ export default function Dob() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -65,6 +68,16 @@ export default function Dob() {
       <Stepper currentStep={2} totalSteps={totalSteps} displayStep={2} />
 
       <View style={styles.content}>
+        <TouchableOpacity
+          onPress={() => {
+            const d = randomDateOfBirth();
+            setValue("date", d, { shouldValidate: true });
+            handleInputChange("birthDay", d.toISOString().split("T")[0]);
+          }}
+          style={{ backgroundColor: "#f0ad4e", padding: 8, borderRadius: 5, marginBottom: 10, alignSelf: "flex-start" }}
+        >
+          <Text style={{ fontSize: 12, color: "#333" }}>🧪 Fill test data</Text>
+        </TouchableOpacity>
         <Text style={styles.title}>{t("dobScreen.title")}</Text>
 
         <View style={styles.inputSection}>

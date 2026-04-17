@@ -66,9 +66,9 @@ const AddVehicle = () => {
       return;
     }
 
-    // Validate plate number length (must be 7 with space at position 4)
-    if (plateNumber.length !== 7) {
-      Alert.alert("Erreur", "Le numéro de plaque doit contenir 7 caractères (XXX XXX)");
+    // Validate plate number (6 alphanumeric chars displayed as "XXX XXX")
+    if (plateNumber.replace(/\s/g, "").length !== 6) {
+      Alert.alert("Erreur", "La plaque d'immatriculation doit contenir exactement 6 caractères (ex: ABC 123)");
       return;
     }
 
@@ -245,7 +245,7 @@ const AddVehicle = () => {
                   maxLength={7}
                   autoCapitalize="characters"
                 />
-                <Text style={styles.counter}>{plateNumber.length}/7</Text>
+                <Text style={styles.counter}>{plateNumber.replace(/\s/g, "").length}/6</Text>
               </View>
             </View>
 

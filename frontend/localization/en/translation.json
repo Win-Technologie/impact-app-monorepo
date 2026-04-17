@@ -60,7 +60,11 @@
     "passwordforget": "Forgotten password",
     "emailplaceholder": "Enter your email",
     "signin": "Sign in",
-    "invalidemailorpassword": "Invalid password or email"
+    "invalidemailorpassword": "Invalid password or email",
+    "wrongPassword": "Incorrect password.",
+    "userNotFound": "No account found with this email.",
+    "accountLocked": "Account locked after multiple failed attempts. Contact the administrator.",
+    "accountInactive": "Account inactive. Contact the administrator."
   },
 
   "account": {
@@ -76,7 +80,8 @@
     "conditionandregulation": "Conditions and regulations",
     "updateandreinstallation": "Update and reinstallation",
     "Login": "Logout",
-    "logout": "Log out"
+    "logout": "Log out",
+    "logoutConfirm": "Do you want to log out?"
   },
 
   "notifications": {
@@ -292,11 +297,11 @@
   },
 
   "vehicleRegistration": {
-    "plateNumberTitle": "What is the vehicle's license plate number?",
-    "plateNumberRequired": "License plate number is required",
-    "plateNumberMaxLength": "The license plate number must be at most 7 characters long",
-    "plateNumberExactLength": "The license plate number must be exactly 7 characters long",
-    "plateNumberPlaceholder": "License plate number",
+    "plateNumberTitle": "What is the vehicle's license plate?",
+    "plateNumberRequired": "License plate is required",
+    "plateNumberMaxLength": "The license plate must be at most 6 characters long",
+    "plateNumberExactLength": "The license plate must be exactly 6 characters",
+    "plateNumberPlaceholder": "License plate",
     "certificateInfoTitle": "Vehicle registration certificate information",
     "certificateRequired": "Certificate number is required",
     "certificateMaxLength": "The certificate number must be at most 13 characters long",
@@ -337,8 +342,8 @@
     "expirationDatePlaceholder": "Expiration date",
     "next": "Next",
     "ownerTitle": "Who is the insurance subscriber?",
-    "ownerOption": "I am the vehicle owner",
-    "notOwnerOption": "I am not the vehicle owner",
+    "ownerOption": "I am the insurance subscriber",
+    "notOwnerOption": "I am not the insurance subscriber",
     "subscriberInfo": "Insurance subscriber information",
     "firstNameRequired": "First name is required",
     "firstNamePlaceholder": "First Name",
@@ -506,6 +511,7 @@
 
   "common": {
     "save": "Save",
+    "cancel": "Cancel",
     "back": "Back",
     "error": "Error",
     "noToken": "No token found",
@@ -542,7 +548,7 @@
     "model": "Vehicle Model",
     "year": "Year",
     "color": "Vehicle Color",
-    "plate": "Plate Number",
+    "plate": "License Plate",
     "serialNumber": "Registration Certificate Number",
     "ownerInfo": "Vehicle Owner",
     "ownerFirstName": "First Name",
@@ -683,6 +689,7 @@
     "submissionCompleteTitle": "You have completed your declaration",
     "submissionCompleteDescription": "The only step left is to contact your insurance company. Once you confirm, you won't be able to go back.",
     "provideMyInfo": "Provide my information",
+    "selectVehicleTitle": "Vehicle Selection",
     "selectVehiclePrompt": "Please select the vehicle involved in the accident:",
     "sessionExpired": "Session expired. Please log in again.",
     "loadVehiclesFailed": "Unable to load vehicles. Please try again later.",
@@ -713,7 +720,12 @@
     "accessMyInfo": "Access my information",
     "receiveInformation": "Receive information",
     "receiveInformationDescription": "Receive the information from other involved individuals by entering their personal data manually.",
-    "enterInformation": "Enter information"
+    "enterInformation": "Enter information",
+    "takeMyLocation": "Take my location",
+    "holdToSelectHint": "(You can hold on the map to select a spot)",
+    "locationPermissionDenied": "Location access was denied. Please enable it in settings.",
+    "locationError": "Unable to get your current location.",
+    "takeCurrentTime": "Take current time"
   },
 
   "verified": {

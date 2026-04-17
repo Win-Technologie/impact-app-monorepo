@@ -202,21 +202,39 @@ export default function VehicleOwnership() {
       // Save to Recoil state (redundant if handleInputChange is always used, but ensures persistence)
       setVehicleDetails((prev) => ({ ...prev, ...formattedDetails }));
 
-      // Send to backend as before
-      const response = await fetch(`${API_URL}vehicles/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formattedDetails),
-      });
+      // If user already created a vehicle during this signup, UPDATE it instead of creating a new one
+      let response;
+      if (lastVehicle) {
+        response = await fetch(`${API_URL}vehicles/${lastVehicle}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formattedDetails),
+        });
+      } else {
+        response = await fetch(`${API_URL}vehicles/add`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formattedDetails),
+        });
+      }
 
       console.log(response);
       const data = await response.json();
 
       console.log(data);
-      if (response.status != 201) {
+      if (response.ok) {
+        // Store the vehicle ID so we can update it if user goes back
+        const vehicleId = data.car?._id;
+        if (vehicleId) {
+          setLastVehicle(vehicleId);
+        }
+      } else {
         if (
           data.message ==
           "Une voiture avec cette plaque d'immatriculation existe déjà."
@@ -317,7 +335,7 @@ export default function VehicleOwnership() {
           currentStep={(progressData[1]?.actualstep ?? 0) + 1}
           totalSteps={totalSteps}
         />
-        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.content} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 80 }}>
           <Text style={styles.title}>{t("vehicleOwnership.ownerTitle")}</Text>
           <View style={styles.inputSection}>
             <TouchableOpacity

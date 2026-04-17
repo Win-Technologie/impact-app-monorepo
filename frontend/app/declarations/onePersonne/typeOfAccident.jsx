@@ -40,8 +40,8 @@ const typeOfAccident = () => {
   const formatPlateNumber = (text) => {
     // Remove all spaces and special characters, keep only alphanumeric
     const cleaned = text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    // Limit to 7 characters
-    const limited = cleaned.substring(0, 7);
+    // Limit to 6 characters
+    const limited = cleaned.substring(0, 6);
     // Add space after 3rd character if length > 3
     if (limited.length > 3) {
       return limited.substring(0, 3) + ' ' + limited.substring(3);
@@ -233,7 +233,7 @@ const typeOfAccident = () => {
                   autoCapitalize="characters"
                   maxLength={8}
                 />
-                <Text style={styles.counter}>{`${plateNumber.replace(' ', '').length}/7`}</Text>
+                <Text style={styles.counter}>{`${plateNumber.replace(' ', '').length}/6`}</Text>
               </View>
               {/* test plate generator removed per request */}
             </View>

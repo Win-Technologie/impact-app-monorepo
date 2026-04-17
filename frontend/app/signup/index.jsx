@@ -27,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import LoadingModal from "../../components/LoadingModal";
 import { useNavigation } from "expo-router";
 import { signInWithGoogle } from "../../utils/googleAuth";
+import { randomSignupData } from "../../utils/testData";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -39,6 +40,7 @@ export default function SignUp() {
     formState: { errors },
     handleSubmit,
     watch,
+    setValue,
   } = useForm({
     defaultValues: {
       email: "",
@@ -184,12 +186,25 @@ export default function SignUp() {
         isSignInPage={false}
       />
 
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <KeyboardAvoidingView enabled={true}>
           <Text style={styles.welcomeText}>
             {t("signUpPage.welcome")} <Text style={styles.appName}>Impact</Text>
             .
           </Text>
+
+          <TouchableOpacity
+            onPress={() => {
+              const d = randomSignupData();
+              setValue("email", d.email, { shouldValidate: true });
+              setValue("password", d.password, { shouldValidate: true });
+              setValue("confirmPassword", d.password, { shouldValidate: true });
+              setValue("checkbox", true, { shouldValidate: true });
+            }}
+            style={{ backgroundColor: "#f0ad4e", padding: 8, borderRadius: 5, marginBottom: 10, alignSelf: "flex-start" }}
+          >
+            <Text style={{ fontSize: 12, color: "#333" }}>🧪 Fill test data</Text>
+          </TouchableOpacity>
 
           <View style={styles.inputSection}>
             <Controller

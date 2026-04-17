@@ -15,6 +15,7 @@ import { useRecoilState } from "recoil";
 import {
   userInfoGatherState,
   lastVehicleState,
+  lastInsuranceState,
   licenceScanState,
   userDetailsState,
 } from "../../../GlobalState/userDetailState";
@@ -25,6 +26,7 @@ export default function SignUpLandingPage() {
   const [progressData, setProgressData] = useRecoilState(userInfoGatherState);
   const [licenceScan, setLicenceScan] = useRecoilState(licenceScanState);
   const [lastVehicle, setlastVehicle] = useRecoilState(lastVehicleState);
+  const [lastInsurance, setLastInsurance] = useRecoilState(lastInsuranceState);
   const [userDetails, setUserDetails] = useRecoilState(userDetailsState);
   const { t } = useTranslation();
   const loginUrl = "user/login/token";
@@ -38,6 +40,7 @@ export default function SignUpLandingPage() {
 
     setLicenceScan(false);
     setlastVehicle(null);
+    setLastInsurance(null);
     setProgressData([
       {
         id: 0,
@@ -158,6 +161,7 @@ export default function SignUpLandingPage() {
 
       setLicenceScan(false);
       setlastVehicle(null);
+      setLastInsurance(null);
       setProgressData([
         {
           id: 0,
@@ -219,27 +223,45 @@ export default function SignUpLandingPage() {
           return;
         }
 
+        // Mark signup as complete on the backend
+        const completeResponse = await fetch(`${API_URL}users/user`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ allFieldsComplete: true }),
+        });
+
+        if (!completeResponse.ok) {
+          console.error("[signUpLanding] Failed to set allFieldsComplete:", await completeResponse.text());
+        }
+
+        // Now login with token to get fresh user data
         const response = await fetch(LOGIN_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          //  body: JSON.stringify(null)
         });
 
         const responseData = await response.json();
         const userPayload = responseData?.user ?? null;
 
-        await AsyncStorage.setItem("userToken", token);
-        if (userPayload === null) {
-          await AsyncStorage.removeItem("user");
-        } else {
+        if (response.ok && userPayload) {
+          // Got fresh data — store access token and user data
+          await AsyncStorage.setItem("userToken", token);
           await AsyncStorage.setItem("user", JSON.stringify(userPayload));
+        } else {
+          // LoginWithToken failed — keep existing AsyncStorage data
+          console.log("[signUpLanding] LoginWithToken returned:", response.status, responseData.msg);
         }
         router.push("(tabs)");
       } catch (error) {
         console.error("Error submitting data:", error);
+        // Navigate anyway — user data is already in AsyncStorage from signup steps
+        router.push("(tabs)");
       }
     } else {
       Alert.alert("Info", t("signUpPage.mustscanyourlicence"), [

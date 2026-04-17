@@ -126,7 +126,7 @@ export default function assuranceInfo() {
         </View>
       </View>
 
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <View style={styles.contentContainer}>
           {insurance === null ? (
             <View style={styles.noInsuranceBox}>

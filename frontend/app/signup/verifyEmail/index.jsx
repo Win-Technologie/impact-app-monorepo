@@ -29,7 +29,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL;
 export default function VerifyEmail() {
   const { t } = useTranslation();
   const params = useLocalSearchParams();
-  const { email = "onanajunior92@gmail.com" } = params;
+  const { email = "" } = params;
 
   const {
     control,
@@ -159,7 +159,7 @@ export default function VerifyEmail() {
         <Text style={{ color: "#19363C" }}>{"   "}Retour</Text>
       </TouchableOpacity>
 
-      <ScrollView>
+      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         <KeyboardAvoidingView enabled={true}>
           <Text style={styles.welcomeText}>
             {t("verified.verifyyouremail")}

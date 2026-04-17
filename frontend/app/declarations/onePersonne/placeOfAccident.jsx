@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TextInput, Alert, TouchableOpacity, FlatList } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import AnimatedButton from "../../../components/SignUp/animatedButton";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
@@ -28,6 +29,18 @@ const placeOfAccident = () => {
   const googlePlacesRef = useRef(null);
   const [suggestions, setSuggestions] = useState([]);
   const debounceRef = useRef(null);
+
+  // Fix UTF-8 double-encoding (mojibake) for French characters
+  const fixEncoding = (str) => {
+    if (!str) return str;
+    return str
+      .replace(/Ã©/g, 'é').replace(/Ã¨/g, 'è').replace(/Ãª/g, 'ê').replace(/Ã«/g, 'ë')
+      .replace(/Ã /g, 'à').replace(/Ã¢/g, 'â').replace(/Ã¤/g, 'ä')
+      .replace(/Ã´/g, 'ô').replace(/Ã¶/g, 'ö')
+      .replace(/Ã¹/g, 'ù').replace(/Ã»/g, 'û').replace(/Ã¼/g, 'ü')
+      .replace(/Ã®/g, 'î').replace(/Ã¯/g, 'ï')
+      .replace(/Ã§/g, 'ç').replace(/Ã‰/g, 'É').replace(/Ã€/g, 'À');
+  };
 
   const back = () => {
     try {
@@ -74,13 +87,14 @@ const placeOfAccident = () => {
       
       // Reverse geocode the coordinates
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.latitude},${coords.longitude}&key=AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY&language=fr`
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.latitude},${coords.longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY}&language=fr`
       );
       
-      const data = await response.json();
+      const text = await response.text();
+      const data = JSON.parse(text);
       
         if (data.results && data.results.length > 0) {
-        const address = data.results[0].formatted_address;
+        const address = fixEncoding(data.results[0].formatted_address);
         setPlace(address);
         // Set the text in the Google Places input field
         if (googlePlacesRef.current) {
@@ -140,6 +154,7 @@ const placeOfAccident = () => {
 
       <View style={styles.container}>
         <Text style={styles.title}>{t("declaration.whereDidAccidentOccur")}</Text>
+        <Text style={styles.hintText}>{t("declaration.holdToSelectHint")}</Text>
 
         <View style={{ zIndex: 9999, marginTop: 20 }}>
             <TextInput
@@ -154,13 +169,19 @@ const placeOfAccident = () => {
                   return;
                 }
                 try {
-                  const key = 'AIzaSyCiUgIoknUS8wxdyfWa8PnEHjQYxerNNGY';
+                  const key = process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY;
                   const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
                     text,
                   )}&key=${key}&language=fr&components=country:ca`;
                   const res = await fetch(url);
                   const json = await res.json();
-                  if (json && json.predictions) setSuggestions(json.predictions);
+                  if (json && json.predictions) {
+                    const fixed = json.predictions.map(p => ({
+                      ...p,
+                      description: fixEncoding(p.description),
+                    }));
+                    setSuggestions(fixed);
+                  }
                   else setSuggestions([]);
                 } catch (e) {
                   console.error("Places autocomplete error", e);
@@ -220,6 +241,41 @@ const placeOfAccident = () => {
             )}
           </MapView>
         </View>
+
+        <TouchableOpacity style={styles.locationButton} onPress={async () => {
+          try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+              Alert.alert(t("common.error"), t("declaration.locationPermissionDenied"));
+              return;
+            }
+            const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+            const { latitude, longitude } = loc.coords;
+            setSelectedCoords({ latitude, longitude });
+            setLocation({
+              latitude,
+              longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            });
+            // Reverse geocode
+            const response = await fetch(
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY}&language=fr`
+            );
+            const text = await response.text();
+            const data = JSON.parse(text);
+            if (data.results && data.results.length > 0) {
+              const address = fixEncoding(data.results[0].formatted_address);
+              setPlace(address);
+            }
+          } catch (error) {
+            console.error("Error getting current location:", error);
+            Alert.alert(t("common.error"), t("declaration.locationError"));
+          }
+        }}>
+          <Ionicons name="locate" size={20} color="#fff" />
+          <Text style={styles.locationButtonText}>{t("declaration.takeMyLocation")}</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.footContainer}>
@@ -274,6 +330,31 @@ const styles = StyleSheet.create({
   map: {
     width: '100%',
     height: '100%',
+  },
+
+  hintText: {
+    fontSize: 13,
+    color: '#888',
+    marginBottom: 5,
+    fontStyle: 'italic',
+  },
+
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0B8BA8',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    marginBottom: 20,
+  },
+
+  locationButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 
   buttonContainer: {

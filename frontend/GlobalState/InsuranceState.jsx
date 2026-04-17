@@ -25,6 +25,7 @@ export const insuranceState = atom({
     insuranceNumber: "",
     insuranceExpirationDate: "",
     insuranceFirmName: "",
+    insuranceFirmPhone: "",
     insuranceFirmAddress: "",
     insuranceFirmCity: "",
     insuranceFirmPostalCode: "",

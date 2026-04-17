@@ -12,6 +12,7 @@ import {
 import AnimatedButton from "../../../components/SignUp/animatedButton";
 import DualOptionButton from "../../../components/SignUp/dualBottomButtonsSteps";
 import Stepper from "../../../components/SignUp/stepper";
+import { Ionicons } from "@expo/vector-icons";
 import { TimePickerModal } from "react-native-paper-dates";
 import { router } from "expo-router";
 import { DeclarationState } from "../../../GlobalState/DeclarationState";
@@ -136,6 +137,18 @@ const hourOfAccident = () => {
             minutes={0}
           />
         </View>
+
+        <TouchableOpacity
+          style={styles.currentTimeButton}
+          onPress={() => {
+            const now = new Date();
+            setHour(now.getHours());
+            setMinute(now.getMinutes());
+          }}
+        >
+          <Ionicons name="time-outline" size={20} color="#fff" />
+          <Text style={styles.currentTimeButtonText}>{t("declaration.takeCurrentTime")}</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.footContainer}>
@@ -253,6 +266,23 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+
+  currentTimeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0B8BA8',
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+
+  currentTimeButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 
   

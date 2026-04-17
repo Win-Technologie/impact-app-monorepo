@@ -16,6 +16,10 @@ const assuranceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  insuranceCompanyPhone: {
+    type: String,
+    default: "",
+  },
   subscriber: {
     type: String,
     required: true,
