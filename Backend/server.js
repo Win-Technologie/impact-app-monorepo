@@ -87,6 +87,11 @@ app.use("/api/accidents", accidentReportRoutes);
 app.get('/Backend/user/profile-image/:id', userController.StreamUserProfileImage);
 app.get('/Backend/user/driving-licence-photo/:id', userController.StreamDrivingLicenceImage);
 
+// Lightweight health check for hosting providers and quick verification
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', time: new Date().toISOString() });
+});
+
 // Programmation de tâches qui s'exécutent automatiquement après un certain laps de temps
 cron.schedule(
   `${MYCRONTIMER}`,

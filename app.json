@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "3166a103-9d77-4e7a-929a-e9c198247df7"
+      }
+    },
+    "android": {
+      "package": "com.cunningham.impactapp"
+    }
+  }
+}
