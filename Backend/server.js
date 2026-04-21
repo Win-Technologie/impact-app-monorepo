@@ -50,7 +50,7 @@ app.use(express.json());
 // // Configuration d'express-session
 app.use(
   session({
-    secret: "votre_secret_session", // Remplacez par une chaîne aléatoire et sécurisée
+    secret: process.env.SESSION_SECRET || process.env.JWTSTKEY || "votre_secret_session", // prefer env var
     resave: true,
     saveUninitialized: true,
   }),
@@ -86,7 +86,19 @@ app.use("/api/accidents", accidentReportRoutes);
 // Backwards-compatible endpoints for image access used by frontend
 app.get('/Backend/user/profile-image/:id', userController.StreamUserProfileImage);
 app.get('/Backend/user/driving-licence-photo/:id', userController.StreamDrivingLicenceImage);
+// Root info endpoint (avoid 404 at /)
+app.get('/', (req, res) => {
+  res.status(200).json({
+    name: 'Impact Backend',
+    status: 'running',
+    env: process.env.NODE_ENV || 'development',
+  });
+});
 
+// Lightweight health check for hosting providers and quick verification
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', time: new Date().toISOString() });
+});
 // Programmation de tâches qui s'exécutent automatiquement après un certain laps de temps
 cron.schedule(
   `${MYCRONTIMER}`,
