@@ -50,7 +50,7 @@ app.use(express.json());
 // // Configuration d'express-session
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || process.env.JWTSTKEY || "votre_secret_session", // prefer env var
+    secret: process.env.SESSION_SECRET || process.env.JWTSTKEY || "votre_secret_session",
     resave: true,
     saveUninitialized: true,
   }),
